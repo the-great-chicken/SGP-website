@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sgp-website-tools"
+version = "0.1.0"
+description = "Build-time data exporters for the SGP website"
+requires-python = ">=3.11"
+dependencies = [
+    "beet==0.112.2",
+    "mecha==0.101.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "jsonschema==4.25.1",
+]
+
+[project.scripts]
+sgp-export-kits = "sgp_kit_exporter.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

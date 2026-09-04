@@ -1,0 +1,9 @@
+{
+  "id": "sgp-test",
+  "pack": {
+    "description": "Kit exporter test fixture",
+    "min_format": 101.1,
+    "max_format": 101.1
+  }
+}
+

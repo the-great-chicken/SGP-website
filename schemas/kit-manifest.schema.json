@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kit-manifest.schema.json",
+  "title": "SGP kit manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "minecraftVersion",
+    "dataPack",
+    "kits"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "../schemas/kit-manifest.schema.json"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "minecraftVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataPack": {
+      "$ref": "#/$defs/dataPack"
+    },
+    "kits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/kit"
+      }
+    }
+  },
+  "$defs": {
+    "dataPack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "minFormat",
+        "maxFormat"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minFormat": {
+          "type": "number"
+        },
+        "maxFormat": {
+          "type": "number"
+        }
+      }
+    },
+    "kit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "function",
+        "operations"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "function": {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        }
+      }
+    },
+    "operation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/giveOperation"
+        },
+        {
+          "$ref": "#/$defs/replaceOperation"
+        }
+      ]
+    },
+    "giveOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "item",
+        "source"
+      ],
+      "properties": {
+        "kind": {
+          "const": "give"
+        },
+        "item": {
+          "$ref": "#/$defs/item"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    },
+    "replaceOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "slot",
+        "item",
+        "source"
+      ],
+      "properties": {
+        "kind": {
+          "const": "replace"
+        },
+        "slot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "item": {
+          "$ref": "#/$defs/item"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "count",
+        "components",
+        "removedComponents"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "components": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          }
+        },
+        "removedComponents": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line",
+        "endLine"
+      ],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endLine": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "jsonValue": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/jsonValue"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          }
+        }
+      ]
+    }
+  }
+}
+
