@@ -16,7 +16,7 @@
       "const": "../schemas/kit-manifest.schema.json"
     },
     "schemaVersion": {
-      "const": 1
+      "const": 2
     },
     "minecraftVersion": {
       "type": "string",
@@ -59,14 +59,57 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "id",
         "key",
+        "name",
+        "color",
+        "icon",
+        "ability",
         "function",
         "operations"
       ],
       "properties": {
+        "id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
         "key": {
           "type": "string",
           "pattern": "^[a-z0-9_]+$"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "color": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "ability": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ability"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "function": {
           "type": "string",
@@ -77,6 +120,42 @@
           "minItems": 1,
           "items": {
             "$ref": "#/$defs/operation"
+          }
+        }
+      }
+    },
+    "ability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "name",
+        "description",
+        "activationKeybind",
+        "descriptionComponents"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "activationKeybind": {
+          "type": "string",
+          "pattern": "^key\\."
+        },
+        "descriptionComponents": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/jsonValue"
           }
         }
       }
@@ -218,4 +297,3 @@
     }
   }
 }
-

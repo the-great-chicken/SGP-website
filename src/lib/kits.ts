@@ -27,14 +27,27 @@ export type KitOperation = {
   };
 };
 
+export type KitAbility = {
+  path: string;
+  name: string;
+  description: string;
+  activationKeybind: string;
+  descriptionComponents: JsonValue[];
+};
+
 export type KitDefinition = {
+  id: number | null;
   key: string;
+  name: string | null;
+  color: string | null;
+  icon: string | null;
+  ability: KitAbility | null;
   function: string;
   operations: KitOperation[];
 };
 
 export type KitManifest = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   minecraftVersion: string;
   dataPack: {
     id: string;
@@ -99,6 +112,10 @@ export function formatKitName(key: string): string {
     .join(" ");
 }
 
+export function getKitDisplayName(kit: KitDefinition): string {
+  return kit.name ?? formatKitName(kit.key);
+}
+
 export function getItemDisplayName(item: KitItem): string {
   const customName = item.components["minecraft:custom_name"];
   if (isJsonObject(customName) && typeof customName.text === "string") {
@@ -109,6 +126,10 @@ export function getItemDisplayName(item: KitItem): string {
 }
 
 export function getKitAccent(kit: KitDefinition): string {
+  if (kit.color && minecraftColors[kit.color]) {
+    return minecraftColors[kit.color];
+  }
+
   for (const operation of kit.operations) {
     const customName = operation.item.components["minecraft:custom_name"];
     if (!isJsonObject(customName) || typeof customName.color !== "string") {
@@ -129,7 +150,7 @@ function isKitManifest(value: unknown): value is KitManifest {
     return false;
   }
   return (
-    value.schemaVersion === 1 &&
+    value.schemaVersion === 2 &&
     typeof value.minecraftVersion === "string" &&
     Array.isArray(value.kits)
   );
@@ -146,4 +167,3 @@ function isMissingFile(error: unknown): boolean {
     (error as NodeJS.ErrnoException).code === "ENOENT"
   );
 }
-

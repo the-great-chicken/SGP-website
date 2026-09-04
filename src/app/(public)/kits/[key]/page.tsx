@@ -8,6 +8,7 @@ import {
   formatKitName,
   getItemDisplayName,
   getKitAccent,
+  getKitDisplayName,
   loadKitManifest,
 } from "@/lib/kits";
 
@@ -19,9 +20,12 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: KitPageProps): Promise<Metadata> {
   const { key } = await params;
+  const manifest = await loadKitManifest();
+  const kit = manifest?.kits.find((candidate) => candidate.key === key);
+  const name = kit ? getKitDisplayName(kit) : formatKitName(key);
   return {
-    title: formatKitName(key),
-    description: `Équipement et aperçu du kit ${formatKitName(key)}.`,
+    title: name,
+    description: `Équipement et aperçu du kit ${name}.`,
   };
 }
 
@@ -45,7 +49,7 @@ export default async function KitPage({ params }: KitPageProps) {
       </Link>
       <PageIntro
         eyebrow="Fiche de kit"
-        title={formatKitName(kit.key)}
+        title={getKitDisplayName(kit)}
         description="Inventaire actuel extrait du datapack. Les caractéristiques calculées et l’aperçu Minecraft des objets viendront enrichir cette fiche."
         aside={
           <div className="manifest-badge accent-badge">

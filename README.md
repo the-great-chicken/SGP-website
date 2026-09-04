@@ -36,6 +36,23 @@ npm run db:migrate
 npm run db:studio
 ```
 
+### Publishing a completed edition
+
+Generate the ignored kit manifest first so the edition captures the exact loadouts plus the ability names and descriptions declared by the datapack:
+
+```powershell
+.\.venv\Scripts\python.exe -m sgp_kit_exporter --datapack ..\server\world\datapacks\TGCdatapack --minecraft-version 26.1
+```
+
+The datapack's independent `stats_analysis/export_web.py` command converts a completed `command_storage.dat` and that kit manifest into one versioned, UUID-based edition bundle. Import it after applying migrations:
+
+```powershell
+npm run db:migrate
+npm run db:import-edition -- <path-to-edition-bundle.json>
+```
+
+The importer validates the full bundle before opening a transaction. Reimporting the same edition number atomically replaces its kit snapshot and statistics, so publishing can be safely repeated after correcting source data.
+
 ## Kit manifest exporter
 
 `items.mcfunction` remains the authoritative source for every kit loadout. The exporter uses Mecha to parse those functions and writes a deterministic, versioned JSON manifest for the website.

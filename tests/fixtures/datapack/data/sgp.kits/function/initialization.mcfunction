@@ -1,0 +1,1 @@
+data merge storage sgp:kits {kit_id_order:[{kit_id:3,kit_path:example,ability_path:test_dash}],example:{kit:example,kit_color:aqua,kit_name:"Exemple",kit_icon:"E",ability_name:"Ruée d’essai",ability_hover:[{text:"Activation : ",color:gray},{keybind:"key.drop",color:yellow,bold:true},{text:"\nFait avancer le joueur pour tester l’export.",color:white}]}}

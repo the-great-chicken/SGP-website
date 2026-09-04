@@ -22,11 +22,23 @@ class ExporterTests(unittest.TestCase):
         manifest = export_manifest(FIXTURE_DATAPACK, "26.1")
         Draft202012Validator(SCHEMA).validate(manifest)
 
-        self.assertEqual(manifest["schemaVersion"], 1)
+        self.assertEqual(manifest["schemaVersion"], 2)
         self.assertEqual(manifest["dataPack"]["minFormat"], 101.1)
         self.assertEqual(len(manifest["kits"]), 1)
 
-        operations = manifest["kits"][0]["operations"]
+        kit = manifest["kits"][0]
+        self.assertEqual(kit["id"], 3)
+        self.assertEqual(kit["name"], "Exemple")
+        self.assertEqual(kit["color"], "aqua")
+        self.assertEqual(kit["ability"]["path"], "test_dash")
+        self.assertEqual(kit["ability"]["name"], "Ruée d’essai")
+        self.assertEqual(
+            kit["ability"]["description"],
+            "Fait avancer le joueur pour tester l’export.",
+        )
+        self.assertEqual(kit["ability"]["activationKeybind"], "key.drop")
+
+        operations = kit["operations"]
         self.assertEqual(len(operations), 2)
         self.assertEqual(operations[0]["kind"], "give")
         self.assertEqual(operations[0]["item"]["id"], "minecraft:trident")
@@ -84,6 +96,20 @@ class ExporterTests(unittest.TestCase):
             function_directory.mkdir(parents=True)
             (function_directory / "items.mcfunction").write_text(
                 contents,
+                encoding="utf-8",
+            )
+            initialization = (
+                datapack / "data/sgp.kits/function/initialization.mcfunction"
+            )
+            initialization.parent.mkdir(parents=True, exist_ok=True)
+            initialization.write_text(
+                'data merge storage sgp:kits '
+                '{kit_id_order:[{kit_id:3,kit_path:example,'
+                'ability_path:test_dash}],example:{kit:example,'
+                'kit_color:aqua,kit_name:"Exemple",kit_icon:"E",'
+                'ability_name:"Test",ability_hover:['
+                '{text:"Activation : "},{keybind:"key.drop"},'
+                '{text:"\\nDescription"}]}}',
                 encoding="utf-8",
             )
             return export_manifest(datapack, "26.1")

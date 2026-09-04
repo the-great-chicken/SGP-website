@@ -2,9 +2,9 @@ import { ArrowUpRight, PackageOpen, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import {
-  formatKitName,
   getItemDisplayName,
   getKitAccent,
+  getKitDisplayName,
   type KitDefinition,
 } from "@/lib/kits";
 
@@ -31,18 +31,17 @@ export function KitCard({ kit, compact = false }: KitCardProps) {
       </div>
       <div className="kit-card-copy">
         <p className="kit-label">Kit</p>
-        <h2>{formatKitName(kit.key)}</h2>
+        <h2>{getKitDisplayName(kit)}</h2>
         <p>{featuredItems.join(" · ")}</p>
       </div>
       <div className="kit-card-footer">
         <span>
           <Sparkles size={14} /> {items} objets au total
         </span>
-        <Link href={`/kits/${kit.key}`} aria-label={`Voir le kit ${formatKitName(kit.key)}`}>
+        <Link href={`/kits/${kit.key}`} aria-label={`Voir le kit ${getKitDisplayName(kit)}`}>
           <ArrowUpRight size={18} />
         </Link>
       </div>
     </article>
   );
 }
-

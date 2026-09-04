@@ -22,15 +22,18 @@ from mecha.ast import (
     AstNbtLongArray,
     AstNbtValue,
     AstNumber,
+    AstResourceLocation,
     AstSelector,
 )
 from mecha.diagnostic import DiagnosticError
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 SCHEMA_REFERENCE = "../schemas/kit-manifest.schema.json"
 FUNCTIONS_ROOT = Path("data/sgp.kits/function/collection")
+INITIALIZATION_FUNCTION = Path("data/sgp.kits/function/initialization.mcfunction")
 FUNCTION_NAMESPACE = "sgp.kits"
+KITS_STORAGE = "sgp:kits"
 # Mecha 0.101 bundles this command tree. The two accepted command shapes and its
 # generic item-component/SNBT parser are verified against every current 26.1 kit.
 MECHA_COMMAND_VERSION = "1.21"
@@ -69,10 +72,26 @@ def export_manifest(datapack: Path, minecraft_version: str) -> dict[str, Any]:
         raise ExportError(f"no kit item functions found in {functions_directory}")
 
     parser = Mecha(version=MECHA_COMMAND_VERSION, multiline=True)
+    kit_metadata = _read_kit_metadata(
+        parser,
+        datapack / INITIALIZATION_FUNCTION,
+    )
     kits = [
-        _export_kit(parser, item_file, item_file.parent.name)
+        _export_kit(
+            parser,
+            item_file,
+            item_file.parent.name,
+            kit_metadata.get(item_file.parent.name),
+        )
         for item_file in item_files
     ]
+
+    unknown_kit_metadata = sorted(set(kit_metadata) - {kit["key"] for kit in kits})
+    if unknown_kit_metadata:
+        raise ExportError(
+            "kit metadata has no matching items.mcfunction: "
+            + ", ".join(unknown_kit_metadata)
+        )
 
     return {
         "$schema": SCHEMA_REFERENCE,
@@ -112,7 +131,142 @@ def _read_pack_metadata(path: Path) -> dict[str, Any]:
     }
 
 
-def _export_kit(parser: Mecha, path: Path, kit_key: str) -> dict[str, Any]:
+def _read_kit_metadata(
+    parser: Mecha,
+    path: Path,
+) -> dict[str, dict[str, Any]]:
+    if not path.is_file():
+        raise ExportError(f"kit initialization function does not exist: {path}")
+
+    try:
+        root = parser.parse(
+            path.read_text(encoding="utf-8"),
+            filename=path,
+            multiline=True,
+        )
+    except (OSError, UnicodeError, DiagnosticError) as exc:
+        raise ExportError(str(exc)) from exc
+
+    storage_commands = [
+        command
+        for command in root.commands
+        if command.identifier == "data:merge:storage:target:nbt"
+        and len(command.arguments) == 2
+        and isinstance(command.arguments[0], AstResourceLocation)
+        and command.arguments[0].get_canonical_value() == KITS_STORAGE
+    ]
+    if len(storage_commands) != 1:
+        raise ExportError(
+            f"{FUNCTION_NAMESPACE}:initialization: expected exactly one data merge "
+            f"for storage {KITS_STORAGE}, found {len(storage_commands)}"
+        )
+
+    command = storage_commands[0]
+    raw_metadata = _nbt_to_json(
+        command.arguments[1],
+        command,
+        f"{FUNCTION_NAMESPACE}:initialization",
+    )
+    if not isinstance(raw_metadata, dict):
+        raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", "kit metadata must be a compound")
+
+    kit_order = raw_metadata.get("kit_id_order")
+    if not isinstance(kit_order, list):
+        raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", "kit_id_order must be a list")
+
+    result: dict[str, dict[str, Any]] = {}
+    used_ids: set[int] = set()
+
+    for index, order_entry in enumerate(kit_order):
+        entry_path = f"kit_id_order[{index}]"
+        if not isinstance(order_entry, dict):
+            raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"{entry_path} must be a compound")
+
+        kit_id = _metadata_integer(order_entry, "kit_id", entry_path, command)
+        kit_key = _metadata_string(order_entry, "kit_path", entry_path, command)
+        ability_path = _metadata_string(order_entry, "ability_path", entry_path, command)
+
+        if kit_id < 0 or kit_id in used_ids:
+            raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"invalid or duplicate kit id {kit_id} at {entry_path}")
+        if not KIT_KEY_PATTERN.fullmatch(kit_key) or not KIT_KEY_PATTERN.fullmatch(ability_path):
+            raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"invalid kit or ability path at {entry_path}")
+        if kit_key in result:
+            raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"duplicate kit path {kit_key!r}")
+
+        kit_data = raw_metadata.get(kit_key)
+        if not isinstance(kit_data, dict):
+            raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"missing kit definition {kit_key!r}")
+        if _metadata_string(kit_data, "kit", kit_key, command) != kit_key:
+            raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"{kit_key}.kit must equal {kit_key!r}")
+
+        hover = kit_data.get("ability_hover")
+        if not isinstance(hover, list):
+            raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"{kit_key}.ability_hover must be a list")
+
+        keybind_entries = [
+            (hover_index, component["keybind"])
+            for hover_index, component in enumerate(hover)
+            if isinstance(component, dict) and isinstance(component.get("keybind"), str)
+        ]
+        if len(keybind_entries) != 1:
+            raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"{kit_key}.ability_hover must contain exactly one keybind")
+        keybind_index, activation_keybind = keybind_entries[0]
+        description = "".join(
+            component["text"]
+            for component in hover[keybind_index + 1 :]
+            if isinstance(component, dict) and isinstance(component.get("text"), str)
+        ).strip()
+        if not description:
+            raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"{kit_key}.ability_hover has no description text after its keybind")
+
+        result[kit_key] = {
+            "id": kit_id,
+            "name": _metadata_string(kit_data, "kit_name", kit_key, command),
+            "color": _metadata_string(kit_data, "kit_color", kit_key, command),
+            "icon": _metadata_string(kit_data, "kit_icon", kit_key, command),
+            "ability": {
+                "path": ability_path,
+                "name": _metadata_string(kit_data, "ability_name", kit_key, command),
+                "description": description,
+                "activationKeybind": activation_keybind,
+                "descriptionComponents": hover,
+            },
+        }
+        used_ids.add(kit_id)
+
+    return result
+
+
+def _metadata_string(
+    data: dict[str, Any],
+    field: str,
+    path: str,
+    command: AstCommand,
+) -> str:
+    value = data.get(field)
+    if not isinstance(value, str) or not value:
+        raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"{path}.{field} must be a non-empty string")
+    return value
+
+
+def _metadata_integer(
+    data: dict[str, Any],
+    field: str,
+    path: str,
+    command: AstCommand,
+) -> int:
+    value = data.get(field)
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise _command_error(command, f"{FUNCTION_NAMESPACE}:initialization", f"{path}.{field} must be an integer")
+    return value
+
+
+def _export_kit(
+    parser: Mecha,
+    path: Path,
+    kit_key: str,
+    metadata: dict[str, Any] | None,
+) -> dict[str, Any]:
     if not KIT_KEY_PATTERN.fullmatch(kit_key):
         raise ExportError(f"invalid kit directory name {kit_key!r}: {path.parent}")
 
@@ -146,7 +300,12 @@ def _export_kit(parser: Mecha, path: Path, kit_key: str) -> dict[str, Any]:
         explicit_slots[slot] = operation["source"]["line"]
 
     return {
+        "id": metadata["id"] if metadata else None,
         "key": kit_key,
+        "name": metadata["name"] if metadata else None,
+        "color": metadata["color"] if metadata else None,
+        "icon": metadata["icon"] if metadata else None,
+        "ability": metadata["ability"] if metadata else None,
         "function": function,
         "operations": operations,
     }
