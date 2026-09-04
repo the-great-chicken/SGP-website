@@ -4,3 +4,15 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 /data/kit-manifest.json
+
+# Next.js
+/node_modules/
+/.next/
+/out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local configuration and runtime state
+.env*
+!.env.example
+/.data/

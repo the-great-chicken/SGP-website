@@ -1,6 +1,40 @@
 # SGP website
 
-This repository owns the build-time exporters and, eventually, the website that consumes their output. The SGP datapack remains independently runnable and is never modified by these tools.
+This repository owns the SGP public website, its private player area, and the build-time exporters that feed it. The SGP datapack remains independently runnable and is never modified by these tools.
+
+## Web application
+
+The application uses Next.js App Router, TypeScript, React, Drizzle ORM and SQLite.
+
+### Local setup
+
+Node.js 20.19 or newer is required.
+
+```powershell
+npm install
+Copy-Item .env.example .env
+npm run db:migrate
+npm run dev
+```
+
+The public structure currently includes the home page, kit catalogue and kit details, leaderboards, player directory and profiles, history, and map. `/login` is the future Discord entry point and `/me` is the private player-area shell. Authentication and authorization still need to be connected before private player data is exposed.
+
+### Database ownership
+
+Only the Drizzle schema and generated SQL migrations belong in Git. The local database is `.data/sgp.sqlite`; the whole `.data` directory is ignored.
+
+In production, set `DATABASE_URL` to a file on a persistent volume outside the application checkout, for example `file:/var/lib/sgp/sgp.sqlite`. Back up that volume independently of deployments. This SQLite setup assumes one writable application instance; move to a network database before running multiple replicas.
+
+Useful commands:
+
+```powershell
+npm run typecheck
+npm run lint
+npm run build
+npm run db:generate
+npm run db:migrate
+npm run db:studio
+```
 
 ## Kit manifest exporter
 
@@ -36,7 +70,7 @@ The default output is `data/kit-manifest.json`. Pass `--output <path>` to write 
 .\.venv\Scripts\python.exe -m sgp_kit_exporter --datapack ..\server\world\datapacks\TGCdatapack --minecraft-version 26.1 --check
 ```
 
-`--check` performs the full export in memory and fails without writing if the committed manifest differs.
+`--check` performs the full export in memory and fails without writing if the on-disk manifest differs.
 
 ### Tests
 
