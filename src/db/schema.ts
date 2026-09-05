@@ -62,6 +62,25 @@ export const players = sqliteTable(
   ],
 );
 
+export const authSessions = sqliteTable(
+  "auth_sessions",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    discordId: text("discord_id").notNull(),
+    discordUsername: text("discord_username").notNull(),
+    discordDisplayName: text("discord_display_name"),
+    discordAvatarUrl: text("discord_avatar_url"),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(now),
+  },
+  (table) => [
+    index("auth_sessions_discord_id_idx").on(table.discordId),
+    index("auth_sessions_expires_at_idx").on(table.expiresAt),
+  ],
+);
+
 export const editionPlayers = sqliteTable(
   "edition_players",
   {

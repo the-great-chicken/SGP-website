@@ -17,7 +17,7 @@ npm run db:migrate
 npm run dev
 ```
 
-The public structure currently includes the home page, kit catalogue and kit details, leaderboards, player directory and profiles, history, and map. `/login` is the future Discord entry point and `/me` is the private player-area shell. Authentication and authorization still need to be connected before private player data is exposed.
+The public structure includes the home page, kit catalogue and kit details, leaderboards, player directory and profiles, history, and map. `/login` starts Discord OAuth with the minimal `identify` scope. `/me` validates an opaque, server-side session and resolves its Minecraft profile through the latest DiscordSRV link sync.
 
 The kit catalogue is searchable and sortable. Each kit page presents its ability, a slot-based loadout with Minecraft-style text-component tooltips, rendered item models, and aggregate popularity, elimination/death ratio, and damage-per-minute statistics across published or archived editions.
 
@@ -65,6 +65,20 @@ npm run db:import-edition -- data\statistics-snapshot.json --kit-manifest data\k
 ```
 
 The importer rejects different datapack release identifiers before opening a transaction, then validates all player, kit, ability and damage-cause relationships. Reimporting the same edition number atomically replaces its kit snapshot and statistics, so publishing can be safely repeated after correcting source data.
+
+### Discord authentication and Minecraft links
+
+Create an application in the Discord Developer Portal and register `http://localhost:3000/api/auth/discord/callback` for local development, plus the HTTPS equivalent for production. Fill `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_REDIRECT_URI` in the environment. The client secret must stay outside Git.
+
+DiscordSRV remains the authority for Discord-to-Minecraft links. Synchronize its append-only account store after importing players and whenever account links change:
+
+```powershell
+npm run db:sync-discordsrv -- ..\server\plugins\DiscordSRV\accounts.aof
+```
+
+The path can instead be stored in `DISCORDSRV_ACCOUNTS_PATH`. Synchronization replays DiscordSRV link and unlink operations, applies the resulting one-to-one mappings atomically, clears stale website links, and ignores UUIDs that do not yet exist in the website database. Run it again after importing an edition so newly known players can be linked.
+
+OAuth access tokens are used once to request the Discord identity and are not persisted. Website sessions use random opaque cookies whose SHA-256 hashes are stored in SQLite for 30 days. In production, the cookies are Secure and use the `__Host-` prefix.
 
 ## Kit manifest exporter
 

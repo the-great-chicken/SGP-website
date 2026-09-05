@@ -11,11 +11,12 @@
     "start": "next start",
     "lint": "eslint .",
     "assets:render-items": "tsx scripts/render-kit-items.mts",
-    "test:database": "tsx --test tests/edition-import.test.ts tests/historical-stats.test.ts",
+    "test:database": "tsx --test tests/auth.test.ts tests/edition-import.test.ts tests/historical-stats.test.ts",
     "test:kits": "tsx --test tests/item-rendering.test.ts tests/kit-presentation.test.ts tests/kit-stats.test.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:import-edition": "tsx src/db/import-edition.ts",
+    "db:sync-discordsrv": "tsx src/db/sync-discordsrv.ts",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio"
   },
