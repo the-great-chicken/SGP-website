@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { prepareAssets, renderItem } from "block-model-renderer";
+import { prepareAssets, readFile as readAssetFile, renderItem } from "block-model-renderer";
 import type { KitItem, KitManifest } from "../src/lib/kit-manifest";
 import {
   getItemRenderInput,
@@ -17,6 +17,13 @@ const indexPath = path.join(projectRoot, "data", "item-renders.json");
 async function main() {
   const options = parseOptions(process.argv.slice(2));
   const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as KitManifest;
+  if (
+    manifest.schemaVersion !== 3 ||
+    !manifest.datapackRelease ||
+    !manifest.resourcePackRelease
+  ) {
+    throw new Error("Kit manifest must use schema 3 and identify both datapack and resource-pack releases");
+  }
   const resourcePackPath = path.resolve(
     options.resourcePack ??
       process.env.TGC_RESOURCE_PACK_PATH ??
@@ -28,7 +35,7 @@ async function main() {
       getDefaultClientPath(manifest.minecraftVersion),
   );
 
-  await assertDirectory(resourcePackPath, "TGC resource pack");
+  await assertAssetSource(resourcePackPath, "TGC resource pack");
   await assertFile(minecraftClientPath, "Minecraft client JAR");
   await mkdir(outputDirectory, { recursive: true });
 
@@ -37,6 +44,12 @@ async function main() {
     cache: true,
     version: manifest.minecraftVersion,
   });
+  const resourcePackRelease = await readResourcePackRelease(assets);
+  if (resourcePackRelease !== manifest.resourcePackRelease) {
+    throw new Error(
+      `Resource-pack release ${resourcePackRelease} does not match kit manifest release ${manifest.resourcePackRelease}`,
+    );
+  }
   const renderedItems: Record<string, string> = {};
   const expectedFiles = new Set<string>();
 
@@ -61,11 +74,11 @@ async function main() {
   }
 
   process.stdout.write("\n");
-  const resourcePackVersion = await readResourcePackVersion(resourcePackPath);
   const renderIndex: ItemRenderIndex = {
-    schemaVersion: 1,
+    schemaVersion: 2,
+    datapackRelease: manifest.datapackRelease,
+    resourcePackRelease,
     minecraftVersion: manifest.minecraftVersion,
-    resourcePackVersion,
     items: Object.fromEntries(Object.entries(renderedItems).toSorted(([a], [b]) => a.localeCompare(b))),
   };
   const temporaryIndexPath = `${indexPath}.tmp`;
@@ -74,7 +87,7 @@ async function main() {
   await removeStaleImages(expectedFiles);
 
   console.log(
-    `Rendered ${uniqueItems.length} item variants with TGC pack${resourcePackVersion ? ` v${resourcePackVersion}` : ""} over Minecraft ${manifest.minecraftVersion}.`,
+    `Rendered ${uniqueItems.length} item variants for datapack ${manifest.datapackRelease} with resource pack ${manifest.resourcePackRelease} over Minecraft ${manifest.minecraftVersion}.`,
   );
 }
 
@@ -128,9 +141,9 @@ function getDefaultClientPath(minecraftVersion: string): string {
   return path.join(appData, ".minecraft", "versions", minecraftVersion, `${minecraftVersion}.jar`);
 }
 
-async function assertDirectory(target: string, label: string) {
+async function assertAssetSource(target: string, label: string) {
   const targetStat = await stat(target).catch(() => null);
-  if (!targetStat?.isDirectory()) {
+  if (!targetStat || (!targetStat.isDirectory() && !targetStat.isFile())) {
     throw new Error(`${label} not found at ${target}`);
   }
 }
@@ -142,20 +155,30 @@ async function assertFile(target: string, label: string) {
   }
 }
 
-async function readResourcePackVersion(resourcePackPath: string): Promise<string | null> {
-  for (const candidate of [
-    path.join(resourcePackPath, "version.txt"),
-    path.join(resourcePackPath, "..", "version.txt"),
-  ]) {
-    try {
-      return (await readFile(candidate, "utf8")).trim() || null;
-    } catch (error) {
-      if (!(error instanceof Error && "code" in error && (error as NodeJS.ErrnoException).code === "ENOENT")) {
-        throw error;
-      }
-    }
+async function readResourcePackRelease(assets: Awaited<ReturnType<typeof prepareAssets>>) {
+  const metadata = await readAssetFile("release.json", assets);
+  if (!metadata) {
+    throw new Error("TGC resource pack has no embedded release.json identity");
   }
-  return null;
+
+  let value: unknown;
+  try {
+    value = JSON.parse(new TextDecoder().decode(metadata));
+  } catch {
+    throw new Error("TGC resource pack has invalid release.json metadata");
+  }
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("schemaVersion" in value) ||
+    value.schemaVersion !== 1 ||
+    !("release" in value) ||
+    typeof value.release !== "string" ||
+    !value.release
+  ) {
+    throw new Error("TGC resource pack has invalid release.json metadata");
+  }
+  return value.release;
 }
 
 async function removeStaleImages(expectedFiles: Set<string>) {

@@ -1,10 +1,33 @@
 import type { JsonValue, KitItem } from "./kit-manifest";
 
 export type ItemRenderIndex = {
-  schemaVersion: 1;
+  schemaVersion: 2;
+  datapackRelease: string;
+  resourcePackRelease: string;
   minecraftVersion: string;
-  resourcePackVersion: string | null;
   items: Record<string, string>;
+};
+
+export function getItemRenderMismatch(
+  index: ItemRenderIndex,
+  manifest: KitManifestIdentity,
+): string | null {
+  if (index.datapackRelease !== manifest.datapackRelease) {
+    return `datapack release ${index.datapackRelease} does not match ${manifest.datapackRelease}`;
+  }
+  if (index.resourcePackRelease !== manifest.resourcePackRelease) {
+    return `resource-pack release ${index.resourcePackRelease} does not match ${manifest.resourcePackRelease}`;
+  }
+  if (index.minecraftVersion !== manifest.minecraftVersion) {
+    return `Minecraft version ${index.minecraftVersion} does not match ${manifest.minecraftVersion}`;
+  }
+  return null;
+}
+
+type KitManifestIdentity = {
+  datapackRelease: string;
+  resourcePackRelease: string;
+  minecraftVersion: string;
 };
 
 export function getItemRenderSignature(item: KitItem): string {

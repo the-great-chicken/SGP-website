@@ -50,16 +50,16 @@ export async function generateMetadata({ params }: KitPageProps): Promise<Metada
 }
 
 export default async function KitPage({ params }: KitPageProps) {
-  const [{ key }, manifest, statsSnapshot, resolveItemImage] = await Promise.all([
+  const [{ key }, manifest, statsSnapshot] = await Promise.all([
     params,
     loadKitManifest(),
     loadKitStats(),
-    loadItemImageResolver(),
   ]);
 
   if (!manifest) {
     notFound();
   }
+  const resolveItemImage = await loadItemImageResolver(manifest);
 
   const kit = manifest.kits.find((candidate) => candidate.key === key);
   if (!kit) {

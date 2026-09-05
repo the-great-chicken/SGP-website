@@ -7,6 +7,8 @@
   "required": [
     "$schema",
     "schemaVersion",
+    "datapackRelease",
+    "resourcePackRelease",
     "minecraftVersion",
     "dataPack",
     "kits"
@@ -16,7 +18,15 @@
       "const": "../schemas/kit-manifest.schema.json"
     },
     "schemaVersion": {
-      "const": 2
+      "const": 3
+    },
+    "datapackRelease": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resourcePackRelease": {
+      "type": "string",
+      "minLength": 1
     },
     "minecraftVersion": {
       "type": "string",

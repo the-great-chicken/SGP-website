@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { KitItem } from "../src/lib/kit-manifest";
-import { getItemRenderInput, getItemRenderSignature } from "../src/lib/item-rendering";
+import {
+  getItemRenderInput,
+  getItemRenderMismatch,
+  getItemRenderSignature,
+} from "../src/lib/item-rendering";
 
 test("item signatures are stable across component key order", () => {
   const first = makeItem({
@@ -29,6 +33,33 @@ test("custom item models and shorthand potion contents become renderer inputs", 
     potion: "minecraft:swiftness",
   });
   assert.equal(input.components.count, 1);
+});
+
+test("render indexes are tied to the kit and resource-pack releases", () => {
+  const index = {
+    schemaVersion: 2 as const,
+    datapackRelease: "dp-release-1",
+    resourcePackRelease: "rp-release-1",
+    minecraftVersion: "26.1",
+    items: {},
+  };
+
+  assert.equal(
+    getItemRenderMismatch(index, {
+      datapackRelease: "dp-release-1",
+      resourcePackRelease: "rp-release-1",
+      minecraftVersion: "26.1",
+    }),
+    null,
+  );
+  assert.match(
+    getItemRenderMismatch(index, {
+      datapackRelease: "dp-release-2",
+      resourcePackRelease: "rp-release-1",
+      minecraftVersion: "26.1",
+    }) ?? "",
+    /datapack release/,
+  );
 });
 
 function makeItem(components: KitItem["components"]): KitItem {

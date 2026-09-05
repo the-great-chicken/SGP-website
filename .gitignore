@@ -4,6 +4,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 /data/kit-manifest.json
+/data/statistics-snapshot.json
 /data/item-renders.json
 /public/generated/item-icons/
 

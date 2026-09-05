@@ -71,7 +71,9 @@ const kitAbility = z
 export const kitManifestSchema = z
   .object({
     $schema: z.literal("../schemas/kit-manifest.schema.json"),
-    schemaVersion: z.literal(2),
+    schemaVersion: z.literal(3),
+    datapackRelease: z.string().min(1),
+    resourcePackRelease: z.string().min(1),
     minecraftVersion: z.string().min(1),
     dataPack: z
       .object({
@@ -116,7 +118,7 @@ const abilityMetricSource = z.discriminatedUnion("type", [
     .strict(),
 ]);
 
-export const editionBundleSchema = z
+const editionBundleBaseSchema = z
   .object({
     schemaVersion: z.literal(1),
     edition: z
@@ -266,37 +268,131 @@ export const editionBundleSchema = z
       })
       .strict(),
   })
+  .strict();
+
+export const editionBundleSchema = editionBundleBaseSchema.superRefine((bundle, context) => {
+  if (bundle.edition.datapackVersion !== bundle.kitManifest.datapackRelease) {
+    context.addIssue({
+      code: "custom",
+      message: "Statistics snapshot and kit manifest have different datapack releases",
+      path: ["edition", "datapackVersion"],
+    });
+  }
+  if (bundle.edition.resourcePackVersion !== bundle.kitManifest.resourcePackRelease) {
+    context.addIssue({
+      code: "custom",
+      message: "Edition and kit manifest have different resource-pack releases",
+      path: ["edition", "resourcePackVersion"],
+    });
+  }
+  if (bundle.edition.minecraftVersion !== bundle.kitManifest.minecraftVersion) {
+    context.addIssue({
+      code: "custom",
+      message: "Edition and kit-manifest Minecraft versions differ",
+      path: ["edition", "minecraftVersion"],
+    });
+  }
+  if (bundle.edition.status === "published" && bundle.edition.publishedAt === null) {
+    context.addIssue({
+      code: "custom",
+      message: "Published editions require publishedAt",
+      path: ["edition", "publishedAt"],
+    });
+  }
+});
+
+export const statisticsSnapshotSchema = z
+  .object({
+    $schema: z.literal("statistics-snapshot.schema.json"),
+    schemaVersion: z.literal(1),
+    datapackRelease: z.string().min(1),
+    statisticsSchemaVersion: z.int().positive(),
+    players: editionBundleBaseSchema.shape.players,
+    damageCauses: editionBundleBaseSchema.shape.damageCauses,
+    kills: editionBundleBaseSchema.shape.kills,
+    damageReceived: editionBundleBaseSchema.shape.damageReceived,
+    picks: editionBundleBaseSchema.shape.picks,
+    abilityMetricDefinitions: editionBundleBaseSchema.shape.abilityMetricDefinitions,
+    abilityMetrics: editionBundleBaseSchema.shape.abilityMetrics,
+    deathPositions: editionBundleBaseSchema.shape.deathPositions,
+    elo: editionBundleBaseSchema.shape.elo,
+  })
+  .strict();
+
+export const editionDetailsSchema = z
+  .object({
+    number: z.int().positive(),
+    name: z.string().min(1).nullable(),
+    status: z.enum(["draft", "published", "archived"]),
+    startsAt: dateTime.nullable(),
+    endsAt: dateTime.nullable(),
+    publishedAt: dateTime.nullable(),
+  })
   .strict()
-  .superRefine((bundle, context) => {
-    if (bundle.edition.minecraftVersion !== bundle.kitManifest.minecraftVersion) {
-      context.addIssue({
-        code: "custom",
-        message: "Edition and kit-manifest Minecraft versions differ",
-        path: ["edition", "minecraftVersion"],
-      });
-    }
-    if (bundle.edition.status === "published" && bundle.edition.publishedAt === null) {
+  .superRefine((edition, context) => {
+    if (edition.status === "published" && edition.publishedAt === null) {
       context.addIssue({
         code: "custom",
         message: "Published editions require publishedAt",
-        path: ["edition", "publishedAt"],
+        path: ["publishedAt"],
       });
     }
   });
 
 export type EditionBundle = z.infer<typeof editionBundleSchema>;
+export type StatisticsSnapshot = z.infer<typeof statisticsSnapshotSchema>;
+export type EditionDetails = z.infer<typeof editionDetailsSchema>;
 
-export async function readEditionBundle(path: string): Promise<EditionBundle> {
+export async function readStatisticsSnapshot(path: string): Promise<StatisticsSnapshot> {
+  return readAndParse(path, statisticsSnapshotSchema, "statistics snapshot");
+}
+
+export async function readKitManifest(path: string): Promise<z.infer<typeof kitManifestSchema>> {
+  return readAndParse(path, kitManifestSchema, "kit manifest");
+}
+
+export function assembleEditionBundle(
+  edition: EditionDetails,
+  statistics: StatisticsSnapshot,
+  kitManifest: z.infer<typeof kitManifestSchema>,
+): EditionBundle {
+  return editionBundleSchema.parse({
+    schemaVersion: 1,
+    edition: {
+      ...edition,
+      minecraftVersion: kitManifest.minecraftVersion,
+      datapackVersion: statistics.datapackRelease,
+      resourcePackVersion: kitManifest.resourcePackRelease,
+      statisticsSchemaVersion: statistics.statisticsSchemaVersion,
+    },
+    kitManifest,
+    players: statistics.players,
+    damageCauses: statistics.damageCauses,
+    kills: statistics.kills,
+    damageReceived: statistics.damageReceived,
+    picks: statistics.picks,
+    abilityMetricDefinitions: statistics.abilityMetricDefinitions,
+    abilityMetrics: statistics.abilityMetrics,
+    deathPositions: statistics.deathPositions,
+    elo: statistics.elo,
+  });
+}
+
+async function readAndParse<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  label: string,
+): Promise<T> {
   let input: unknown;
   try {
     input = JSON.parse(await readFile(path, "utf8"));
   } catch (error) {
-    throw new Error(`Could not read edition bundle ${path}`, { cause: error });
+    throw new Error(`Could not read ${label} ${path}`, { cause: error });
   }
 
-  const result = editionBundleSchema.safeParse(input);
+  const result = schema.safeParse(input);
   if (!result.success) {
-    throw new Error(`Invalid edition bundle ${path}:\n${z.prettifyError(result.error)}`);
+    throw new Error(`Invalid ${label} ${path}:\n${z.prettifyError(result.error)}`);
   }
   return result.data;
 }

@@ -16,11 +16,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function KitsPage() {
-  const [manifest, stats, resolveItemImage] = await Promise.all([
-    loadKitManifest(),
-    loadKitStats(),
-    loadItemImageResolver(),
-  ]);
+  const [manifest, stats] = await Promise.all([loadKitManifest(), loadKitStats()]);
+  const resolveItemImage = manifest
+    ? await loadItemImageResolver(manifest)
+    : () => null;
   const kits = (manifest?.kits ?? [])
     .toSorted(compareKits)
     .map((kit) => toKitCardView(kit, resolveItemImage));

@@ -3,14 +3,18 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { KitItem } from "./kit-manifest";
-import { getItemRenderSignature, type ItemRenderIndex } from "./item-rendering";
+import type { KitItem, KitManifest } from "./kit-manifest";
+import {
+  getItemRenderMismatch,
+  getItemRenderSignature,
+  type ItemRenderIndex,
+} from "./item-rendering";
 
 const indexPath = path.join(process.cwd(), "data", "item-renders.json");
 
 export type ItemImageResolver = (item: KitItem) => string | null;
 
-export async function loadItemImageResolver(): Promise<ItemImageResolver> {
+export async function loadItemImageResolver(manifest: KitManifest): Promise<ItemImageResolver> {
   let source: string;
 
   try {
@@ -25,6 +29,10 @@ export async function loadItemImageResolver(): Promise<ItemImageResolver> {
   const index: unknown = JSON.parse(source);
   if (!isItemRenderIndex(index)) {
     throw new Error(`Unsupported item render index at ${indexPath}`);
+  }
+  const mismatch = getItemRenderMismatch(index, manifest);
+  if (mismatch) {
+    throw new Error(`Item render index mismatch: ${mismatch}`);
   }
 
   return (item) => index.items[getItemRenderKey(item)] ?? null;
@@ -41,9 +49,12 @@ function isItemRenderIndex(value: unknown): value is ItemRenderIndex {
 
   const candidate = value as Partial<ItemRenderIndex>;
   return (
-    candidate.schemaVersion === 1 &&
+    candidate.schemaVersion === 2 &&
+    typeof candidate.datapackRelease === "string" &&
+    candidate.datapackRelease.length > 0 &&
+    typeof candidate.resourcePackRelease === "string" &&
+    candidate.resourcePackRelease.length > 0 &&
     typeof candidate.minecraftVersion === "string" &&
-    (candidate.resourcePackVersion === null || typeof candidate.resourcePackVersion === "string") &&
     typeof candidate.items === "object" &&
     candidate.items !== null &&
     !Array.isArray(candidate.items) &&

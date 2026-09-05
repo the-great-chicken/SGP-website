@@ -28,7 +28,7 @@ from mecha.ast import (
 from mecha.diagnostic import DiagnosticError
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 SCHEMA_REFERENCE = "../schemas/kit-manifest.schema.json"
 FUNCTIONS_ROOT = Path("data/sgp.kits/function/collection")
 INITIALIZATION_FUNCTION = Path("data/sgp.kits/function/initialization.mcfunction")
@@ -55,10 +55,21 @@ class ExportError(RuntimeError):
     """The datapack can't be represented by the kit manifest contract."""
 
 
-def export_manifest(datapack: Path, minecraft_version: str) -> dict[str, Any]:
+def export_manifest(
+    datapack: Path,
+    minecraft_version: str,
+    datapack_release: str,
+    resource_pack_release: str,
+) -> dict[str, Any]:
     datapack = datapack.resolve()
+    datapack_release = datapack_release.strip()
+    resource_pack_release = resource_pack_release.strip()
     if not minecraft_version.strip():
         raise ExportError("minecraft version must not be empty")
+    if not datapack_release:
+        raise ExportError("datapack release must not be empty")
+    if not resource_pack_release:
+        raise ExportError("resource-pack release must not be empty")
     if not datapack.is_dir():
         raise ExportError(f"datapack directory does not exist: {datapack}")
 
@@ -96,6 +107,8 @@ def export_manifest(datapack: Path, minecraft_version: str) -> dict[str, Any]:
     return {
         "$schema": SCHEMA_REFERENCE,
         "schemaVersion": SCHEMA_VERSION,
+        "datapackRelease": datapack_release,
+        "resourcePackRelease": resource_pack_release,
         "minecraftVersion": minecraft_version,
         "dataPack": pack_metadata,
         "kits": kits,

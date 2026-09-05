@@ -5,7 +5,13 @@ import { createClient } from "@libsql/client";
 import { count, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
-import { editionBundleSchema, type EditionBundle } from "../src/db/edition-bundle";
+import {
+  assembleEditionBundle,
+  editionDetailsSchema,
+  kitManifestSchema,
+  statisticsSnapshotSchema,
+  type EditionBundle,
+} from "../src/db/edition-bundle";
 import { replaceEdition } from "../src/db/importer";
 import * as schema from "../src/db/schema";
 
@@ -23,6 +29,12 @@ test("edition imports are atomic replacements", async () => {
     await replaceEdition(db, bundle);
 
     const [editionCount] = await db.select({ value: count() }).from(schema.editions);
+    const [edition] = await db
+      .select({
+        datapackVersion: schema.editions.datapackVersion,
+        resourcePackVersion: schema.editions.resourcePackVersion,
+      })
+      .from(schema.editions);
     const [killCount] = await db.select({ value: count() }).from(schema.editionKills);
     const [playerCount] = await db.select({ value: count() }).from(schema.players);
     const [editionPlayer] = await db
@@ -33,6 +45,8 @@ test("edition imports are atomic replacements", async () => {
     assert.equal(killCount.value, 1);
     assert.equal(playerCount.value, 1);
     assert.equal(editionPlayer.sgpId, 1);
+    assert.equal(edition.datapackVersion, "dp-release-1");
+    assert.equal(edition.resourcePackVersion, "rp-release-1");
   } finally {
     client.close();
   }
@@ -58,8 +72,47 @@ test("reimporting an older edition does not regress the current player name", as
   }
 });
 
+test("assembly rejects statistics and kits from different datapack releases", () => {
+  const bundle = makeBundle(5, "Premier nom");
+  const mismatchedManifest = {
+    ...bundle.kitManifest,
+    datapackRelease: "dp-release-2",
+  };
+
+  assert.throws(
+    () =>
+      assembleEditionBundle(
+        editionDetailsSchema.parse({
+          number: 5,
+          name: null,
+          status: "draft",
+          startsAt: null,
+          endsAt: null,
+          publishedAt: null,
+        }),
+        statisticsSnapshotSchema.parse({
+          $schema: "statistics-snapshot.schema.json",
+          schemaVersion: 1,
+          datapackRelease: "dp-release-1",
+          statisticsSchemaVersion: bundle.edition.statisticsSchemaVersion,
+          players: bundle.players,
+          damageCauses: bundle.damageCauses,
+          kills: bundle.kills,
+          damageReceived: bundle.damageReceived,
+          picks: bundle.picks,
+          abilityMetricDefinitions: bundle.abilityMetricDefinitions,
+          abilityMetrics: bundle.abilityMetrics,
+          deathPositions: bundle.deathPositions,
+          elo: bundle.elo,
+        }),
+        kitManifestSchema.parse(mismatchedManifest),
+      ),
+    /different datapack releases/,
+  );
+});
+
 function makeBundle(editionNumber: number, minecraftName: string): EditionBundle {
-  return editionBundleSchema.parse({
+  const combined = {
     schemaVersion: 1,
     edition: {
       number: editionNumber,
@@ -69,13 +122,15 @@ function makeBundle(editionNumber: number, minecraftName: string): EditionBundle
       endsAt: "2026-08-01T20:00:00Z",
       publishedAt: "2026-08-02T10:00:00Z",
       minecraftVersion: "26.1",
-      datapackVersion: "test",
-      resourcePackVersion: "test",
+      datapackVersion: "dp-release-1",
+      resourcePackVersion: "rp-release-1",
       statisticsSchemaVersion: 7,
     },
     kitManifest: {
       $schema: "../schemas/kit-manifest.schema.json",
-      schemaVersion: 2,
+      schemaVersion: 3,
+      datapackRelease: "dp-release-1",
+      resourcePackRelease: "rp-release-1",
       minecraftVersion: "26.1",
       dataPack: { id: "sgp", minFormat: 101.1, maxFormat: 101.1 },
       kits: [
@@ -184,5 +239,32 @@ function makeBundle(editionNumber: number, minecraftName: string): EditionBundle
       },
       ratings: [{ playerUuid, rating: 1012.5, ratedEncounters: 4 }],
     },
-  });
+  };
+
+  return assembleEditionBundle(
+    editionDetailsSchema.parse({
+      number: combined.edition.number,
+      name: combined.edition.name,
+      status: combined.edition.status,
+      startsAt: combined.edition.startsAt,
+      endsAt: combined.edition.endsAt,
+      publishedAt: combined.edition.publishedAt,
+    }),
+    statisticsSnapshotSchema.parse({
+      $schema: "statistics-snapshot.schema.json",
+      schemaVersion: 1,
+      datapackRelease: "dp-release-1",
+      statisticsSchemaVersion: combined.edition.statisticsSchemaVersion,
+      players: combined.players,
+      damageCauses: combined.damageCauses,
+      kills: combined.kills,
+      damageReceived: combined.damageReceived,
+      picks: combined.picks,
+      abilityMetricDefinitions: combined.abilityMetricDefinitions,
+      abilityMetrics: combined.abilityMetrics,
+      deathPositions: combined.deathPositions,
+      elo: combined.elo,
+    }),
+    kitManifestSchema.parse(combined.kitManifest),
+  );
 }

@@ -19,10 +19,12 @@ SCHEMA = json.loads(
 
 class ExporterTests(unittest.TestCase):
     def test_exports_multiline_items_to_schema_valid_json(self) -> None:
-        manifest = export_manifest(FIXTURE_DATAPACK, "26.1")
+        manifest = export_manifest(FIXTURE_DATAPACK, "26.1", "dp-test", "rp-test")
         Draft202012Validator(SCHEMA).validate(manifest)
 
-        self.assertEqual(manifest["schemaVersion"], 2)
+        self.assertEqual(manifest["schemaVersion"], 3)
+        self.assertEqual(manifest["datapackRelease"], "dp-test")
+        self.assertEqual(manifest["resourcePackRelease"], "rp-test")
         self.assertEqual(manifest["dataPack"]["minFormat"], 101.1)
         self.assertEqual(len(manifest["kits"]), 1)
 
@@ -51,7 +53,10 @@ class ExporterTests(unittest.TestCase):
         self.assertEqual(operations[1]["item"]["count"], 1)
 
         rendered = render_manifest(manifest)
-        self.assertEqual(rendered, render_manifest(export_manifest(FIXTURE_DATAPACK, "26.1")))
+        self.assertEqual(
+            rendered,
+            render_manifest(export_manifest(FIXTURE_DATAPACK, "26.1", "dp-test", "rp-test")),
+        )
         self.assertIn("Test trident", rendered)
 
     def test_rejects_unsupported_loadout_commands(self) -> None:
@@ -112,7 +117,7 @@ class ExporterTests(unittest.TestCase):
                 '{text:"\\nDescription"}]}}',
                 encoding="utf-8",
             )
-            return export_manifest(datapack, "26.1")
+            return export_manifest(datapack, "26.1", "dp-test", "rp-test")
 
 
 class CurrentManifestTests(unittest.TestCase):

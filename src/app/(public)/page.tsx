@@ -45,11 +45,10 @@ const destinations = [
 ];
 
 export default async function HomePage() {
-  const [manifest, stats, resolveItemImage] = await Promise.all([
-    loadKitManifest(),
-    loadKitStats(),
-    loadItemImageResolver(),
-  ]);
+  const [manifest, stats] = await Promise.all([loadKitManifest(), loadKitStats()]);
+  const resolveItemImage = manifest
+    ? await loadItemImageResolver(manifest)
+    : () => null;
   const definitions = (manifest?.kits ?? []).toSorted(compareKits);
   const kits = definitions.map((kit) => toKitCardView(kit, resolveItemImage));
   const operationCount = definitions.reduce((sum, kit) => sum + kit.operations.length, 0);

@@ -26,6 +26,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exact Minecraft version represented by the manifest, for example 26.1.",
     )
     parser.add_argument(
+        "--datapack-release",
+        required=True,
+        help="Immutable datapack release identifier, such as a release tag or commit SHA.",
+    )
+    parser.add_argument(
+        "--resource-pack-release",
+        required=True,
+        help="Exact TGC resource-pack release identifier used with this datapack release.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=DEFAULT_OUTPUT,
@@ -43,7 +53,12 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
     try:
-        manifest = export_manifest(args.datapack, args.minecraft_version)
+        manifest = export_manifest(
+            args.datapack,
+            args.minecraft_version,
+            args.datapack_release,
+            args.resource_pack_release,
+        )
         rendered = render_manifest(manifest)
     except ExportError as exc:
         print(f"error: {exc}", file=sys.stderr)

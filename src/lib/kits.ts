@@ -30,7 +30,11 @@ function isKitManifest(value: unknown): value is KitManifest {
     return false;
   }
   return (
-    value.schemaVersion === 2 &&
+    value.schemaVersion === 3 &&
+    typeof value.datapackRelease === "string" &&
+    value.datapackRelease.length > 0 &&
+    typeof value.resourcePackRelease === "string" &&
+    value.resourcePackRelease.length > 0 &&
     typeof value.minecraftVersion === "string" &&
     Array.isArray(value.kits)
   );

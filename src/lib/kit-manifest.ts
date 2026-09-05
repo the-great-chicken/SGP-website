@@ -42,7 +42,9 @@ export type KitDefinition = {
 };
 
 export type KitManifest = {
-  schemaVersion: 2;
+  schemaVersion: 3;
+  datapackRelease: string;
+  resourcePackRelease: string;
   minecraftVersion: string;
   dataPack: {
     id: string;
