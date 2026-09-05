@@ -1934,7 +1934,8 @@ h3 {
   border-top: 1px solid var(--line);
 }
 
-.private-sidebar nav span {
+.private-sidebar nav span,
+.private-sidebar nav a {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -1993,6 +1994,29 @@ h3 {
   border-color: color-mix(in srgb, var(--kit-accent) 40%, transparent);
   color: var(--kit-accent);
 }
+
+.private-main { display: grid; gap: 24px; min-width: 0; }
+.cosmetic-wardrobe { scroll-margin-top: 100px; align-items: stretch; justify-content: flex-start; padding: clamp(24px, 4vw, 40px); }
+.cosmetic-wardrobe .cosmetic-heading .eyebrow { margin-top: 0; }
+.cosmetic-heading, .cosmetic-category-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.cosmetic-heading h2 { margin-bottom: 0; }
+.cosmetic-status { display: grid; gap: 7px; padding: 18px; margin-top: 24px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, 0.025); }
+.cosmetic-status span, .cosmetic-status small { color: var(--paper-muted); line-height: 1.6; }
+.cosmetic-status.is-live strong { color: #9fd9a4; }
+.cosmetic-category { margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--line); }
+.cosmetic-category h3 { margin: 0 0 8px; font-size: 1.08rem; }
+.cosmetic-category-heading p { margin: 0; color: var(--paper-muted); }
+.cosmetic-category-heading p strong { color: var(--paper); }
+.cosmetic-grid { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.cosmetic-tile { display: flex; align-items: flex-start; flex-direction: column; gap: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, 0.025); }
+.cosmetic-tile > svg { color: var(--gold); }
+.cosmetic-tile > strong { flex: 1; line-height: 1.5; }
+.cosmetic-tile .button { width: 100%; min-height: 36px; padding: 8px 12px; font-size: 0.82rem; }
+.cosmetic-tile.is-equipped { border-color: #5f8d62; background: rgba(100, 170, 110, 0.07); }
+.cosmetic-wardrobe button:disabled { opacity: 0.55; cursor: default; }
+.cosmetic-feedback { padding: 14px 16px; border-radius: 10px; background: rgba(100, 170, 110, 0.12); color: #b9e7bd; line-height: 1.6; }
+.cosmetic-feedback.is-error { background: rgba(230, 150, 80, 0.1); color: #ebbc95; }
+.cosmetic-empty, .cosmetic-hint { color: var(--paper-muted); line-height: 1.7; margin-top: 20px; }
 
 .kit-overview-grid {
   display: grid;

@@ -317,6 +317,7 @@ export const cosmetics = sqliteTable(
     description: text("description"),
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),
+    active: integer("active", { mode: "boolean" }).notNull().default(false),
   },
   (table) => [index("cosmetics_category_sort_idx").on(table.category, table.sortOrder)],
 );
@@ -355,3 +356,10 @@ export const playerEquipment = sqliteTable(
     index("player_equipment_cosmetic_idx").on(table.cosmeticId),
   ],
 );
+
+// Only confirmed Minecraft observations are persisted here, never requested equipment.
+export const playerCosmeticSync = sqliteTable("player_cosmetic_sync", {
+  playerUuid: text("player_uuid").primaryKey().references(() => players.uuid, { onDelete: "cascade" }),
+  observedAt: integer("observed_at", { mode: "timestamp_ms" }).notNull(),
+  issues: text("issues", { mode: "json" }).$type<string[]>().notNull(),
+});

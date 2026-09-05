@@ -80,6 +80,17 @@ The path can instead be stored in `DISCORDSRV_ACCOUNTS_PATH`. Synchronization re
 
 OAuth access tokens are used once to request the Discord identity and are not persisted. Website sessions use random opaque cookies whose SHA-256 hashes are stored in SQLite for 30 days. In production, the cookies are Secure and use the `__Host-` prefix.
 
+### Private cosmetics
+
+`/me` displays Minecraft unlocks and equipment. Players must be online to equip or unequip; offline views show the last confirmed snapshot. Particle trails need a selected intensity. The catalogue comes from the datapack and refreshes on datapack reload.
+
+1. Install TGCPlugin and the datapack cosmetic API, enable the plugin's cosmetics bridge, and synchronize DiscordSRV links as above.
+2. Generate a secret with `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`. Set it in both TGCPlugin's `cosmetics.secret` and the website's `COSMETICS_BRIDGE_SECRET`.
+3. Set `COSMETICS_BRIDGE_URL` to the private plugin listener: `http://127.0.0.1:8766` on the same host, or private HTTPS/a loopback tunnel across hosts. Keep host clocks synchronized.
+4. Run `npm run db:migrate`, build and restart the website. Its reverse proxy must preserve the public `Host` header.
+
+Run `npm run test:cosmetics` for website tests and `.venv/Scripts/python.exe scripts/check-cosmetic-hooks.py` to validate the datapack declarations and hooks without starting Minecraft.
+
 ## Kit manifest exporter
 
 `items.mcfunction` remains the authoritative source for every kit loadout. The exporter uses Mecha to parse those functions and writes a deterministic, versioned JSON manifest for the website.

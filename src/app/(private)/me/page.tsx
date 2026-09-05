@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { ArrowRight, CheckCircle2, Link2Off, LockKeyhole, LogOut, Palette, Sparkles, UserRound } from "lucide-react";
+import { ArrowRight, CheckCircle2, Link2Off, LockKeyhole, LogOut, Palette, UserRound } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/auth/session";
 import { PageIntro } from "@/components/page-intro";
+import { CosmeticWardrobe } from "@/components/cosmetic-wardrobe";
+import { cosmeticService } from "@/cosmetics/server";
 
 export const metadata: Metadata = {
   title: "Mon profil",
@@ -16,6 +18,7 @@ export default async function MyProfilePage() {
   const session = await getCurrentSession();
   if (!session) redirect("/login");
   const discordName = session.discord.displayName ?? session.discord.username;
+  const cosmetics = session.player ? await cosmeticService.read(session) : null;
 
   return (
     <div className="shell page-stack private-page">
@@ -39,34 +42,36 @@ export default async function MyProfilePage() {
           </div>
           <nav aria-label="Sections du profil">
             <span className="is-active"><UserRound size={16} /> Vue d’ensemble</span>
-            <span><Palette size={16} /> Cosmétiques</span>
-            <span><Sparkles size={16} /> Équipement</span>
+            {session.player && <a href="#cosmetiques"><Palette size={16} /> Cosmétiques</a>}
           </nav>
         </aside>
-        <section className="private-content-card private-account-card">
-          <span className="round-icon large">{session.player ? <CheckCircle2 size={27} /> : <Link2Off size={27} />}</span>
-          <p className="eyebrow">{session.player ? "Identité vérifiée" : "Liaison Minecraft manquante"}</p>
-          <h2>{session.player ? session.player.minecraftName : "Terminez la liaison dans DiscordSRV."}</h2>
-          {session.player ? (
-            <>
-              <p>Le profil privé utilise l’UUID <span className="inline-code">{session.player.uuid}</span>. Les futurs réglages de cosmétiques seront toujours appliqués à cette identité.</p>
-              <div className="private-account-actions">
-                <Link className="button primary" href={`/players/${session.player.uuid}`}>
-                  Voir mon profil public <ArrowRight size={17} />
-                </Link>
-                <LogoutButton />
-              </div>
-            </>
-          ) : (
-            <>
-              <p>Liez votre compte Minecraft avec la commande et le code DiscordSRV habituels, puis demandez à l’administrateur de resynchroniser <span className="inline-code">accounts.aof</span>. Reconnectez-vous ensuite ici.</p>
-              <div className="private-account-actions">
-                <Link className="button ghost" href="/players">Chercher mon profil public</Link>
-                <LogoutButton />
-              </div>
-            </>
-          )}
-        </section>
+        <div className="private-main">
+          <section className="private-content-card private-account-card">
+            <span className="round-icon large">{session.player ? <CheckCircle2 size={27} /> : <Link2Off size={27} />}</span>
+            <p className="eyebrow">{session.player ? "Identité vérifiée" : "Liaison Minecraft manquante"}</p>
+            <h2>{session.player ? session.player.minecraftName : "Terminez la liaison dans DiscordSRV."}</h2>
+            {session.player ? (
+              <>
+                <p>Vos cosmétiques sont associés à ce joueur Minecraft. Retrouvez ci-dessous vos récompenses débloquées et votre équipement.</p>
+                <div className="private-account-actions">
+                  <Link className="button primary" href={`/players/${session.player.uuid}`}>
+                    Voir mon profil public <ArrowRight size={17} />
+                  </Link>
+                  <LogoutButton />
+                </div>
+              </>
+            ) : (
+              <>
+                <p>Liez votre compte Minecraft avec la commande et le code DiscordSRV habituels, puis demandez à l’administrateur de resynchroniser <span className="inline-code">accounts.aof</span>. Reconnectez-vous ensuite ici.</p>
+                <div className="private-account-actions">
+                  <Link className="button ghost" href="/players">Chercher mon profil public</Link>
+                  <LogoutButton />
+                </div>
+              </>
+            )}
+          </section>
+          {cosmetics && <CosmeticWardrobe initialView={cosmetics} />}
+        </div>
       </div>
     </div>
   );
