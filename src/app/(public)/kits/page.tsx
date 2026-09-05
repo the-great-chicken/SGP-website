@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Boxes, PackageSearch } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import { KitCard } from "@/components/kit-card";
+import { KitBrowser } from "@/components/kit-browser";
 import { PageIntro } from "@/components/page-intro";
+import { loadKitStats } from "@/db/kit-stats";
+import { compareKits, toKitCardView } from "@/lib/kit-manifest";
 import { loadKitManifest } from "@/lib/kits";
 
 export const metadata: Metadata = {
@@ -13,32 +15,30 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function KitsPage() {
-  const manifest = await loadKitManifest();
-  const kits = manifest?.kits ?? [];
+  const [manifest, stats] = await Promise.all([loadKitManifest(), loadKitStats()]);
+  const kits = (manifest?.kits ?? []).toSorted(compareKits).map(toKitCardView);
 
   return (
     <div className="shell page-stack">
       <PageIntro
         eyebrow="Arsenal actuel"
         title="Choisir son style de jeu."
-        description="Chaque kit a son rythme, son équipement et sa manière de renverser une partie. Les données ci-dessous viennent directement du datapack."
+        description="Parcourez chaque loadout, lisez les objets comme en jeu et comparez les tendances relevées au fil des éditions. L’équipement et les capacités viennent directement du datapack."
         aside={
           <div className="manifest-badge">
             <Boxes size={17} />
             <span>
               <strong>{kits.length || "—"} kits</strong>
-              {manifest ? `Minecraft ${manifest.minecraftVersion}` : "Manifeste absent"}
+              {manifest
+                ? `Minecraft ${manifest.minecraftVersion}${stats.editionCount ? ` · ${stats.editionCount} édition${stats.editionCount > 1 ? "s" : ""}` : ""}`
+                : "Manifeste absent"}
             </span>
           </div>
         }
       />
 
       {kits.length ? (
-        <div className="kit-grid">
-          {kits.map((kit) => (
-            <KitCard kit={kit} key={kit.key} />
-          ))}
-        </div>
+        <KitBrowser kits={kits} stats={stats} />
       ) : (
         <EmptyState
           icon={PackageSearch}

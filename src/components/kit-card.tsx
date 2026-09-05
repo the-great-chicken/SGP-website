@@ -1,47 +1,70 @@
 import { ArrowUpRight, PackageOpen, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import {
-  getItemDisplayName,
-  getKitAccent,
-  getKitDisplayName,
-  type KitDefinition,
-} from "@/lib/kits";
+import type { KitCardView } from "@/lib/kit-manifest";
+import { getKitMetrics, type KitAggregateStats, type KitStatsSnapshot } from "@/lib/kit-stats";
 
 type KitCardProps = {
-  kit: KitDefinition;
+  kit: KitCardView;
+  stats?: KitAggregateStats;
+  statsContext?: Pick<KitStatsSnapshot, "editionCount" | "totalPicks">;
   compact?: boolean;
 };
 
-export function KitCard({ kit, compact = false }: KitCardProps) {
-  const accent = getKitAccent(kit);
-  const items = kit.operations.reduce((sum, operation) => sum + operation.item.count, 0);
-  const featuredItems = kit.operations.slice(0, 3).map((operation) => getItemDisplayName(operation.item));
-  const style = { "--kit-accent": accent } as CSSProperties;
+export function KitCard({ kit, stats, statsContext, compact = false }: KitCardProps) {
+  const style = { "--kit-accent": kit.accent } as CSSProperties;
+  const metrics = statsContext ? getKitMetrics(kit.id, stats, statsContext) : [];
 
   return (
-    <article className={compact ? "kit-card is-compact" : "kit-card"} style={style}>
-      <div className="kit-card-glow" aria-hidden="true" />
-      <div className="kit-card-topline">
-        <span className="kit-index">{kit.key.slice(0, 2).toUpperCase()}</span>
-        <span className="kit-count">
-          <PackageOpen size={14} />
-          {kit.operations.length} emplacements
-        </span>
-      </div>
-      <div className="kit-card-copy">
-        <p className="kit-label">Kit</p>
-        <h2>{getKitDisplayName(kit)}</h2>
-        <p>{featuredItems.join(" · ")}</p>
-      </div>
-      <div className="kit-card-footer">
-        <span>
-          <Sparkles size={14} /> {items} objets au total
-        </span>
-        <Link href={`/kits/${kit.key}`} aria-label={`Voir le kit ${getKitDisplayName(kit)}`}>
-          <ArrowUpRight size={18} />
-        </Link>
-      </div>
-    </article>
+    <Link
+      className={compact ? "kit-card-link is-compact" : "kit-card-link"}
+      href={`/kits/${kit.key}`}
+      aria-label={`Voir le kit ${kit.name}`}
+      style={style}
+    >
+      <article className="kit-card">
+        <div className="kit-card-glow" aria-hidden="true" />
+        <div className="kit-card-topline">
+          <span className="kit-index">{kit.id === null ? "—" : String(kit.id).padStart(2, "0")}</span>
+          <span className="kit-count">
+            <PackageOpen size={14} />
+            {kit.operationCount} emplacements
+          </span>
+        </div>
+        <div className="kit-card-copy">
+          <p className="kit-label">{kit.abilityName ? "Kit à capacité" : "Kit spécial"}</p>
+          <h2>{kit.name}</h2>
+          <p className="kit-ability-name">
+            <Sparkles size={14} /> {kit.abilityName ?? "Sans capacité active"}
+          </p>
+        </div>
+        <div className="kit-item-preview" aria-label="Aperçu du loadout">
+          {kit.featuredItems.map((item) => (
+            <span className="kit-preview-item" title={`${item.name} — ${item.id}`} key={`${item.id}-${item.name}`}>
+              {item.abbreviation}
+            </span>
+          ))}
+          {kit.operationCount > kit.featuredItems.length ? (
+            <span className="kit-preview-more">+{kit.operationCount - kit.featuredItems.length}</span>
+          ) : null}
+        </div>
+        {metrics.length ? (
+          <div className="kit-card-stats">
+            {metrics.map((metric) => (
+              <span key={metric.label}>
+                <strong>{metric.value}</strong>
+                {metric.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        <div className="kit-card-footer">
+          <span>{kit.itemCount} objets au total</span>
+          <span className="kit-card-arrow" aria-hidden="true">
+            <ArrowUpRight size={18} />
+          </span>
+        </div>
+      </article>
+    </Link>
   );
 }

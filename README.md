@@ -19,6 +19,8 @@ npm run dev
 
 The public structure currently includes the home page, kit catalogue and kit details, leaderboards, player directory and profiles, history, and map. `/login` is the future Discord entry point and `/me` is the private player-area shell. Authentication and authorization still need to be connected before private player data is exposed.
 
+The kit catalogue is searchable and sortable. Each kit page presents its ability, a slot-based loadout with Minecraft-style text-component tooltips, and aggregate popularity, elimination/death ratio, and damage-per-minute statistics across published or archived editions. Item slots intentionally use generic placeholders until the resource-pack rendering integration is added.
+
 ### Database ownership
 
 Only the Drizzle schema and generated SQL migrations belong in Git. The local database is `.data/sgp.sqlite`; the whole `.data` directory is ignored.
@@ -31,6 +33,8 @@ Useful commands:
 npm run typecheck
 npm run lint
 npm run build
+npm run test:kits
+npm run test:database
 npm run db:generate
 npm run db:migrate
 npm run db:studio

@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { KitCard } from "@/components/kit-card";
+import { loadKitStats } from "@/db/kit-stats";
+import { compareKits, toKitCardView } from "@/lib/kit-manifest";
 import { loadKitManifest } from "@/lib/kits";
 
 export const dynamic = "force-dynamic";
@@ -42,9 +44,10 @@ const destinations = [
 ];
 
 export default async function HomePage() {
-  const manifest = await loadKitManifest();
-  const kits = manifest?.kits ?? [];
-  const operationCount = kits.reduce((sum, kit) => sum + kit.operations.length, 0);
+  const [manifest, stats] = await Promise.all([loadKitManifest(), loadKitStats()]);
+  const definitions = (manifest?.kits ?? []).toSorted(compareKits);
+  const kits = definitions.map(toKitCardView);
+  const operationCount = definitions.reduce((sum, kit) => sum + kit.operations.length, 0);
 
   return (
     <>
@@ -116,7 +119,13 @@ export default async function HomePage() {
         {kits.length ? (
           <div className="featured-kits">
             {kits.slice(0, 3).map((kit) => (
-              <KitCard kit={kit} compact key={kit.key} />
+              <KitCard
+                kit={kit}
+                stats={stats.byKitKey[kit.key]}
+                statsContext={stats}
+                compact
+                key={kit.key}
+              />
             ))}
           </div>
         ) : (
