@@ -37,7 +37,7 @@ const destinations = [
     description: "Revirements, personnages et petits drames qui ont construit la légende.",
   },
   {
-    href: "/map",
+    href: "/map/",
     icon: Map,
     title: "Carte",
     description: "Explorer le terrain de jeu en trois dimensions grâce à BlueMap.",
@@ -148,17 +148,20 @@ export default async function HomePage() {
             <p>Une porte d’entrée vers tout ce qui compose une édition de la SGP.</p>
           </div>
           <div className="destination-grid">
-            {destinations.map(({ href, icon: Icon, title, description }, index) => (
-              <Link className="destination-card" href={href} key={href}>
-                <span className="destination-number">0{index + 1}</span>
-                <span className="destination-icon">
-                  <Icon size={22} />
-                </span>
-                <h3>{title}</h3>
-                <p>{description}</p>
-                <ArrowRight className="destination-arrow" size={18} />
-              </Link>
-            ))}
+            {destinations.map(({ href, icon: Icon, title, description }, index) => {
+              const DestinationLink = href === "/map/" ? "a" : Link;
+              return (
+                <DestinationLink className="destination-card" href={href} key={href}>
+                  <span className="destination-number">0{index + 1}</span>
+                  <span className="destination-icon">
+                    <Icon size={22} />
+                  </span>
+                  <h3>{title}</h3>
+                  <p>{description}</p>
+                  <ArrowRight className="destination-arrow" size={18} />
+                </DestinationLink>
+              );
+            })}
           </div>
         </div>
       </section>

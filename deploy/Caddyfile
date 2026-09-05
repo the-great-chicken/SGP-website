@@ -1,0 +1,12 @@
+# Replace example.com with the public domain. Next.js listens on port 3000.
+example.com {
+    redir /map /map/ 308
+
+    handle_path /map/* {
+        reverse_proxy 127.0.0.1:8100
+    }
+
+    handle {
+        reverse_proxy 127.0.0.1:3000
+    }
+}

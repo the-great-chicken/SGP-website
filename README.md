@@ -19,6 +19,8 @@ npm run dev
 
 The public structure includes the home page, kit catalogue and kit details, leaderboards, player directory and profiles, history, and map. `/login` starts Discord OAuth with the minimal `identify` scope. `/me` validates an opaque, server-side session and resolves its Minecraft profile through the latest DiscordSRV link sync.
 
+`/map/` is served by BlueMap through the reverse proxy; [deploy/Caddyfile](deploy/Caddyfile) provides the routing template. The theme is versioned in `public/bluemap/` and served directly by the website: set `styles: ["/bluemap/sgp.css"]` and `scripts: ["/bluemap/sgp.js"]` in BlueMap's `webapp.conf`.
+
 The kit catalogue is searchable and sortable. Each kit page presents its ability, a slot-based loadout with Minecraft-style text-component tooltips, rendered item models, and aggregate popularity, elimination/death ratio, and damage-per-minute statistics across published or archived editions.
 
 ### Database ownership

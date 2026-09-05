@@ -10,7 +10,7 @@ const navigation = [
   { href: "/leaderboards", label: "Classements" },
   { href: "/players", label: "Joueurs" },
   { href: "/wiki", label: "Histoire" },
-  { href: "/map", label: "Carte" },
+  { href: "/map/", label: "Carte" },
 ];
 
 export function SiteHeader() {
@@ -31,15 +31,18 @@ export function SiteHeader() {
         </Link>
 
         <nav className="desktop-nav" aria-label="Navigation principale">
-          {navigation.map((item) => (
-            <Link
-              className={isActive(pathname, item.href) ? "nav-link is-active" : "nav-link"}
-              href={item.href}
-              key={item.href}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navigation.map((item) => {
+            const NavigationLink = item.href === "/map/" ? "a" : Link;
+            return (
+              <NavigationLink
+                className={isActive(pathname, item.href) ? "nav-link is-active" : "nav-link"}
+                href={item.href}
+                key={item.href}
+              >
+                {item.label}
+              </NavigationLink>
+            );
+          })}
         </nav>
 
         <Link className="profile-link desktop-profile" href="/me">
@@ -64,16 +67,19 @@ export function SiteHeader() {
         id="mobile-navigation"
       >
         <nav className="shell mobile-nav" aria-label="Navigation mobile">
-          {navigation.map((item) => (
-            <Link
-              className={isActive(pathname, item.href) ? "mobile-nav-link is-active" : "mobile-nav-link"}
-              href={item.href}
-              key={item.href}
-              onClick={() => setMenuOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navigation.map((item) => {
+            const NavigationLink = item.href === "/map/" ? "a" : Link;
+            return (
+              <NavigationLink
+                className={isActive(pathname, item.href) ? "mobile-nav-link is-active" : "mobile-nav-link"}
+                href={item.href}
+                key={item.href}
+                onClick={() => setMenuOpen(false)}
+              >
+                {item.label}
+              </NavigationLink>
+            );
+          })}
           <Link className="profile-link mobile-profile" href="/me" onClick={() => setMenuOpen(false)}>
             <UserRound size={17} />
             Mon profil
