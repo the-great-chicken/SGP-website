@@ -1,4 +1,5 @@
 import { Box } from "lucide-react";
+import Image from "next/image";
 import { MinecraftText } from "@/components/minecraft-text";
 import {
   getItemAbbreviation,
@@ -11,9 +12,10 @@ type ItemSlotProps = {
   operation?: KitOperation;
   slotLabel: string;
   compact?: boolean;
+  imageSrc?: string | null;
 };
 
-export function ItemSlot({ operation, slotLabel, compact = false }: ItemSlotProps) {
+export function ItemSlot({ operation, slotLabel, compact = false, imageSrc }: ItemSlotProps) {
   if (!operation) {
     return (
       <div className="inventory-entry is-empty" aria-label={`${slotLabel} vide`}>
@@ -40,9 +42,27 @@ export function ItemSlot({ operation, slotLabel, compact = false }: ItemSlotProp
       aria-label={`${slotLabel} : ${name}, quantité ${item.count}`}
     >
       <span className="inventory-slot-label">{slotLabel}</span>
-      <span className={`item-slot-visual${hasGlint ? " has-glint" : ""}`} aria-hidden="true">
-        <Box size={compact ? 18 : 24} strokeWidth={1.55} />
-        <span className="item-monogram">{getItemAbbreviation(item)}</span>
+      <span
+        className={`item-slot-visual${hasGlint && !imageSrc ? " has-glint" : ""}`}
+        aria-hidden="true"
+      >
+        {imageSrc ? (
+          <Image
+            className="item-render"
+            src={imageSrc}
+            alt=""
+            width={128}
+            height={128}
+            sizes={compact ? "36px" : "52px"}
+            draggable={false}
+            unoptimized
+          />
+        ) : (
+          <>
+            <Box size={compact ? 18 : 24} strokeWidth={1.55} />
+            <span className="item-monogram">{getItemAbbreviation(item)}</span>
+          </>
+        )}
         {item.count > 1 ? <strong className="stack-count">{item.count}</strong> : null}
       </span>
       <span className="minecraft-tooltip" role="tooltip">

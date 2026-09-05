@@ -12,6 +12,7 @@ import Link from "next/link";
 import { KitCard } from "@/components/kit-card";
 import { loadKitStats } from "@/db/kit-stats";
 import { compareKits, toKitCardView } from "@/lib/kit-manifest";
+import { loadItemImageResolver } from "@/lib/item-renders";
 import { loadKitManifest } from "@/lib/kits";
 
 export const dynamic = "force-dynamic";
@@ -44,9 +45,13 @@ const destinations = [
 ];
 
 export default async function HomePage() {
-  const [manifest, stats] = await Promise.all([loadKitManifest(), loadKitStats()]);
+  const [manifest, stats, resolveItemImage] = await Promise.all([
+    loadKitManifest(),
+    loadKitStats(),
+    loadItemImageResolver(),
+  ]);
   const definitions = (manifest?.kits ?? []).toSorted(compareKits);
-  const kits = definitions.map(toKitCardView);
+  const kits = definitions.map((kit) => toKitCardView(kit, resolveItemImage));
   const operationCount = definitions.reduce((sum, kit) => sum + kit.operations.length, 0);
 
   return (

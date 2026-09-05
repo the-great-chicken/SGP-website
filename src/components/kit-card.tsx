@@ -1,4 +1,5 @@
 import { ArrowUpRight, PackageOpen, Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { KitCardView } from "@/lib/kit-manifest";
@@ -41,7 +42,20 @@ export function KitCard({ kit, stats, statsContext, compact = false }: KitCardPr
         <div className="kit-item-preview" aria-label="Aperçu du loadout">
           {kit.featuredItems.map((item) => (
             <span className="kit-preview-item" title={`${item.name} — ${item.id}`} key={`${item.id}-${item.name}`}>
-              {item.abbreviation}
+              {item.imageSrc ? (
+                <Image
+                  className="kit-preview-render"
+                  src={item.imageSrc}
+                  alt=""
+                  width={128}
+                  height={128}
+                  sizes="38px"
+                  draggable={false}
+                  unoptimized
+                />
+              ) : (
+                item.abbreviation
+              )}
             </span>
           ))}
           {kit.operationCount > kit.featuredItems.length ? (

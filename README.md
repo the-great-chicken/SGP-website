@@ -19,7 +19,7 @@ npm run dev
 
 The public structure currently includes the home page, kit catalogue and kit details, leaderboards, player directory and profiles, history, and map. `/login` is the future Discord entry point and `/me` is the private player-area shell. Authentication and authorization still need to be connected before private player data is exposed.
 
-The kit catalogue is searchable and sortable. Each kit page presents its ability, a slot-based loadout with Minecraft-style text-component tooltips, and aggregate popularity, elimination/death ratio, and damage-per-minute statistics across published or archived editions. Item slots intentionally use generic placeholders until the resource-pack rendering integration is added.
+The kit catalogue is searchable and sortable. Each kit page presents its ability, a slot-based loadout with Minecraft-style text-component tooltips, rendered item models, and aggregate popularity, elimination/death ratio, and damage-per-minute statistics across published or archived editions.
 
 ### Database ownership
 
@@ -35,6 +35,7 @@ npm run lint
 npm run build
 npm run test:kits
 npm run test:database
+npm run assets:render-items
 npm run db:generate
 npm run db:migrate
 npm run db:studio
@@ -84,6 +85,18 @@ python -m venv .venv
 ```
 
 The default output is `data/kit-manifest.json`. Pass `--output <path>` to write elsewhere.
+
+### Render kit items
+
+After generating the kit manifest, render its unique item variants with the TGC resource pack layered over the matching vanilla Minecraft client JAR:
+
+```powershell
+npm run assets:render-items
+```
+
+On Windows, the command defaults to `../TGC_PACK/TGC_Pack` and the client JAR for the manifest's Minecraft version in the standard launcher directory. Override either source with `TGC_RESOURCE_PACK_PATH` and `MINECRAFT_CLIENT_JAR_PATH`, or pass `--resource-pack <path>` and `--minecraft-client <path>` after `--`.
+
+The command writes ignored PNG files under `public/generated/item-icons` and an ignored lookup index at `data/item-renders.json`. Missing generated assets gracefully fall back to the generic item placeholders, so normal application work does not require the resource pack. These path-based inputs are also the boundary where extracted, version-matched release artifacts can replace local checkouts later.
 
 ### Check generated data
 

@@ -4,6 +4,8 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 /data/kit-manifest.json
+/data/item-renders.json
+/public/generated/item-icons/
 
 # Next.js
 /node_modules/

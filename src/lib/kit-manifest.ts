@@ -56,6 +56,7 @@ export type KitCardItem = {
   id: string;
   name: string;
   abbreviation: string;
+  imageSrc: string | null;
 };
 
 export type KitCardView = {
@@ -202,11 +203,15 @@ export function compareKits(a: KitDefinition, b: KitDefinition): number {
   return getKitDisplayName(a).localeCompare(getKitDisplayName(b), "fr-FR");
 }
 
-export function toKitCardView(kit: KitDefinition): KitCardView {
+export function toKitCardView(
+  kit: KitDefinition,
+  resolveItemImage: (item: KitItem) => string | null = () => null,
+): KitCardView {
   const featuredItems = kit.operations.slice(0, 3).map(({ item }) => ({
     id: item.id,
     name: getItemDisplayName(item),
     abbreviation: getItemAbbreviation(item),
+    imageSrc: resolveItemImage(item),
   }));
   const itemNames = kit.operations.map(({ item }) => getItemDisplayName(item));
 

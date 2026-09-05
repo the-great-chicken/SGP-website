@@ -14,6 +14,7 @@ import {
   type KitOperation,
 } from "@/lib/kit-manifest";
 import { getKitMetrics } from "@/lib/kit-stats";
+import { loadItemImageResolver } from "@/lib/item-renders";
 import { loadKitManifest } from "@/lib/kits";
 
 type KitPageProps = {
@@ -49,10 +50,11 @@ export async function generateMetadata({ params }: KitPageProps): Promise<Metada
 }
 
 export default async function KitPage({ params }: KitPageProps) {
-  const [{ key }, manifest, statsSnapshot] = await Promise.all([
+  const [{ key }, manifest, statsSnapshot, resolveItemImage] = await Promise.all([
     params,
     loadKitManifest(),
     loadKitStats(),
+    loadItemImageResolver(),
   ]);
 
   if (!manifest) {
@@ -166,6 +168,7 @@ export default async function KitPage({ params }: KitPageProps) {
                 <ItemSlot
                   operation={findOperation(kit.operations, slot)}
                   slotLabel={label}
+                  imageSrc={getOperationImage(kit.operations, slot, resolveItemImage)}
                   key={slot}
                 />
               ))}
@@ -182,6 +185,7 @@ export default async function KitPage({ params }: KitPageProps) {
                 <ItemSlot
                   operation={findOperation(kit.operations, slot)}
                   slotLabel={label}
+                  imageSrc={getOperationImage(kit.operations, slot, resolveItemImage)}
                   key={slot}
                 />
               ))}
@@ -199,6 +203,7 @@ export default async function KitPage({ params }: KitPageProps) {
                   <ItemSlot
                     operation={operation}
                     slotLabel={operation.slot ? "Inventaire" : "Ajout direct"}
+                    imageSrc={resolveItemImage(operation.item)}
                     key={`${operation.source.line}-${index}`}
                   />
                 ))}
@@ -215,4 +220,13 @@ export default async function KitPage({ params }: KitPageProps) {
 
 function findOperation(operations: KitOperation[], slot: string) {
   return operations.find((operation) => operation.slot === slot);
+}
+
+function getOperationImage(
+  operations: KitOperation[],
+  slot: string,
+  resolveItemImage: (item: KitOperation["item"]) => string | null,
+) {
+  const operation = findOperation(operations, slot);
+  return operation ? resolveItemImage(operation.item) : null;
 }

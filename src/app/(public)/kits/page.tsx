@@ -5,6 +5,7 @@ import { KitBrowser } from "@/components/kit-browser";
 import { PageIntro } from "@/components/page-intro";
 import { loadKitStats } from "@/db/kit-stats";
 import { compareKits, toKitCardView } from "@/lib/kit-manifest";
+import { loadItemImageResolver } from "@/lib/item-renders";
 import { loadKitManifest } from "@/lib/kits";
 
 export const metadata: Metadata = {
@@ -15,8 +16,14 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function KitsPage() {
-  const [manifest, stats] = await Promise.all([loadKitManifest(), loadKitStats()]);
-  const kits = (manifest?.kits ?? []).toSorted(compareKits).map(toKitCardView);
+  const [manifest, stats, resolveItemImage] = await Promise.all([
+    loadKitManifest(),
+    loadKitStats(),
+    loadItemImageResolver(),
+  ]);
+  const kits = (manifest?.kits ?? [])
+    .toSorted(compareKits)
+    .map((kit) => toKitCardView(kit, resolveItemImage));
 
   return (
     <div className="shell page-stack">
