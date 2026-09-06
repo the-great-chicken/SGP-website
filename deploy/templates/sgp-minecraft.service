@@ -1,0 +1,24 @@
+[Unit]
+Description=SGP Paper server with BlueMap
+After=network.target
+
+[Service]
+Type=simple
+User=minecraft
+Group=minecraft
+WorkingDirectory=@minecraft_dir@
+ExecStart=@java@ -Xms@minecraft_heap@ -Xmx@minecraft_heap@ -jar paper.jar --nogui
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGTERM
+TimeoutStopSec=300
+SendSIGKILL=no
+SuccessExitStatus=0 143
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

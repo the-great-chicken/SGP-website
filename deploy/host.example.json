@@ -1,0 +1,13 @@
+{
+  "domain": "sgp.example.com",
+  "app_root": "/srv/sgp",
+  "state_dir": "/var/lib/sgp",
+  "config_dir": "/etc/sgp",
+  "minecraft_dir": "/srv/minecraft",
+  "node": "/opt/node/bin/node",
+  "java": "/usr/bin/java",
+  "minecraft_heap": "6G",
+  "website_port": 3000,
+  "bluemap_port": 8100,
+  "backup_schedule": "*-*-* 05:00:00 UTC"
+}

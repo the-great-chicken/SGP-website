@@ -1,0 +1,26 @@
+[Unit]
+Description=SGP website
+After=network.target
+
+[Service]
+Type=simple
+User=sgp
+Group=sgp
+WorkingDirectory=@app_root@/current
+Environment=NODE_ENV=production
+Environment=HOSTNAME=127.0.0.1
+Environment=PORT=@website_port@
+Environment=DATABASE_URL=file:@state_dir@/sgp.sqlite
+EnvironmentFile=@config_dir@/website.env
+ExecStart=@node@ server.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

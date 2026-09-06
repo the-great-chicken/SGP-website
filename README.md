@@ -10,6 +10,8 @@ The application uses Next.js App Router, TypeScript, React, Drizzle ORM and SQLi
 
 Node.js 20.19 or newer is required.
 
+For Linux production setup, HTTPS, deployment and backup recovery, see [deploy/README.md](deploy/README.md). Production builds use the Node version pinned in `.node-version`.
+
 ```powershell
 npm install
 Copy-Item .env.example .env

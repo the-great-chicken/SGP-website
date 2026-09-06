@@ -1,0 +1,10 @@
+[Unit]
+Description=Scheduled SGP backup (Minecraft downtime during local copy)
+
+[Timer]
+OnCalendar=@backup_schedule@
+Persistent=false
+Unit=sgp-backup.service
+
+[Install]
+WantedBy=timers.target

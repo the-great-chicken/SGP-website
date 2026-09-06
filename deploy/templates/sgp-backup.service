@@ -1,0 +1,15 @@
+[Unit]
+Description=Encrypted SGP backup
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=@config_dir@/backup.env
+ExecStart=/usr/bin/python3 @app_root@/ops/host.py --config @config_dir@/host.json backup
+TimeoutStartSec=infinity
+TimeoutStopSec=360
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
