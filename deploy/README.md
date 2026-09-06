@@ -59,7 +59,7 @@ The provided service handles graceful shutdown. Backup consistency depends on ru
 
 ## Build and activate a release
 
-Build on Linux with the same CPU architecture as production, from a clean committed checkout with no `.env` files. Copy the ignored outputs of `npm run content:refresh` into this checkout before building: `data/kit-manifest.json`, `data/item-renders.json`, `public/generated/item-icons/`, and `public/bluemap/overlays.json`. Production statistics and player data come from SQLite.
+Build on Linux with the same CPU architecture as production, from a clean committed checkout with no `.env` files. Copy the [generated current-content files](../docs/publishing.md#refresh-current-content) into this checkout before building. Production statistics and player data come from SQLite.
 
 ```bash
 export PATH="/opt/node/bin:$PATH"
@@ -76,7 +76,7 @@ sudo systemctl enable --now caddy
 sudo systemctl reload caddy
 ```
 
-Activation checks runtime compatibility, stops the website, snapshots an existing database, applies migrations, switches `current`, and checks `/api/health`. First deployment creates an empty migrated database; import edition data and synchronize DiscordSRV links using the repository's existing commands with `DATABASE_URL=file:/var/lib/sgp/sgp.sqlite` as user `sgp`. Imports need a source checkout with its dependencies; the standalone release contains only the serving runtime.
+Activation checks runtime compatibility, stops the website, snapshots an existing database, applies migrations, switches `current`, and checks `/api/health`. First deployment creates an empty migrated database. Follow [Content publishing](../docs/publishing.md#publish-a-finished-edition) as user `sgp`, with `databaseUrl` in `publish.json` set to `file:/var/lib/sgp/sgp.sqlite`. Then synchronize DiscordSRV links with `DATABASE_URL` pointing to that same file. Imports need a source checkout with its dependencies; the standalone release contains only the serving runtime.
 
 Check `https://YOUR_DOMAIN/api/health`, `/`, `/map/`, live markers and Discord login before opening the site to players. Read failures with `journalctl -u sgp-website -u sgp-minecraft -u caddy`. Caddy forwards the public Host header to the website.
 

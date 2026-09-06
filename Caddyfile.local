@@ -1,0 +1,11 @@
+http://localhost:8080 {
+    redir /map /map/ 308
+
+    handle_path /map/* {
+        reverse_proxy 127.0.0.1:8100
+    }
+
+    handle {
+        reverse_proxy 127.0.0.1:3000
+    }
+}
