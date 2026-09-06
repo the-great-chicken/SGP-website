@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
+import { EmptyState } from "@/components/empty-state";
 import { loadPlayerProfile } from "@/db/historical-stats";
 import type { PlayerEditionStats } from "@/db/historical-stats-query";
 import {
@@ -42,14 +43,33 @@ export async function generateMetadata({ params }: PlayerPageProps): Promise<Met
         title: profile.currentMinecraftName,
         description: `Statistiques historiques de ${profile.currentMinecraftName} à la SGP.`,
       }
-    : { title: "Joueur introuvable" };
+    : { title: "Profil joueur", robots: { index: false, follow: true } };
 }
 
 export default async function PlayerPage({ params }: PlayerPageProps) {
   const { uuid } = await params;
   if (!uuidPattern.test(uuid)) notFound();
   const profile = await loadPlayerProfile(uuid);
-  if (!profile) notFound();
+  if (!profile) {
+    return (
+      <div className="shell page-stack">
+        <Link className="back-link" href="/players">
+          <ArrowLeft size={16} /> Tous les joueurs
+        </Link>
+        <PageIntro
+          eyebrow="Profil joueur"
+          title="L’histoire reste à écrire."
+          description="Les profils retracent les éditions dont les statistiques ont été publiées."
+        />
+        <EmptyState
+          icon={CalendarRange}
+          title="Aucune statistique publiée pour ce joueur."
+          description="Son profil se remplira lorsque les résultats d’une édition à laquelle il a participé seront publiés."
+          action={<a className="button ghost" href="/map/">Retour à la carte</a>}
+        />
+      </div>
+    );
+  }
 
   const ratio = profile.lifetime.deaths > 0
     ? profile.lifetime.kills / profile.lifetime.deaths

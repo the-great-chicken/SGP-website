@@ -28,6 +28,24 @@ html.sgp-map {
   font-family: var(--sgp-font);
 }
 
+.sgp-map .sgp-player-profile {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+.sgp-map .sgp-player-profile:focus-visible {
+  outline: 2px solid var(--sgp-gold);
+  outline-offset: 4px;
+}
+
+.sgp-map #map-container .sgp-player-profile:hover .bm-player-name,
+.sgp-map #map-container .sgp-player-profile:focus-visible .bm-player-name {
+  opacity: 1;
+  color: var(--sgp-gold);
+}
+
 .sgp-map #map-container,
 .sgp-map body > #app {
   top: var(--sgp-header-height);

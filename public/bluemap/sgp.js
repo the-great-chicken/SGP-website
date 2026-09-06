@@ -41,7 +41,47 @@
   header.append(brand, title, navigation);
   document.body.prepend(header);
 
+  const mapContainer = document.getElementById("map-container");
+  const playerMarkerPattern = /^bm-marker-bm-player-([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i;
+  const linkedMarkers = new WeakSet();
+
+  function linkPlayerMarker(marker) {
+    const match = playerMarkerPattern.exec(marker.id);
+    if (!match || linkedMarkers.has(marker)) return;
+
+    const link = document.createElement("a");
+    link.className = "sgp-player-profile";
+    link.href = `/players/${match[1].toLowerCase()}`;
+    link.title = "Voir le profil SGP";
+    link.draggable = false;
+    marker.querySelector("img").alt = "";
+    // Keep BlueMap's name/head nodes intact so live updates still reach them.
+    link.append(...marker.childNodes);
+    marker.append(link);
+    linkedMarkers.add(marker);
+
+    // Keep native link navigation and keyboard/modifier support, without activating map controls.
+    for (const type of ["pointerdown", "mousedown", "touchstart", "click", "contextmenu"]) {
+      link.addEventListener(type, (event) => event.stopPropagation());
+    }
+  }
+
+  function linkPlayerMarkers(root) {
+    if (root.matches(".bm-marker-player")) linkPlayerMarker(root);
+    root.querySelectorAll(".bm-marker-player").forEach(linkPlayerMarker);
+  }
+
+  linkPlayerMarkers(mapContainer);
+  const playerObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node instanceof Element) linkPlayerMarkers(node);
+      }
+    }
+  });
+  playerObserver.observe(mapContainer, { childList: true, subtree: true });
+
   // BlueMap listens to window resize; also notify it when our CSS changes its viewport.
   const resizeObserver = new ResizeObserver(() => window.dispatchEvent(new Event("resize")));
-  resizeObserver.observe(document.getElementById("map-container"));
+  resizeObserver.observe(mapContainer);
 })();
