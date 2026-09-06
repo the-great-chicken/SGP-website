@@ -35,6 +35,25 @@ html.sgp-map {
   pointer-events: auto;
 }
 
+.sgp-map .sgp-spawn-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font: 600 13px/1.4 var(--sgp-font);
+  color: var(--spawn-color);
+  text-shadow: 0 1px 3px #000;
+}
+
+.sgp-map .sgp-spawn-marker > span:last-child {
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: #101416e6;
+  color: var(--sgp-paper);
+}
+
 .sgp-map .sgp-player-profile:focus-visible {
   outline: 2px solid var(--sgp-gold);
   outline-offset: 4px;

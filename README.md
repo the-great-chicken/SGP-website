@@ -45,7 +45,24 @@ npm run db:migrate
 npm run db:studio
 ```
 
-### Publishing a completed edition
+### Refreshing content and publishing editions
+
+One-time setup: with Python 3.11+ installed (`python3-venv` is also needed on Ubuntu), run `npm run content:setup`, then copy `publish.example.json` to ignored `publish.json`. Fill in your saved-world, datapack, resource-pack and Minecraft client paths, exact release identifiers, and edition details. Paths are relative to the configuration file. Use a stopped-world copy or backup; source files are read-only.
+
+```powershell
+npm run content:refresh
+npm run edition:publish -- 5
+```
+
+`content:refresh` updates the current kit catalogue, reuses matching item images, and exports BlueMap locations and spawnpoints. BlueMap shows toggleable **Lieux** and **Points de spawn** layers. `maps[].id` is the BlueMap map id; `playableArea` and `spawnGroups` select your datapack's numbered area and spawn lists. The example selects playable area 1 and spawn groups 1 and 2.
+
+`edition:publish` uses that edition's own saved inputs, prepares all exports, validates them, snapshots the existing SQLite database, and imports the statistics as published. It never replaces the current kit catalogue or map overlays. Set `databaseUrl` to the website database and run with its filesystem permissions on production; no website rebuild is needed for statistics.
+
+Add `--prepare-only` to either command to validate exports without updating the website or database, or `--config <file>` to select another configuration. Every run retains its exports and any database recovery copy in `.data/publishing/`. Failed exports stop before publication. A lock prevents overlapping runs in the checkout; after an interrupted process, remove `active.lock` there only once that process has stopped. Keep edition inputs immutable and retain useful recovery copies; obsolete run directories can be removed later.
+
+Include the generated `data/kit-manifest.json`, `data/item-renders.json`, `public/generated/item-icons/`, and `public/bluemap/overlays.json` in the next website release after refreshing current content. Exporters and styling are versioned; generated content stays outside Git. The individual commands below remain available for focused corrections.
+
+### Individual edition exports
 
 Choose the immutable datapack and resource-pack release identifiers used for the edition. Generate the ignored kit manifest from that exact datapack release; it captures those identifiers alongside the loadouts, ability names and descriptions:
 

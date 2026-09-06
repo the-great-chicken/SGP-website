@@ -11,6 +11,7 @@ export default defineConfig([
     "build/**",
     "next-env.d.ts",
     ".venv/**",
+    ".venv-statistics/**",
     ".data/**",
   ]),
 ]);

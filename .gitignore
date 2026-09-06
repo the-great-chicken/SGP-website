@@ -1,4 +1,5 @@
 .venv/
+.venv-statistics/
 *.egg-info/
 __pycache__/
 *.py[cod]
@@ -6,6 +7,8 @@ __pycache__/
 /data/kit-manifest.json
 /data/statistics-snapshot.json
 /data/item-renders.json
+/public/bluemap/overlays.json
+/publish.json
 /public/generated/item-icons/
 
 # Next.js

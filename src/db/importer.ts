@@ -247,7 +247,7 @@ export async function replaceEdition(
   });
 }
 
-function validateBundleRelations(bundle: EditionBundle) {
+export function validateBundleRelations(bundle: EditionBundle) {
   const playerUuids = unique(
     bundle.players.map((player) => player.uuid),
     "player UUID",

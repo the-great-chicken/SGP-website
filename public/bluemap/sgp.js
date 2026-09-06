@@ -81,6 +81,28 @@
   });
   playerObserver.observe(mapContainer, { childList: true, subtree: true });
 
+  async function loadOverlays() {
+    const response = await fetch(new URL("overlays.json", themeUrl), { cache: "no-cache" });
+    if (response.status === 404) return; // No map export has been published yet.
+    if (!response.ok) throw new Error(`Map overlay request failed: ${response.status}`);
+    const overlays = await response.json();
+    if (overlays.schemaVersion !== 1) throw new Error("Unsupported SGP map overlay format");
+
+    // BlueMap 5.23 replaces normal marker sets on refresh. Merge our sets into that update
+    // so they survive its regular refreshes and follow the selected map.
+    const prototype = window.BlueMap.NormalMarkerManager.prototype;
+    const updateFromData = prototype.updateFromData;
+    prototype.updateFromData = function (markers) {
+      if (this.disposed) return false;
+      const mapId = window.bluemap.mapViewer.map.data.id;
+      const result = updateFromData.call(this, { ...markers, ...overlays.maps[mapId] });
+      window.bluemap.mapViewer.redraw();
+      return result;
+    };
+    await window.bluemap.markerFileManager.update();
+  }
+  loadOverlays().catch((error) => console.error("SGP map overlays:", error));
+
   // BlueMap listens to window resize; also notify it when our CSS changes its viewport.
   const resizeObserver = new ResizeObserver(() => window.dispatchEvent(new Event("resize")));
   resizeObserver.observe(mapContainer);

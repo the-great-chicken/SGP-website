@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { createReadStream } from "node:fs";
 import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { prepareAssets, readFile as readAssetFile, renderItem } from "block-model-renderer";
@@ -51,23 +52,39 @@ async function main() {
     );
   }
   const renderedItems: Record<string, string> = {};
+  const assetFingerprint = await fingerprintAssets([resourcePackPath, minecraftClientPath]);
   const expectedFiles = new Set<string>();
+  let previousIndex: ItemRenderIndex | undefined;
+  try {
+    previousIndex = JSON.parse(await readFile(indexPath, "utf8")) as ItemRenderIndex;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  const reusable = previousIndex?.schemaVersion === 2 &&
+    previousIndex.resourcePackRelease === resourcePackRelease &&
+    previousIndex.minecraftVersion === manifest.minecraftVersion;
+  let renderedCount = 0;
 
   for (const [index, [key, item]] of uniqueItems.entries()) {
-    const fileName = `${slugItemId(item.id)}-${key.slice(0, 16)}.png`;
+    const assetKey = createHash("sha256").update(`${resourcePackRelease}\0${manifest.minecraftVersion}\0${assetFingerprint}\0${key}`).digest("hex");
+    const fileName = `${slugItemId(item.id)}-${assetKey.slice(0, 20)}.png`;
     const outputPath = path.join(outputDirectory, fileName);
     const input = getItemRenderInput(item);
 
-    process.stdout.write(`\rRendering item ${index + 1}/${uniqueItems.length}`);
-    const rendered = await renderItem({
-      id: input.id,
-      components: input.components,
-      assets,
-      version: manifest.minecraftVersion,
-      width: 128,
-      height: 128,
-    });
-    await writeFile(outputPath, rendered as unknown as Uint8Array);
+    process.stdout.write(`\rPreparing item ${index + 1}/${uniqueItems.length}`);
+    const exists = await stat(outputPath).then((file) => file.isFile() && file.size > 0).catch(() => false);
+    if (!(reusable && previousIndex?.items[key] === `/generated/item-icons/${fileName}` && exists)) {
+      const rendered = await renderItem({
+        id: input.id,
+        components: input.components,
+        assets,
+        version: manifest.minecraftVersion,
+        width: 128,
+        height: 128,
+      });
+      await writeFile(outputPath, rendered as unknown as Uint8Array);
+      renderedCount += 1;
+    }
 
     expectedFiles.add(fileName);
     renderedItems[key] = `/generated/item-icons/${fileName}`;
@@ -87,8 +104,33 @@ async function main() {
   await removeStaleImages(expectedFiles);
 
   console.log(
-    `Rendered ${uniqueItems.length} item variants for datapack ${manifest.datapackRelease} with resource pack ${manifest.resourcePackRelease} over Minecraft ${manifest.minecraftVersion}.`,
+    `Prepared ${uniqueItems.length} item variants (${renderedCount} rendered, ${uniqueItems.length - renderedCount} reused) for datapack ${manifest.datapackRelease} with resource pack ${manifest.resourcePackRelease} over Minecraft ${manifest.minecraftVersion}.`,
   );
+}
+
+async function fingerprintAssets(sources: string[]) {
+  const hash = createHash("sha256");
+  async function addFile(file: string, name: string) {
+    const contents = createHash("sha256");
+    for await (const chunk of createReadStream(file)) contents.update(chunk);
+    hash.update(`${name}\0${contents.digest("hex")}\0`);
+  }
+  async function addDirectory(directory: string, prefix = "") {
+    const entries = await readdir(directory, { withFileTypes: true });
+    entries.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+    for (const entry of entries) {
+      const file = path.join(directory, entry.name);
+      const name = `${prefix}${entry.name}`;
+      if (entry.isDirectory()) await addDirectory(file, `${name}/`);
+      else await addFile(file, name);
+    }
+  }
+  for (const [index, source] of sources.entries()) {
+    hash.update(`source-${index}\0`);
+    if ((await stat(source)).isDirectory()) await addDirectory(source);
+    else await addFile(source, "archive");
+  }
+  return hash.digest("hex");
 }
 
 function collectUniqueItems(manifest: KitManifest): Array<[string, KitItem]> {

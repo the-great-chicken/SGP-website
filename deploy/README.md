@@ -59,7 +59,7 @@ The provided service handles graceful shutdown. Backup consistency depends on ru
 
 ## Build and activate a release
 
-Build on Linux with the same CPU architecture as production, from a clean committed checkout with no `.env` files. If using generated kit data/icons, copy the matching ignored `data/kit-manifest.json`, `data/item-renders.json`, and `public/generated/item-icons/` into this checkout before building. Production statistics and player data come from SQLite.
+Build on Linux with the same CPU architecture as production, from a clean committed checkout with no `.env` files. Copy the ignored outputs of `npm run content:refresh` into this checkout before building: `data/kit-manifest.json`, `data/item-renders.json`, `public/generated/item-icons/`, and `public/bluemap/overlays.json`. Production statistics and player data come from SQLite.
 
 ```bash
 export PATH="/opt/node/bin:$PATH"
