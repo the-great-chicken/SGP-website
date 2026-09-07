@@ -77,6 +77,8 @@ test("refresh promotes validated current content without exporting statistics", 
     assert.equal(JSON.parse(await readFile(path.join(f.workspace, "public/bluemap/overlays.json"), "utf8")).schemaVersion, 1);
     assert.equal(await readFile(path.join(f.workspace, "public/generated/kit-models/steve.png"), "utf8"), "player texture");
     assert.ok(!f.calls.some((args) => args[0].endsWith("export_web.py")));
+    const mapExport = f.calls.find((args) => args.includes("sgp_map_exporter"))!;
+    assert.equal(mapExport[mapExport.indexOf("--resource-pack") + 1], path.join(f.workspace, "inputs/pack"));
   } finally { await f.cleanup(); }
 });
 

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import base64
 import gzip
 import html
 import io
+import json
 import math
 from pathlib import Path
 import re
@@ -130,7 +132,26 @@ def location_markers(entities, area):
     return dict(sorted(result.items()))
 
 
-def spawn_markers(spawns, groups, area):
+def spawn_icon(spawn, resource_pack):
+    # The datapack inserts this fragment between quoted text components in its spawn menu.
+    component = nbtlib.parse_nbt(spawn["icon"][2:-2]).unpack()
+    namespace, name = component["font"].split(":")
+    assets = resource_pack.resolve() / "assets"
+    font_path = (assets / namespace / "font" / f"{name}.json").resolve()
+    if not font_path.is_relative_to(assets):
+        raise ValueError("Spawn font must be inside the resource pack")
+    font = json.loads(font_path.read_text(encoding="utf-8"))
+    provider = next((p for p in font["providers"] if p["type"] == "bitmap" and p["chars"] == [component["text"]]), None)
+    if provider is None:
+        raise ValueError(f"Missing spawn icon glyph: {component['text']}")
+    namespace, name = provider["file"].split(":")
+    texture = (assets / namespace / "textures" / name).resolve()
+    if not texture.is_relative_to(assets) or texture.suffix != ".png":
+        raise ValueError("Spawn icon must be a PNG inside the resource pack")
+    return "data:image/png;base64," + base64.b64encode(texture.read_bytes()).decode("ascii")
+
+
+def spawn_markers(spawns, groups, area, resource_pack):
     result = {}
     for group_id in groups:
         matching = [entry for entry in spawns if entry.get("id") == group_id]
@@ -149,12 +170,12 @@ def spawn_markers(spawns, groups, area):
             css_color = f"rgb({tint['r']},{tint['g']},{tint['b']})"
             result[f"spawn-{group_id}-{index}"] = {
                 "type": "html", "label": label, "position": position, "listed": True, "classes": [],
-                "html": f'<div class="sgp-spawn-marker" style="--spawn-color:{css_color}"><span aria-hidden="true">◆</span><span>{html.escape(label)}</span></div>',
+                "html": f'<div class="sgp-spawn-marker" style="--spawn-color:{css_color}"><img src="{spawn_icon(spawn, resource_pack)}" alt="" width="32" height="32"><span>{html.escape(label)}</span></div>',
             }
     return result
 
 
-def export_overlays(world: Path, maps: list[dict]):
+def export_overlays(world: Path, maps: list[dict], resource_pack: Path):
     world = world.resolve()
     storage_path = world / "data/sgp/command_storage.dat"
     before = storage_path.stat().st_mtime_ns
@@ -176,7 +197,7 @@ def export_overlays(world: Path, maps: list[dict]):
         area = selector_box(areas[0]["Pos"], areas[0]["data"])
         result[config["id"]] = {
             "sgp-locations": {"label": "Lieux", "toggleable": True, "defaultHidden": True, "markers": location_markers(entities, area)},
-            "sgp-spawns": {"label": "Points de spawn", "toggleable": True, "defaultHidden": False, "markers": spawn_markers(spawns, config["spawnGroups"], area)},
+            "sgp-spawns": {"label": "Points de spawn", "toggleable": True, "defaultHidden": False, "markers": spawn_markers(spawns, config["spawnGroups"], area, resource_pack)},
         }
     if before != storage_path.stat().st_mtime_ns:
         raise ValueError("Command storage changed during export; use a saved-world copy")

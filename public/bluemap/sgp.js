@@ -6,6 +6,45 @@
   document.querySelector('meta[name="theme-color"]').content = "#101416";
   document.querySelector('link[rel="icon"]').href = new URL("sgp.svg", themeUrl).href;
 
+  const bluemap = window.bluemap;
+  // BlueMap 5.23 installs its live translation function on the mounted Vue app.
+  const appRoot = document.getElementById("app");
+  const translations = appRoot.__vue_app__.config.globalProperties;
+  bluemap.settings.hiresSliderDefault = 250;
+  bluemap.mapViewer.data.loadedHiresViewDistance = 250;
+  bluemap.mapViewer.updateLoadedMapArea();
+  bluemap.setChunkBorders(false);
+  bluemap.setDebug(false);
+  bluemap.saveUserSettings();
+
+  function disableFlatView() {
+    const map = bluemap.mapViewer.map;
+    if (!map) return;
+    map.data.flatView = false;
+    const index = map.data.views.indexOf("flat");
+    if (index !== -1) map.data.views.splice(index, 1);
+    if (bluemap.appState.controls.state === "flat") bluemap.setPerspectiveView(0);
+  }
+
+  function simplifyMenu() {
+    const page = bluemap.mainMenu.currentPage().id;
+    const buttonKeys = page === "root" ? ["maps.button", "updateMap.button"]
+      : page === "settings" ? ["chunkBorders.button", "debug.button"] : [];
+    const groupKeys = page === "settings" ? ["renderDistance.title", "mapControls.title", "theme.title"] : [];
+    const buttons = new Set(buttonKeys.map((key) => translations.$t(key)));
+    const groups = new Set(groupKeys.map((key) => translations.$t(key)));
+    for (const button of document.querySelectorAll(".side-menu .simple-button, .side-menu .switch-button")) {
+      button.classList.toggle("sgp-menu-hidden", buttons.has(button.querySelector(".label").textContent.trim()));
+    }
+    for (const group of document.querySelectorAll(".side-menu .group")) {
+      group.classList.toggle("sgp-menu-hidden", groups.has(group.querySelector(":scope > .title").textContent.trim()));
+    }
+  }
+  const menuObserver = new MutationObserver(() => { disableFlatView(); simplifyMenu(); });
+  menuObserver.observe(appRoot, { childList: true, subtree: true, characterData: true });
+  disableFlatView();
+  simplifyMenu();
+
   const header = document.createElement("header");
   header.className = "sgp-map-header";
   header.lang = "fr";

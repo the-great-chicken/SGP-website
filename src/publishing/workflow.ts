@@ -156,6 +156,7 @@ export async function runPublishing(options: {
     const manifest = await readKitManifest(path.join(data, "kit-manifest.json"));
     await writeFile(path.join(data, "maps.json"), JSON.stringify(source.maps));
     await command(python(".venv"), ["-m", "sgp_map_exporter", "--world", source.world, "--maps", path.join(data, "maps.json"),
+      "--resource-pack", source.resourcePack,
       "--output", path.join(stage, "public/bluemap/overlays.json")], root);
 
     let bundle: EditionBundle | undefined;

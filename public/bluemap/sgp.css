@@ -28,6 +28,10 @@ html.sgp-map {
   font-family: var(--sgp-font);
 }
 
+.sgp-map .sgp-menu-hidden {
+  display: none !important;
+}
+
 .sgp-map .sgp-player-profile {
   display: block;
   color: inherit;
@@ -50,8 +54,16 @@ html.sgp-map {
 .sgp-map .sgp-spawn-marker > span:last-child {
   padding: 3px 7px;
   border-radius: 4px;
-  background: #101416e6;
+  background: #10141645;
   color: var(--sgp-paper);
+}
+
+.sgp-map .sgp-spawn-marker > img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 2px #0008);
 }
 
 .sgp-map .sgp-player-profile:focus-visible {

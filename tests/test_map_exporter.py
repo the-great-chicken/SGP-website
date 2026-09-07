@@ -1,4 +1,5 @@
 import io
+import base64
 import json
 from pathlib import Path
 import tempfile
@@ -7,7 +8,7 @@ import zlib
 
 import nbtlib
 
-from sgp_map_exporter.exporter import export_overlays, selector_box, subtract_box
+from sgp_map_exporter.exporter import export_overlays, selector_box, spawn_icon, subtract_box
 
 
 class MapExporterTests(unittest.TestCase):
@@ -54,24 +55,42 @@ class MapExporterTests(unittest.TestCase):
                 {id:1,list:[{x:3,y:5,z:3,title:'{text:"Spawn <test>",color:red}'}]},
                 {id:2,list:[{x:4,y:5,z:4,title:'{text:"Other group"}'}]}
             ]}}}}''')}).save(storage, gzipped=True)
+            saved = nbtlib.load(storage)
+            saved.root["data"]["contents"]["data"]["spawns"][0]["list"][0]["icon"] = nbtlib.String('\",{text:"\ue007",font:"sgp.misc:spawn_icons",color:"white",bold:false},"')
+            saved.save(storage, gzipped=True)
+            pack = root / "pack"
+            font = pack / "assets/sgp.misc/font/spawn_icons.json"
+            texture = pack / "assets/sgp.misc/textures/font/spawns/galerie.png"
+            font.parent.mkdir(parents=True)
+            texture.parent.mkdir(parents=True)
+            icon = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=")
+            texture.write_bytes(icon)
+            font.write_text(json.dumps({"providers": [{"type": "bitmap", "file": "sgp.misc:font/spawns/galerie.png", "chars": ["\ue007"]}]}), encoding="utf-8")
             before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
             config = [{"id": "world", "dimension": "minecraft:overworld", "playableArea": 1, "spawnGroups": [1]}]
-            result = export_overlays(root, config)
+            result = export_overlays(root, config, pack)
             markers = result["maps"]["world"]
             self.assertEqual(len(markers["sgp-spawns"]["markers"]), 1)
             spawn = markers["sgp-spawns"]["markers"]["spawn-1-0"]
             self.assertEqual(spawn["position"], {"x": 3, "y": 5, "z": 3})
             self.assertIn("Spawn &lt;test&gt;", spawn["html"])
+            self.assertIn("data:image/png;base64," + base64.b64encode(icon).decode("ascii"), spawn["html"])
+            self.assertNotIn("◆", spawn["html"])
             locations = list(markers["sgp-locations"]["markers"].values())
             self.assertEqual(len(locations), 6)
             self.assertEqual(sum(marker["listed"] for marker in locations), 1)
             self.assertEqual(locations[0]["detail"], "Hall &lt;test&gt;")
-            self.assertEqual(result, export_overlays(root, config))
+            self.assertEqual(result, export_overlays(root, config, pack))
             self.assertEqual(before, {p: p.read_bytes() for p in root.rglob("*") if p.is_file()})
             json.dumps(result, allow_nan=False)
             config[0]["spawnGroups"] = [99]
             with self.assertRaisesRegex(ValueError, "spawn group"):
-                export_overlays(root, config)
+                export_overlays(root, config, pack)
+
+    def test_spawn_icon_rejects_font_paths_outside_resource_pack(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ValueError, "inside the resource pack"):
+                spawn_icon({"icon": '\",{text:"x",font:"../../outside:font"},"'}, Path(directory))
 
 
 if __name__ == "__main__":

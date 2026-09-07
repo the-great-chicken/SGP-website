@@ -23,7 +23,7 @@ Set the exact datapack and resource-pack release identifiers; `resourcePackRelea
 npm run content:refresh
 ```
 
-This updates the kit manifest, renders item images (reusing unchanged assets), and exports BlueMap's **Lieux** and **Points de spawn** layers. Locations are clipped to the playable area with their exclusions preserved. It does not import statistics. Reload the map page to load the new overlays.
+This updates the kit manifest, renders item images (reusing unchanged assets), and exports BlueMap's **Lieux** and **Points de spawn** layers, including the resource pack's spawn icons. Locations are clipped to the playable area with their exclusions preserved. It does not import statistics. Reload the map page to load the new overlays. Terrain limits are applied separately by [BlueMap's render mask](map.md).
 
 Generated files stay outside Git:
 
