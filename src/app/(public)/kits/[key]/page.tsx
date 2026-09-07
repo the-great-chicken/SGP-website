@@ -165,7 +165,7 @@ export default async function KitPage({ params }: KitPageProps) {
               <h3>Équipement porté</h3>
               <span>Armure et main secondaire</span>
             </div>
-            <KitPlayerModel preview={getKitPreview(kit, resolveItemImage)} name={getKitDisplayName(kit)} />
+            <KitPlayerModel preview={getKitPreview(kit)} name={getKitDisplayName(kit)} />
             <div className="equipment-slots inventory-slots">
               {equipmentSlots.map(({ slot, label }) => (
                 <ItemSlot

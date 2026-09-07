@@ -3,6 +3,9 @@ import path from "node:path";
 import sharp from "sharp";
 import { readFile as readAssetFile, renderModel, type PreparedAssets, type ModelJson } from "block-model-renderer";
 import { isJsonObject, type KitItem, type KitManifest } from "../src/lib/kit-manifest";
+import { tintKitIcon } from "../src/lib/kit-icon-color";
+import { getKitWeapon } from "../src/lib/kit-preview";
+import { buildHeldItem } from "./build-held-item.mts";
 
 const output = path.join(process.cwd(), "public/generated/kit-models");
 const skinCache = path.join(process.cwd(), ".data/skin-cache");
@@ -27,8 +30,11 @@ export async function renderKitVisuals(manifest: KitManifest, assets: PreparedAs
       const provider = font.providers.find((provider) => provider.type === "bitmap" && provider.chars?.includes(kit.icon!));
       if (!provider?.file) throw new Error(`Missing resource-pack icon for ${kit.key}`);
       const [namespace, name] = provider.file.split(":");
-      await writeFile(path.join(directory, "icon.png"), await readAsset(`${namespace}/textures/${name}`));
+      const { data, info } = await sharp(await readAsset(`${namespace}/textures/${name}`)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      await sharp(tintKitIcon(data, kit.color), { raw: info }).png().toFile(path.join(directory, "icon.png"));
     }
+    const weapon = getKitWeapon(kit);
+    if (weapon) await writeFile(path.join(directory, "held-item.json"), JSON.stringify(await buildHeldItem(weapon, assets, manifest.minecraftVersion)));
     for (const { slot, item } of kit.operations) {
       if (item.id === "minecraft:player_head") {
         const source = await resolveHeadSkin(item);
