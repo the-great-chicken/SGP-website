@@ -46,7 +46,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           defaultValue={directory.query}
           maxLength={64}
           name="q"
-          placeholder="Rechercher un pseudo, un ancien pseudo ou un UUID…"
+          placeholder="Rechercher un pseudo ou un ancien pseudo…"
         />
         {directory.query ? (
           <Link className="search-clear" href="/players" aria-label="Effacer la recherche">
@@ -66,7 +66,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         <EmptyState
           icon={Search}
           title="Aucun joueur trouvé"
-          description={`Aucun pseudo historique ni UUID ne correspond à « ${directory.query} ».`}
+          description={`Aucun joueur ne correspond à « ${directory.query} ».`}
           action={<Link className="button ghost" href="/players">Voir tous les joueurs</Link>}
         />
       ) : (

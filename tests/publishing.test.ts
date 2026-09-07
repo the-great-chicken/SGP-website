@@ -48,6 +48,8 @@ async function fixture() {
         elo: { metadata: { initialRating: 1000, kFactor: 32, ratingDivisor: 400, metrics: [] }, ratings: [] } }));
     } else {
       await mkdir(path.join(cwd, "public/generated/item-icons"), { recursive: true });
+      await mkdir(path.join(cwd, "public/generated/kit-models"), { recursive: true });
+      await writeFile(path.join(cwd, "public/generated/kit-models/steve.png"), "player texture");
       await writeFile(path.join(cwd, "public/generated/item-icons/stone.png"), "rendered image");
       await writeFile(path.join(cwd, "data/item-renders.json"), JSON.stringify({ schemaVersion: 2, datapackRelease: "dp-test", resourcePackRelease: "rp-test", minecraftVersion: "26.1", items: { [itemKey]: "/generated/item-icons/stone.png" } }));
     }
@@ -73,6 +75,7 @@ test("refresh promotes validated current content without exporting statistics", 
     await runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "refresh" }, command: f.command });
     assert.equal(JSON.parse(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8")).datapackRelease, "dp-test");
     assert.equal(JSON.parse(await readFile(path.join(f.workspace, "public/bluemap/overlays.json"), "utf8")).schemaVersion, 1);
+    assert.equal(await readFile(path.join(f.workspace, "public/generated/kit-models/steve.png"), "utf8"), "player texture");
     assert.ok(!f.calls.some((args) => args[0].endsWith("export_web.py")));
   } finally { await f.cleanup(); }
 });
@@ -138,6 +141,7 @@ test("promotion restores earlier files when a later file cannot be copied", asyn
     const stage = path.join(f.workspace, "stage");
     await mkdir(path.join(stage, "data"), { recursive: true });
     await mkdir(path.join(stage, "public/generated/item-icons"), { recursive: true });
+    await mkdir(path.join(stage, "public/generated/kit-models"), { recursive: true });
     await writeFile(path.join(stage, "data/kit-manifest.json"), "replacement manifest");
     await writeFile(path.join(stage, "data/item-renders.json"), "replacement index");
     await assert.rejects(promoteCurrent(f.workspace, stage), /ENOENT/);

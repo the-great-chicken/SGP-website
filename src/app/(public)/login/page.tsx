@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AlertTriangle, ArrowRight, LockKeyhole, MessagesSquare, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, MessagesSquare } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDiscordAuthConfig } from "@/auth/discord";
@@ -36,11 +36,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="auth-copy">
           <p className="eyebrow">Espace joueur</p>
           <h1>Retrouver son profil SGP.</h1>
-          <p>La connexion Discord identifiera votre compte, puis le lien vérifié par DiscordSRV permettra de retrouver votre UUID Minecraft.</p>
-          <div className="auth-points">
-            <span><ShieldCheck size={17} /> Aucun nouveau système de liaison</span>
-            <span><LockKeyhole size={17} /> Les réglages privés restent côté serveur</span>
-          </div>
+          <p>Connectez-vous avec le compte Discord lié à votre joueur Minecraft pour retrouver votre profil et personnaliser vos cosmétiques.</p>
         </div>
         <div className="auth-action-panel">
           <span className="discord-mark" aria-hidden="true"><MessagesSquare size={27} /></span>

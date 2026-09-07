@@ -76,10 +76,6 @@ export function ItemSlot({ operation, slotLabel, compact = false, imageSrc }: It
             ))}
           </span>
         ) : null}
-        <span className="minecraft-tooltip-meta">
-          <span>{item.id}</span>
-          <span>{operation.slot ?? "Ajout à l’inventaire"}</span>
-        </span>
       </span>
     </div>
   );

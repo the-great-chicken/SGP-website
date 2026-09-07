@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { renderKitVisuals, renderResolvedHead } from "./render-kit-visuals.mts";
 import { prepareAssets, readFile as readAssetFile, renderItem } from "block-model-renderer";
 import type { KitItem, KitManifest } from "../src/lib/kit-manifest";
 import {
@@ -51,6 +52,7 @@ async function main() {
       `Resource-pack release ${resourcePackRelease} does not match kit manifest release ${manifest.resourcePackRelease}`,
     );
   }
+  const heads = await renderKitVisuals(manifest, assets);
   const renderedItems: Record<string, string> = {};
   const assetFingerprint = await fingerprintAssets([resourcePackPath, minecraftClientPath]);
   const expectedFiles = new Set<string>();
@@ -66,7 +68,9 @@ async function main() {
   let renderedCount = 0;
 
   for (const [index, [key, item]] of uniqueItems.entries()) {
-    const assetKey = createHash("sha256").update(`${resourcePackRelease}\0${manifest.minecraftVersion}\0${assetFingerprint}\0${key}`).digest("hex");
+    const headSkin = heads.get(JSON.stringify(item.components["minecraft:profile"]));
+    const headHash = headSkin ? createHash("sha256").update(headSkin).digest("hex") : "";
+    const assetKey = createHash("sha256").update(`${resourcePackRelease}\0${manifest.minecraftVersion}\0${assetFingerprint}\0${key}${headHash}`).digest("hex");
     const fileName = `${slugItemId(item.id)}-${assetKey.slice(0, 20)}.png`;
     const outputPath = path.join(outputDirectory, fileName);
     const input = getItemRenderInput(item);
@@ -74,7 +78,7 @@ async function main() {
     process.stdout.write(`\rPreparing item ${index + 1}/${uniqueItems.length}`);
     const exists = await stat(outputPath).then((file) => file.isFile() && file.size > 0).catch(() => false);
     if (!(reusable && previousIndex?.items[key] === `/generated/item-icons/${fileName}` && exists)) {
-      const rendered = await renderItem({
+      const rendered = headSkin ? await renderResolvedHead(headSkin) : await renderItem({
         id: input.id,
         components: input.components,
         assets,

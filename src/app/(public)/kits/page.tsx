@@ -29,7 +29,7 @@ export default async function KitsPage() {
       <PageIntro
         eyebrow="Arsenal actuel"
         title="Choisir son style de jeu."
-        description="Parcourez chaque loadout, lisez les objets comme en jeu et comparez les tendances relevées au fil des éditions. L’équipement et les capacités viennent directement du datapack."
+        description="Parcourez chaque loadout, lisez les objets comme en jeu et comparez les tendances relevées au fil des éditions."
         aside={
           <div className="manifest-badge">
             <Boxes size={17} />
@@ -37,7 +37,7 @@ export default async function KitsPage() {
               <strong>{kits.length || "—"} kits</strong>
               {manifest
                 ? `Minecraft ${manifest.minecraftVersion}${stats.editionCount ? ` · ${stats.editionCount} édition${stats.editionCount > 1 ? "s" : ""}` : ""}`
-                : "Manifeste absent"}
+                : "Bientôt disponibles"}
             </span>
           </div>
         }
@@ -48,8 +48,8 @@ export default async function KitsPage() {
       ) : (
         <EmptyState
           icon={PackageSearch}
-          title="Aucun manifeste de kits"
-          description="Générez data/kit-manifest.json avec l’exporteur du dépôt pour afficher les kits sans recopier les données du datapack."
+          title="Les kits arrivent bientôt"
+          description="Leurs équipements et capacités seront disponibles ici."
         />
       )}
     </div>

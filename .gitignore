@@ -10,6 +10,7 @@ __pycache__/
 /public/bluemap/overlays.json
 /publish.json
 /public/generated/item-icons/
+/public/generated/kit-models/
 
 # Next.js
 /node_modules/

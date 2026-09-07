@@ -83,8 +83,9 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
       <PageIntro
         eyebrow="Profil joueur"
         title={profile.currentMinecraftName}
-        description={`Un parcours public de l’édition ${profile.firstEditionNumber} à l’édition ${profile.latestEditionNumber}, calculé uniquement à partir des statistiques archivées.`}
-        aside={<span className="uuid-chip">{profile.uuid}</span>}
+        description={profile.firstEditionNumber === profile.latestEditionNumber
+          ? `Édition ${profile.firstEditionNumber}.`
+          : `De l’édition ${profile.firstEditionNumber} à l’édition ${profile.latestEditionNumber}.`}
       />
 
       <div className="profile-layout historical-profile">
@@ -93,7 +94,6 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
             {profile.currentMinecraftName.slice(0, 2).toLocaleUpperCase("fr-FR")}
           </span>
           <h2>{profile.currentMinecraftName}</h2>
-          <p>{profile.uuid}</p>
           <div className="identity-facts">
             <span>
               <CalendarRange size={16} />
@@ -199,9 +199,8 @@ function EditionCard({ edition }: { edition: PlayerEditionStats }) {
 function ProfileStat({ icon: Icon, label, value, detail }: { icon: typeof Activity; label: string; value: string; detail: string }) {
   return (
     <div className="profile-stat">
-      <Icon size={18} />
+      <span className="profile-stat-label"><Icon size={18} /> {label}</span>
       <strong>{value}</strong>
-      <span>{label}</span>
       <small>{detail}</small>
     </div>
   );

@@ -2051,10 +2051,11 @@ h3 {
 
 .leaderboard-toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) auto;
+  grid-template-columns: minmax(0, 320px) auto;
   align-items: end;
   gap: 12px;
   margin-top: 34px;
+  margin-bottom: 16px;
   padding: 17px;
   border: 1px solid var(--line-strong);
   border-radius: 14px;
@@ -2646,8 +2647,7 @@ h3 {
 
 .minecraft-tooltip-name,
 .minecraft-tooltip-lore,
-.minecraft-tooltip-line,
-.minecraft-tooltip-meta {
+.minecraft-tooltip-line {
   display: block;
 }
 
@@ -2658,19 +2658,6 @@ h3 {
 
 .minecraft-tooltip-lore {
   color: #aaa;
-}
-
-.minecraft-tooltip-meta {
-  margin-top: 7px;
-  padding-top: 5px;
-  border-top: 1px solid rgba(170, 0, 170, 0.34);
-  color: #555;
-  font-size: 0.62rem;
-  font-style: italic;
-}
-
-.minecraft-tooltip-meta span {
-  display: block;
 }
 
 .loadout-help {
@@ -3288,4 +3275,177 @@ h3 {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.profile-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-stat-label svg {
+  flex-shrink: 0;
+  color: var(--gold);
+}
+
+.stats-table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.stats-table {
+  width: 100%;
+  min-width: 740px;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 18px 20px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.stats-table th:first-child,
+.stats-table td:first-child,
+.stats-table th:nth-child(2) {
+  text-align: left;
+}
+
+.stats-table thead {
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--paper-muted);
+}
+
+.stats-table th button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.stats-table th[aria-sort="ascending"],
+.stats-table th[aria-sort="descending"],
+.stats-table .is-sorted {
+  color: var(--gold);
+}
+
+.stats-table tbody tr:hover {
+  background: var(--gold-soft);
+}
+
+.stats-table tr:last-child td,
+.stats-table tr:last-child th {
+  border-bottom: 0;
+}
+
+.kit-icon {
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.kit-card-copy > .kit-icon {
+  float: right;
+  margin: 8px 0 12px 16px;
+}
+
+.kit-player-stage {
+  position: relative;
+  height: 290px;
+  perspective: 900px;
+  background: radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--kit-accent) 9%, transparent), transparent 68%);
+}
+
+.kit-player-rig,
+.model-part,
+.model-cube {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.kit-player-rig {
+  top: 40px;
+  left: 50%;
+  transform: rotateY(-18deg);
+}
+
+.model-head {
+  top: 48px;
+  transform: rotateY(10deg);
+}
+
+.model-arm {
+  top: 54px;
+}
+
+.model-main-arm {
+  transform: rotateX(-16deg) rotateZ(5deg);
+}
+
+.model-leg {
+  top: 120px;
+}
+
+.model-wing {
+  top: 58px;
+}
+
+.model-face {
+  position: absolute;
+  image-rendering: pixelated;
+  backface-visibility: hidden;
+  background-repeat: no-repeat;
+}
+
+.model-face-left,
+.model-face-right {
+  filter: brightness(0.82);
+}
+
+.model-face-bottom,
+.model-face-back {
+  filter: brightness(0.65);
+}
+
+.model-weapon {
+  position: absolute;
+  width: 108px;
+  height: 108px;
+  top: -13px;
+  left: -86px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  transform: translateZ(18px) scaleX(-1);
+}
+
+.kit-player-shadow {
+  position: absolute;
+  width: 115px;
+  height: 20px;
+  left: calc(50% - 57px);
+  top: 235px;
+  border-radius: 50%;
+  background: #0006;
+  filter: blur(6px);
+}
+
+.equipment-group .loadout-group-heading {
+  margin-bottom: 0;
+}
+
+.equipment-group .equipment-slots {
+  justify-content: center;
 }

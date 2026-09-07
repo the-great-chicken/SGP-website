@@ -30,6 +30,7 @@ Generated files stay outside Git:
 - `data/kit-manifest.json`
 - `data/item-renders.json`
 - `public/generated/item-icons/`
+- `public/generated/kit-models/`
 - `public/bluemap/overlays.json`
 
 The dev server serves these files locally. Include them in the next production website build as described in the [hosting guide](../deploy/README.md#build-and-activate-a-release).

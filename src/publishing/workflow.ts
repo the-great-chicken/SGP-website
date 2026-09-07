@@ -55,6 +55,7 @@ async function exists(file: string) {
 export async function promoteCurrent(root: string, stage: string) {
   // Image filenames include the resource-pack identity. Keep previous images usable by open pages.
   await cp(path.join(stage, "public/generated/item-icons"), path.join(root, "public/generated/item-icons"), { recursive: true, force: false });
+  await cp(path.join(stage, "public/generated/kit-models"), path.join(root, "public/generated/kit-models"), { recursive: true });
   const files = ["data/kit-manifest.json", "data/item-renders.json", "public/bluemap/overlays.json"];
   const previous = new Map<string, Buffer | null>();
   const changed: string[] = [];
@@ -169,7 +170,7 @@ export async function runPublishing(options: {
     }
 
     // Give the renderer a copy of the current image cache; it only reuses matching release identities.
-    for (const name of ["data/item-renders.json", "public/generated/item-icons"]) {
+    for (const name of ["data/item-renders.json", "public/generated/item-icons", ".data/skin-cache"]) {
       if (await exists(path.join(root, name))) await cp(path.join(root, name), path.join(stage, name), { recursive: true });
     }
     await command(process.execPath, ["--import", "tsx", path.join(root, "scripts/render-kit-items.mts"),

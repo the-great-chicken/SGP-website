@@ -33,6 +33,7 @@ export function KitCard({ kit, stats, statsContext, compact = false }: KitCardPr
           </span>
         </div>
         <div className="kit-card-copy">
+          {kit.iconSrc ? <Image className="kit-icon" src={kit.iconSrc} width={48} height={48} alt="" unoptimized /> : null}
           <p className="kit-label">{kit.abilityName ? "Kit à capacité" : "Kit spécial"}</p>
           <h2>{kit.name}</h2>
           <p className="kit-ability-name">
@@ -41,7 +42,7 @@ export function KitCard({ kit, stats, statsContext, compact = false }: KitCardPr
         </div>
         <div className="kit-item-preview" aria-label="Aperçu du loadout">
           {kit.featuredItems.map((item) => (
-            <span className="kit-preview-item" title={`${item.name} — ${item.id}`} key={`${item.id}-${item.name}`}>
+            <span className="kit-preview-item" title={item.name} key={`${item.id}-${item.name}`}>
               {item.imageSrc ? (
                 <Image
                   className="kit-preview-render"

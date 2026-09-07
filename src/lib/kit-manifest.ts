@@ -66,6 +66,7 @@ export type KitCardView = {
   key: string;
   name: string;
   accent: string;
+  iconSrc: string | null;
   abilityName: string | null;
   operationCount: number;
   itemCount: number;
@@ -222,6 +223,7 @@ export function toKitCardView(
     key: kit.key,
     name: getKitDisplayName(kit),
     accent: getKitAccent(kit),
+    iconSrc: kit.icon ? `/generated/kit-models/${kit.key}/icon.png` : null,
     abilityName: kit.ability?.name ?? null,
     operationCount: kit.operations.length,
     itemCount: kit.operations.reduce((sum, operation) => sum + operation.item.count, 0),

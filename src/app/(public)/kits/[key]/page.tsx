@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { ArrowLeft, BarChart3, Keyboard, PackageOpen, Sparkles } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 import { ItemSlot } from "@/components/item-slot";
+import { KitPlayerModel } from "@/components/kit-player-model";
+import { getKitIconSrc, getKitPreview } from "@/lib/kit-preview";
 import { PageIntro } from "@/components/page-intro";
 import { loadKitStats } from "@/db/kit-stats";
 import {
@@ -102,14 +105,14 @@ export default async function KitPage({ params }: KitPageProps) {
       <div className="kit-overview-grid">
         <section className="ability-panel">
           <div className="ability-mark" aria-hidden="true">
-            <Sparkles size={24} />
+            {getKitIconSrc(kit) ? <Image className="kit-icon" src={getKitIconSrc(kit)!} width={48} height={48} alt="" unoptimized /> : <Sparkles size={24} />}
           </div>
           <div className="ability-copy">
             <p className="eyebrow">Capacité</p>
             <h2>{kit.ability?.name ?? "Aucune capacité active"}</h2>
             <p>
               {kit.ability?.description ??
-                "Ce kit n’a pas de capacité active enregistrée dans le manifeste."}
+                "Ce kit n’a pas de capacité active."}
             </p>
           </div>
           {kit.ability ? (
@@ -154,7 +157,6 @@ export default async function KitPage({ params }: KitPageProps) {
             <p className="eyebrow">Équipement</p>
             <h2>Loadout complet</h2>
           </div>
-          <span className="source-chip">Manifeste v{manifest.schemaVersion} · Minecraft {manifest.minecraftVersion}</span>
         </div>
 
         <div className="loadout-workbench">
@@ -163,6 +165,7 @@ export default async function KitPage({ params }: KitPageProps) {
               <h3>Équipement porté</h3>
               <span>Armure et main secondaire</span>
             </div>
+            <KitPlayerModel preview={getKitPreview(kit, resolveItemImage)} name={getKitDisplayName(kit)} />
             <div className="equipment-slots inventory-slots">
               {equipmentSlots.map(({ slot, label }) => (
                 <ItemSlot
