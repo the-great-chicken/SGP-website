@@ -71,7 +71,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
           icon={CalendarRange}
           title="Aucune statistique publiée pour ce joueur."
           description="Son profil se remplira lorsque les résultats d’une édition à laquelle il a participé seront publiés."
-          action={<a className="button ghost" href="/map/">Retour à la carte</a>}
+          action={<a className="button ghost" href="/map">Retour à la carte</a>}
         />
       </div>
     );

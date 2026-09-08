@@ -4,15 +4,7 @@ import { Bird, Menu, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-
-const navigation = [
-  { href: "/", label: "Accueil" },
-  { href: "/kits", label: "Kits" },
-  { href: "/leaderboards", label: "Classements" },
-  { href: "/players", label: "Joueurs" },
-  { href: "/wiki", label: "Histoire" },
-  { href: "/map/", label: "Carte" },
-];
+import { siteNavigation } from "@/lib/site-navigation";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -32,8 +24,8 @@ export function SiteHeader() {
         </Link>
 
         <nav className="desktop-nav" aria-label="Navigation principale">
-          {navigation.map((item) => {
-            const NavigationLink = item.href === "/map/" ? "a" : Link;
+          {siteNavigation.map((item) => {
+            const NavigationLink = item.href === "/map" ? "a" : Link;
             return (
               <NavigationLink
                 className={isActive(pathname, item.href) ? "nav-link is-active" : "nav-link"}
@@ -68,8 +60,8 @@ export function SiteHeader() {
         id="mobile-navigation"
       >
         <nav className="shell mobile-nav" aria-label="Navigation mobile">
-          {navigation.map((item) => {
-            const NavigationLink = item.href === "/map/" ? "a" : Link;
+          {siteNavigation.map((item) => {
+            const NavigationLink = item.href === "/map" ? "a" : Link;
             return (
               <NavigationLink
                 className={isActive(pathname, item.href) ? "mobile-nav-link is-active" : "mobile-nav-link"}

@@ -1,7 +1,17 @@
 # The renderer supplies these values in rendered/Caddyfile.
 {$SGP_DOMAIN} {
-	redir /map /map/ 308
+	# /map is an SGP-owned HTML shell served by Next in every environment. The
+	# browser then requests BlueMap's native assets/data below /map/*.
+	handle /map {
+		reverse_proxy 127.0.0.1:{$SGP_WEBSITE_PORT:3000}
+	}
 
+	# Preserve old /map/ bookmarks while keeping /map as the canonical document
+	# URL. Fragments remain client-side and are preserved by normal redirects.
+	redir /map/ /map 308
+
+	# Keep high-volume BlueMap assets, map tiles and SSE off the Node process in
+	# production. handle_path strips the /map prefix before proxying.
 	handle_path /map/* {
 		reverse_proxy 127.0.0.1:{$SGP_BLUEMAP_PORT:8100}
 	}

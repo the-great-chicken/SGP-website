@@ -3,8 +3,10 @@
   const themeUrl = new URL(".", document.currentScript.src);
   document.documentElement.classList.add("sgp-map");
   document.title = "Carte — SGP";
-  document.querySelector('meta[name="theme-color"]').content = "#101416";
-  document.querySelector('link[rel="icon"]').href = new URL("sgp.svg", themeUrl).href;
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.content = "#18252f";
+  const favicon = document.querySelector('link[rel="icon"]');
+  if (favicon) favicon.href = new URL("sgp.svg", themeUrl).href;
 
   const bluemap = window.bluemap;
   // BlueMap 5.23 installs its live translation function on the mounted Vue app.
@@ -45,40 +47,56 @@
   disableFlatView();
   simplifyMenu();
 
-  const header = document.createElement("header");
-  header.className = "sgp-map-header";
-  header.lang = "fr";
+  function createHeaderFallback() {
+    const header = document.createElement("header");
+    header.className = "sgp-map-header";
+    header.dataset.sgpMapHeader = "true";
+    header.innerHTML = `
+      <div class="sgp-map-header-inner">
+        <a class="sgp-map-brand" href="/" aria-label="SGP — Accueil">
+          <span class="sgp-map-brand-mark" aria-hidden="true"><img src="${new URL("sgp.svg", themeUrl).href}" alt="" width="34" height="34"></span>
+          <span class="sgp-map-brand-copy"><strong>SGP</strong><small>Soirée du Grand Poulet</small></span>
+        </a>
+        <nav class="sgp-map-nav" aria-label="Navigation principale">
+          <a class="sgp-map-nav-link" href="/">Accueil</a>
+          <a class="sgp-map-nav-link" href="/kits">Kits</a>
+          <a class="sgp-map-nav-link" href="/leaderboards">Classements</a>
+          <a class="sgp-map-nav-link" href="/players">Joueurs</a>
+          <a class="sgp-map-nav-link" href="/wiki">Histoire</a>
+          <a class="sgp-map-nav-link is-active" href="/map" aria-current="page">Carte</a>
+        </nav>
+        <a class="sgp-map-profile" href="/me"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg><span>Mon profil</span></a>
+        <button class="sgp-map-menu-button" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sgp-map-mobile-navigation">
+          <svg class="sgp-map-menu-open-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <svg class="sgp-map-menu-close-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="sgp-map-mobile-menu" id="sgp-map-mobile-navigation">
+        <nav class="sgp-map-mobile-nav" aria-label="Navigation mobile">
+          <a class="sgp-map-mobile-nav-link" href="/">Accueil</a>
+          <a class="sgp-map-mobile-nav-link" href="/kits">Kits</a>
+          <a class="sgp-map-mobile-nav-link" href="/leaderboards">Classements</a>
+          <a class="sgp-map-mobile-nav-link" href="/players">Joueurs</a>
+          <a class="sgp-map-mobile-nav-link" href="/wiki">Histoire</a>
+          <a class="sgp-map-mobile-nav-link is-active" href="/map" aria-current="page">Carte</a>
+          <a class="sgp-map-profile sgp-map-mobile-profile" href="/me"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg><span>Mon profil</span></a>
+        </nav>
+      </div>`;
+    document.body.prepend(header);
+    return header;
+  }
 
-  const brand = document.createElement("a");
-  brand.className = "sgp-map-brand";
-  brand.href = "/";
-  brand.setAttribute("aria-label", "SGP — Accueil");
-  const logo = document.createElement("img");
-  logo.src = new URL("sgp.svg", themeUrl).href;
-  logo.alt = "";
-  logo.width = 40;
-  logo.height = 40;
-  const wordmark = document.createElement("strong");
-  wordmark.textContent = "SGP";
-  brand.append(logo, wordmark);
-
-  const title = document.createElement("span");
-  title.className = "sgp-map-title";
-  title.textContent = "Le terrain de jeu";
-
-  const navigation = document.createElement("nav");
-  navigation.setAttribute("aria-label", "Navigation SGP");
-  const back = document.createElement("a");
-  back.className = "sgp-map-back";
-  back.href = "/";
-  const arrow = document.createElement("span");
-  arrow.textContent = "←";
-  arrow.setAttribute("aria-hidden", "true");
-  back.append(arrow, "Retour au site");
-  navigation.append(back);
-
-  header.append(brand, title, navigation);
-  document.body.prepend(header);
+  const header = document.querySelector("[data-sgp-map-header='true']") || createHeaderFallback();
+  const menuButton = header.querySelector(".sgp-map-menu-button");
+  const mobileMenu = header.querySelector(".sgp-map-mobile-menu");
+  function setMenuOpen(open) {
+    if (!menuButton || !mobileMenu) return;
+    menuButton.setAttribute("aria-expanded", String(open));
+    menuButton.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
+    mobileMenu.classList.toggle("is-open", open);
+  }
+  menuButton?.addEventListener("click", () => setMenuOpen(menuButton.getAttribute("aria-expanded") !== "true"));
+  mobileMenu?.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => setMenuOpen(false)));
 
   const mapContainer = document.getElementById("map-container");
   const playerMarkerPattern = /^bm-marker-bm-player-([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i;
@@ -145,4 +163,5 @@
   // BlueMap listens to window resize; also notify it when our CSS changes its viewport.
   const resizeObserver = new ResizeObserver(() => window.dispatchEvent(new Event("resize")));
   resizeObserver.observe(mapContainer);
+
 })();

@@ -1,6 +1,14 @@
 http://localhost:8080 {
     redir /map /map/ 308
 
+    # The map root is the SGP first-paint shell. It fetches BlueMap's current
+    # index document server-side, injects the persistent-looking SGP header,
+    # and leaves every BlueMap asset/data URL on the native upstream.
+    handle /map/ {
+        rewrite * /api/map-shell
+        reverse_proxy 127.0.0.1:3000
+    }
+
     handle_path /map/* {
         reverse_proxy 127.0.0.1:8100
     }

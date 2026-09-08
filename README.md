@@ -26,29 +26,31 @@ The website is available at [localhost:3000](http://localhost:3000). Public page
 
 ### Include the map
 
-Install [Caddy](https://caddyserver.com/docs/install) and make `caddy` available on your PATH. Keep the website running, start your Paper server with BlueMap, and run this in a second terminal:
+Start your Paper server with BlueMap's integrated webserver enabled, then keep the normal website development command running:
 
 ```powershell
-caddy run --config Caddyfile.local --adapter caddyfile
+npm run dev
 ```
 
-Open **[localhost:8080](http://localhost:8080)** for the website and **[localhost:8080/map/](http://localhost:8080/map/)** for BlueMap. The versioned [Caddyfile.local](Caddyfile.local) routes `/map/` to BlueMap on `127.0.0.1:8100` and everything else to Next.js on port 3000. Keep both terminals open; Ctrl+C stops each process.
+Open **[localhost:3000/map](http://localhost:3000/map)**. No development reverse proxy is required. The Next app owns the `/map` HTML document, fetches BlueMap's current generated index from `BLUEMAP_INTERNAL_URL` (default `http://127.0.0.1:8100`), and injects the SGP first-paint header/loading shell. In development only, Next's fallback rewrite proxies `/map/*` assets, map data and live/SSE requests to that BlueMap origin. The real `/map` route wins before the fallback, so the generated BlueMap document itself is never served directly.
 
-BlueMap's webserver must be enabled on that address. In its `webapp.conf`, set `styles: ["/bluemap/sgp.css"]` and `scripts: ["/bluemap/sgp.js"]`. These files and the exported overlays are served by the website, so they do not need to be copied into BlueMap's webroot.
+The injected document adds `<base href="/map/">`, so BlueMap's untouched relative `./assets/...`, `settings.json`, `maps/...` and live-data URLs keep resolving correctly even though the public document URL is `/map`. Hash camera/map links such as `/map#world:...` remain native BlueMap state.
 
-A `/map/` **404 on port 3000** means you bypassed Caddy. A **502 on port 8080** means the upstream service for that route is unavailable. `content:refresh` exports data; it does not start BlueMap or the proxy.
+In BlueMap's `webapp.conf`, keep `styles: ["/bluemap/sgp.css"]` and `scripts: ["/bluemap/sgp.js"]`. The shell also loads `sgp.css` before first paint. Its loading surface waits for BlueMap 5.23's own `mapViewer.data.mapState === "loaded"`; the mere creation of BlueMap's WebGL canvas is intentionally not treated as ready.
+
+If BlueMap is not running, `/map` returns a navigable Slate error page instead of a raw proxy error. `content:refresh` exports data; it does not start BlueMap.
 
 ### Discord login and cosmetics (optional)
 
-To test login, create a Discord application and fill `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` and `DISCORD_REDIRECT_URI` in `.env`. Register the same callback in the Discord Developer Portal: `http://localhost:8080/api/auth/discord/callback` when using Caddy, or port 3000 when using Next.js directly. Restart the dev server after configuration changes.
+To test login, create a Discord application and fill `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` and `DISCORD_REDIRECT_URI` in `.env`. Register `http://localhost:3000/api/auth/discord/callback` in the Discord Developer Portal, then restart the dev server after configuration changes.
 
-Set `DISCORDSRV_ACCOUNTS_PATH` to the server's `plugins/DiscordSRV/accounts.aof`, then synchronize links after importing players or changing Minecraft/Discord links:
+Set `DISCORDSRV_ACCOUNTS_PATH` to the server's `plugins/DiscordSRV/accounts.aof` and `MINECRAFT_USERCACHE_PATH` to the same server's `usercache.json`, then synchronize after Minecraft/Discord links change or new players join. If `MINECRAFT_USERCACHE_PATH` is omitted, the command also tries the standard `usercache.json` location inferred from `accounts.aof`:
 
 ```powershell
 npm run db:sync-discordsrv
 ```
 
-Only players already imported into the website database can be linked. For `/me` cosmetics, enable TGCPlugin's cosmetics bridge and the datapack cosmetic API. Set `COSMETICS_BRIDGE_URL` to its private listener (locally `http://127.0.0.1:8766`) and use the same secret for the plugin's `cosmetics.secret` and `.env`'s `COSMETICS_BRIDGE_SECRET`. Generate a secret with:
+The sync refreshes current Minecraft names from `usercache.json`, creates newly discovered player identities, then applies DiscordSRV's current one-to-one links. Public player statistics still appear only after a published edition contains that player. For `/me` cosmetics, enable TGCPlugin's cosmetics bridge and the datapack cosmetic API. Set `COSMETICS_BRIDGE_URL` to its private listener (locally `http://127.0.0.1:8766`) and use the same secret for the plugin's `cosmetics.secret` and `.env`'s `COSMETICS_BRIDGE_SECRET`. Generate a secret with:
 
 ```powershell
 node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"

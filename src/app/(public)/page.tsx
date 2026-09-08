@@ -103,7 +103,7 @@ export default async function HomePage() {
         </section>
 
         <section className="home-section home-map-section" id="world">
-          <a className="home-map-art" href="/map/" aria-label="Ouvrir la carte du serveur">
+          <a className="home-map-art" href="/map" aria-label="Ouvrir la carte du serveur">
             <Image
               src="/media/sgp-landscape.svg"
               alt="Aperçu illustré du terrain de la SGP"
@@ -117,7 +117,7 @@ export default async function HomePage() {
             <p className="eyebrow">Le serveur</p>
             <h2>Carte</h2>
             <p>Consultez le terrain et les points d’intérêt sur la carte interactive du serveur.</p>
-            <a className="text-link" href="/map/">
+            <a className="text-link" href="/map">
               Ouvrir la carte <ArrowRight size={15} />
             </a>
           </div>

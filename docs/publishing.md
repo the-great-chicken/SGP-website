@@ -43,7 +43,7 @@ npm run edition:publish -- 5
 
 This prepares the edition's kits, images, map overlays and statistics, validates them, saves a recovery copy of an existing database, and imports the statistics as published. The current kit catalogue and map overlays stay unchanged. Repeating the same edition number atomically replaces that edition's snapshot and statistics. Statistics do not require a website rebuild.
 
-For production, point `databaseUrl` at the persistent website database and run with its filesystem permissions. The command needs a source checkout with dependencies; the standalone serving release does not include the exporters. Synchronize DiscordSRV links afterward if the import added players (see [the README](../README.md#discord-login-and-cosmetics-optional)).
+For production, point `databaseUrl` at the persistent website database and run with its filesystem permissions. The command needs a source checkout with dependencies; the standalone serving release does not include the exporters. Synchronize DiscordSRV afterward to refresh account links and current Minecraft identities from `usercache.json` (see [the README](../README.md#discord-login-and-cosmetics-optional)).
 
 ## Preview and recovery
 

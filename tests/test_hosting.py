@@ -120,9 +120,15 @@ class HostingTests(unittest.TestCase):
         website = (output / "sgp-website.service").read_text()
         self.assertIn("Environment=HOSTNAME=127.0.0.1", website)
         self.assertIn("Environment=DATABASE_URL=file:/var/lib/sgp/sgp.sqlite", website)
+        self.assertIn("Environment=BLUEMAP_INTERNAL_URL=http://127.0.0.1:8100", website)
         self.assertIn("EnvironmentFile=/etc/sgp/website.env", website)
         self.assertNotIn("TEST_SECRET", website)
-        self.assertIn("sgp.example.com", (output / "Caddyfile").read_text())
+        caddy = (output / "Caddyfile").read_text()
+        self.assertIn("sgp.example.com", caddy)
+        self.assertIn("handle /map {", caddy)
+        self.assertIn("redir /map/ /map 308", caddy)
+        self.assertIn("handle_path /map/*", caddy)
+        self.assertNotIn("rewrite * /api/map-shell", caddy)
 
     def test_config_rejects_overlapping_paths_and_line_injection(self):
         config = json.loads((ROOT / "deploy/host.example.json").read_text())

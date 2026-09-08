@@ -13,11 +13,17 @@ export type DiscordSrvLink = {
   playerUuid: string;
 };
 
+export type MinecraftPlayerIdentity = {
+  playerUuid: string;
+  minecraftName: string;
+};
+
 export type DiscordSrvSyncResult = {
   linksInSource: number;
   linkedPlayers: number;
   changedPlayers: number;
   clearedPlayers: number;
+  discoveredPlayers: number;
   unknownPlayers: number;
 };
 
@@ -55,33 +61,112 @@ export function parseDiscordSrvAccountsAof(contents: string): DiscordSrvLink[] {
   return [...byDiscord].map(([discordId, playerUuid]) => ({ discordId, playerUuid }));
 }
 
+export function parseMinecraftUsercache(contents: string): MinecraftPlayerIdentity[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(contents.replace(/^\uFEFF/, ""));
+  } catch (error) {
+    throw new Error("Invalid Minecraft usercache.json: expected valid JSON", { cause: error });
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw new Error("Invalid Minecraft usercache.json: expected a JSON array");
+  }
+
+  const byUuid = new Map<string, MinecraftPlayerIdentity>();
+  parsed.forEach((entry, index) => {
+    if (!entry || typeof entry !== "object") {
+      throw new Error(`Invalid Minecraft usercache.json entry at index ${index}`);
+    }
+
+    const uuid = "uuid" in entry ? entry.uuid : undefined;
+    const name = "name" in entry ? entry.name : undefined;
+    if (
+      typeof uuid !== "string" ||
+      !uuidOnlyPattern.test(uuid) ||
+      typeof name !== "string" ||
+      name.length === 0
+    ) {
+      throw new Error(`Invalid Minecraft usercache.json entry at index ${index}`);
+    }
+
+    const playerUuid = uuid.toLowerCase();
+    byUuid.set(playerUuid, { playerUuid, minecraftName: name });
+  });
+
+  return [...byUuid.values()];
+}
+
 export async function syncDiscordSrvLinks(
   database: SgpDatabase,
   sourceLinks: DiscordSrvLink[],
+  minecraftPlayers: MinecraftPlayerIdentity[] = [],
 ): Promise<DiscordSrvSyncResult> {
-  const existingPlayers = await database
-    .select({
-      uuid: players.uuid,
-      discordId: players.discordId,
-      discordUsername: players.discordUsername,
-      discordDisplayName: players.discordDisplayName,
-      discordAvatarUrl: players.discordAvatarUrl,
-      updatedAt: players.updatedAt,
-    })
-    .from(players);
-  const playersByUuid = new Map(existingPlayers.map((player) => [player.uuid.toLowerCase(), player]));
-  const matchedLinks = sourceLinks.flatMap((link) => {
-    const player = playersByUuid.get(link.playerUuid.toLowerCase());
-    return player ? [{ link, player }] : [];
-  });
-  const matchedUuids = new Set(matchedLinks.map(({ player }) => player.uuid));
-  const changedPlayers = matchedLinks.filter(({ link, player }) => player.discordId !== link.discordId).length;
-  const clearedPlayers = existingPlayers.filter(
-    (player) => player.discordId !== null && !matchedUuids.has(player.uuid),
-  ).length;
-
-  await database.transaction(async (transaction) => {
+  return database.transaction(async (transaction) => {
     const now = new Date();
+    const existingBefore = await transaction
+      .select({
+        uuid: players.uuid,
+        currentMinecraftName: players.currentMinecraftName,
+      })
+      .from(players);
+    const storedByNormalizedUuid = new Map(
+      existingBefore.map((player) => [player.uuid.toLowerCase(), player]),
+    );
+    let discoveredPlayers = 0;
+
+    for (const player of minecraftPlayers) {
+      const normalizedUuid = player.playerUuid.toLowerCase();
+      const stored = storedByNormalizedUuid.get(normalizedUuid);
+      if (stored) {
+        if (stored.currentMinecraftName !== player.minecraftName) {
+          await transaction
+            .update(players)
+            .set({
+              currentMinecraftName: player.minecraftName,
+              updatedAt: now,
+            })
+            .where(eq(players.uuid, stored.uuid));
+          storedByNormalizedUuid.set(normalizedUuid, {
+            uuid: stored.uuid,
+            currentMinecraftName: player.minecraftName,
+          });
+        }
+      } else {
+        await transaction.insert(players).values({
+          uuid: normalizedUuid,
+          currentMinecraftName: player.minecraftName,
+          updatedAt: now,
+        });
+        storedByNormalizedUuid.set(normalizedUuid, {
+          uuid: normalizedUuid,
+          currentMinecraftName: player.minecraftName,
+        });
+        discoveredPlayers += 1;
+      }
+    }
+
+    const existingPlayers = await transaction
+      .select({
+        uuid: players.uuid,
+        discordId: players.discordId,
+        discordUsername: players.discordUsername,
+        discordDisplayName: players.discordDisplayName,
+        discordAvatarUrl: players.discordAvatarUrl,
+        updatedAt: players.updatedAt,
+      })
+      .from(players);
+    const playersByUuid = new Map(existingPlayers.map((player) => [player.uuid.toLowerCase(), player]));
+    const matchedLinks = sourceLinks.flatMap((link) => {
+      const player = playersByUuid.get(link.playerUuid.toLowerCase());
+      return player ? [{ link, player }] : [];
+    });
+    const matchedUuids = new Set(matchedLinks.map(({ player }) => player.uuid));
+    const changedPlayers = matchedLinks.filter(({ link, player }) => player.discordId !== link.discordId).length;
+    const clearedPlayers = existingPlayers.filter(
+      (player) => player.discordId !== null && !matchedUuids.has(player.uuid),
+    ).length;
+
     await transaction
       .update(players)
       .set({
@@ -106,15 +191,16 @@ export async function syncDiscordSrvLinks(
         })
         .where(eq(players.uuid, player.uuid));
     }
-  });
 
-  return {
-    linksInSource: sourceLinks.length,
-    linkedPlayers: matchedLinks.length,
-    changedPlayers,
-    clearedPlayers,
-    unknownPlayers: sourceLinks.length - matchedLinks.length,
-  };
+    return {
+      linksInSource: sourceLinks.length,
+      linkedPlayers: matchedLinks.length,
+      changedPlayers,
+      clearedPlayers,
+      discoveredPlayers,
+      unknownPlayers: sourceLinks.length - matchedLinks.length,
+    };
+  });
 }
 
 function removeDiscordLink(byDiscord: Map<string, string>, byUuid: Map<string, string>, discordId: string) {

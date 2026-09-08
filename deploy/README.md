@@ -2,7 +2,7 @@
 
 One Ubuntu Server 26.04 LTS machine runs Caddy, the Next.js website and Paper with BlueMap. SQLite stays outside releases. These files prepare the host; nothing is installed until you run the commands below. The domain and machine location can be chosen later.
 
-Public traffic uses HTTPS: `/` → website, `/map/` → BlueMap. Caddy connects to both through loopback; BlueMap's CSS/JS remain served from the website's `/bluemap/` directory. Minecraft has its separate game port.
+Public traffic uses HTTPS: `/` → website. The `/map` HTML document is served by the website itself so the SGP navbar/background exist at first paint; `/map/*` assets, tiles and live/SSE traffic proxy directly to BlueMap with the prefix stripped. Caddy connects to both through loopback, and BlueMap's SGP CSS/JS remain served from the website's `/bluemap/` directory. Minecraft has its separate game port.
 
 ## Prepare the host
 
@@ -76,9 +76,9 @@ sudo systemctl enable --now caddy
 sudo systemctl reload caddy
 ```
 
-Activation checks runtime compatibility, stops the website, snapshots an existing database, applies migrations, switches `current`, and checks `/api/health`. First deployment creates an empty migrated database. Follow [Content publishing](../docs/publishing.md#publish-a-finished-edition) as user `sgp`, with `databaseUrl` in `publish.json` set to `file:/var/lib/sgp/sgp.sqlite`. Then synchronize DiscordSRV links with `DATABASE_URL` pointing to that same file. Imports need a source checkout with its dependencies; the standalone release contains only the serving runtime.
+Activation checks runtime compatibility, stops the website, snapshots an existing database, applies migrations, switches `current`, and checks `/api/health`. First deployment creates an empty migrated database. Follow [Content publishing](../docs/publishing.md#publish-a-finished-edition) as user `sgp`, with `databaseUrl` in `publish.json` set to `file:/var/lib/sgp/sgp.sqlite`. Then, from a source checkout with dependencies and filesystem access to both the database and Minecraft account files, synchronize DiscordSRV with `DATABASE_URL=file:/var/lib/sgp/sgp.sqlite`, `DISCORDSRV_ACCOUNTS_PATH=/srv/minecraft/plugins/DiscordSRV/accounts.aof`, and `MINECRAFT_USERCACHE_PATH=/srv/minecraft/usercache.json`. The sync imports current Minecraft identities before applying Discord links, so it does not depend on an edition import. The standalone release contains only the serving runtime, not the import/sync tooling.
 
-Check `https://YOUR_DOMAIN/api/health`, `/`, `/map/`, live markers and Discord login before opening the site to players. Read failures with `journalctl -u sgp-website -u sgp-minecraft -u caddy`. Caddy forwards the public Host header to the website.
+Check `https://YOUR_DOMAIN/api/health`, `/`, `/map`, live markers and Discord login before opening the site to players. Read failures with `journalctl -u sgp-website -u sgp-minecraft -u caddy`. Caddy forwards the public Host header to the website.
 
 ## Backups and recovery
 

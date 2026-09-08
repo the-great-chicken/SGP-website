@@ -25,7 +25,7 @@ export default async function MyProfilePage() {
       <PageIntro
         eyebrow="Espace privé"
         title="Mon profil"
-        description={session.player ? "Votre compte Discord est relié à votre identité Minecraft par DiscordSRV." : "Votre identité Discord est confirmée, mais DiscordSRV ne la relie encore à aucun joueur connu du site."}
+        description={session.player ? "Votre compte Discord est relié à votre identité Minecraft par DiscordSRV." : "Votre identité Discord est confirmée, mais aucune identité Minecraft synchronisée ne correspond encore à ce compte."}
         aside={<span className="status-chip protected"><LockKeyhole size={14} /> Session privée</span>}
       />
       <div className="private-layout">
@@ -62,7 +62,7 @@ export default async function MyProfilePage() {
               </>
             ) : (
               <>
-                <p>Liez votre compte Minecraft avec la commande et le code DiscordSRV habituels, puis demandez à l’administrateur de resynchroniser <span className="inline-code">accounts.aof</span>. Reconnectez-vous ensuite ici.</p>
+                <p>Liez votre compte Minecraft avec la commande et le code DiscordSRV habituels, puis demandez à l’administrateur de resynchroniser <span className="inline-code">accounts.aof</span> et <span className="inline-code">usercache.json</span>. Actualisez ensuite cette page.</p>
                 <div className="private-account-actions">
                   <Link className="button ghost" href="/players">Chercher mon profil public</Link>
                   <LogoutButton />

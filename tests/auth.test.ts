@@ -16,7 +16,11 @@ import {
   removeAuthSession,
   storeAuthSession,
 } from "../src/auth/session-query";
-import { parseDiscordSrvAccountsAof, syncDiscordSrvLinks } from "../src/db/discordsrv";
+import {
+  parseDiscordSrvAccountsAof,
+  parseMinecraftUsercache,
+  syncDiscordSrvLinks,
+} from "../src/db/discordsrv";
 import * as schema from "../src/db/schema";
 
 const alpha = "11111111-1111-4111-8111-111111111111";
@@ -79,7 +83,21 @@ test("DiscordSRV AOF replay produces the current one-to-one links", () => {
   );
 });
 
-test("DiscordSRV sync atomically applies links and clears stale identities", async () => {
+test("Minecraft usercache provides current UUID/name identities", () => {
+  const minecraftPlayers = parseMinecraftUsercache(JSON.stringify([
+    { name: "Alpha", uuid: alpha, expiresOn: "2026-10-01 00:00:00 +0000" },
+    { name: "BravoPrime", uuid: bravo, expiresOn: "2026-10-01 00:00:00 +0000" },
+  ]));
+
+  assert.deepEqual(minecraftPlayers, [
+    { playerUuid: alpha, minecraftName: "Alpha" },
+    { playerUuid: bravo, minecraftName: "BravoPrime" },
+  ]);
+  assert.throws(() => parseMinecraftUsercache("{}"), /expected a JSON array/);
+  assert.throws(() => parseMinecraftUsercache("not-json"), /expected valid JSON/);
+});
+
+test("DiscordSRV sync atomically imports Minecraft identities, applies links and clears stale identities", async () => {
   const fixture = await createFixture();
   try {
     await fixture.database.insert(schema.players).values([
@@ -98,16 +116,27 @@ test("DiscordSRV sync atomically applies links and clears stale identities", asy
       { uuid: charlie, currentMinecraftName: "Charlie" },
     ]);
 
-    const result = await syncDiscordSrvLinks(fixture.database, [
-      { discordId: discordAlpha, playerUuid: alpha },
-      { discordId: discordCharlie, playerUuid: charlie },
-      { discordId: "444444444444444444", playerUuid: "44444444-4444-4444-8444-444444444444" },
-    ]);
+    const delta = "44444444-4444-4444-8444-444444444444";
+    const echo = "55555555-5555-4555-8555-555555555555";
+    const result = await syncDiscordSrvLinks(
+      fixture.database,
+      [
+        { discordId: discordAlpha, playerUuid: alpha },
+        { discordId: discordCharlie, playerUuid: charlie },
+        { discordId: "444444444444444444", playerUuid: delta },
+        { discordId: "555555555555555555", playerUuid: echo },
+      ],
+      [
+        { playerUuid: alpha, minecraftName: "AlphaPrime" },
+        { playerUuid: delta, minecraftName: "Delta" },
+      ],
+    );
     assert.deepEqual(result, {
-      linksInSource: 3,
-      linkedPlayers: 2,
-      changedPlayers: 1,
+      linksInSource: 4,
+      linkedPlayers: 3,
+      changedPlayers: 2,
       clearedPlayers: 1,
+      discoveredPlayers: 1,
       unknownPlayers: 1,
     });
 
@@ -116,12 +145,14 @@ test("DiscordSRV sync atomically applies links and clears stale identities", asy
         uuid: schema.players.uuid,
         discordId: schema.players.discordId,
         discordUsername: schema.players.discordUsername,
+        minecraftName: schema.players.currentMinecraftName,
       })
       .from(schema.players);
     assert.deepEqual(rows, [
-      { uuid: alpha, discordId: discordAlpha, discordUsername: "alpha_old" },
-      { uuid: bravo, discordId: null, discordUsername: null },
-      { uuid: charlie, discordId: discordCharlie, discordUsername: null },
+      { uuid: alpha, discordId: discordAlpha, discordUsername: "alpha_old", minecraftName: "AlphaPrime" },
+      { uuid: bravo, discordId: null, discordUsername: null, minecraftName: "Bravo" },
+      { uuid: charlie, discordId: discordCharlie, discordUsername: null, minecraftName: "Charlie" },
+      { uuid: delta, discordId: "444444444444444444", discordUsername: null, minecraftName: "Delta" },
     ]);
   } finally {
     fixture.client.close();
@@ -131,10 +162,6 @@ test("DiscordSRV sync atomically applies links and clears stale identities", asy
 test("opaque sessions resolve the current DiscordSRV Minecraft link", async () => {
   const fixture = await createFixture();
   try {
-    await fixture.database.insert(schema.players).values({
-      uuid: alpha,
-      currentMinecraftName: "Alpha",
-    });
     const now = new Date("2026-09-05T12:00:00Z");
     const expiresAt = new Date("2026-10-05T12:00:00Z");
     const discord = {
@@ -146,7 +173,11 @@ test("opaque sessions resolve the current DiscordSRV Minecraft link", async () =
 
     await storeAuthSession(fixture.database, "hashed-token", discord, expiresAt, now);
     assert.equal((await queryAuthSession(fixture.database, "hashed-token", now))?.player, null);
-    await syncDiscordSrvLinks(fixture.database, [{ discordId: discordAlpha, playerUuid: alpha }]);
+    await syncDiscordSrvLinks(
+      fixture.database,
+      [{ discordId: discordAlpha, playerUuid: alpha }],
+      [{ playerUuid: alpha, minecraftName: "Alpha" }],
+    );
     assert.deepEqual(await queryAuthSession(fixture.database, "hashed-token", now), {
       discord,
       player: { uuid: alpha, minecraftName: "Alpha" },
