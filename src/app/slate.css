@@ -2686,3 +2686,108 @@ select:focus-visible,
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Private profile: full-width identity and cosmetics ----------------------- */
+.private-page .private-main {
+  width: 100%;
+}
+
+.private-page .private-account-card {
+  min-height: 0;
+  justify-content: flex-start;
+  padding: clamp(24px, 4vw, 40px);
+}
+
+.private-identity-summary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.private-identity-avatar {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  border-radius: 3px;
+}
+
+.private-identity-copy {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.private-identity-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.private-identity-status .round-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  color: var(--gold);
+}
+
+.private-identity-status .eyebrow,
+.private-account-card .private-identity-status .eyebrow {
+  margin: 0;
+}
+
+.private-account-card .private-identity-copy h2 {
+  margin: 0;
+}
+
+.private-identity-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 16px;
+  color: var(--paper-muted);
+  font-size: var(--font-min);
+}
+
+.private-identity-names span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.private-identity-names strong {
+  color: var(--paper);
+  font-size: inherit;
+}
+
+.private-identity-names small {
+  color: var(--paper-muted);
+  font-size: inherit;
+}
+
+.private-page .private-account-card > p:not(.eyebrow) {
+  max-width: 760px;
+  margin-top: 24px;
+  margin-bottom: 0;
+}
+
+.private-page .private-account-actions {
+  margin-top: 22px;
+}
+
+@media (max-width: 620px) {
+  .private-identity-summary {
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .private-identity-avatar {
+    width: 60px;
+    height: 60px;
+    flex-basis: 60px;
+  }
+
+  .private-identity-names {
+    display: grid;
+    gap: 4px;
+  }
+}
