@@ -25,10 +25,10 @@ export default async function KitsPage() {
     .map((kit) => toKitCardView(kit, resolveItemImage));
 
   return (
-    <div className="shell page-stack">
+    <div className="shell page-stack kits-page">
       <PageIntro
-        eyebrow="Arsenal actuel"
-        title="Choisir son style de jeu."
+        eyebrow="Équipement et capacités"
+        title="Kits"
         description="Parcourez chaque loadout, lisez les objets comme en jeu et comparez les tendances relevées au fil des éditions."
         aside={
           <div className="manifest-badge">

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Vector3 } from "three";
 import { getKitPreview, getKitWeapon } from "../src/lib/kit-preview";
-import { rightHandAttachment } from "../src/lib/kit-player-scene";
+import { elytraWingPose, rightHandAttachment } from "../src/lib/kit-player-scene";
 import { minecraftRgb, tintKitIcon } from "../src/lib/kit-icon-color";
 import type { KitDefinition, KitOperation } from "../src/lib/kit-manifest";
 
@@ -46,4 +46,21 @@ test("native hand attachment uses Minecraft bone-relative coordinates without im
   assert.ok(origin.distanceTo(new Vector3(-1, 10, -2)) < 1e-10);
   assert.ok(Math.abs(transform.determinant() - 1) < 1e-10);
   assert.ok(Math.abs(new Vector3(0, 16, 0).applyMatrix4(transform).distanceTo(origin) - 16) < 1e-10);
+});
+
+
+test("elytra wings use vanilla shoulder pivots, opposing rotations, and mirrored right-wing geometry", () => {
+  const left = elytraWingPose(1);
+  const right = elytraWingPose(-1);
+
+  assert.deepEqual(left.pivot, [5, 0, 2]);
+  assert.deepEqual(right.pivot, [-5, 0, 2]);
+  assert.deepEqual(left.center, [-5, 10, 1]);
+  assert.deepEqual(right.center, [-5, 10, 1]);
+  assert.equal(left.rotation[0], Math.PI / 12);
+  assert.equal(right.rotation[0], Math.PI / 12);
+  assert.equal(left.rotation[2], -Math.PI / 12);
+  assert.equal(right.rotation[2], Math.PI / 12);
+  assert.equal(left.scaleX, 1);
+  assert.equal(right.scaleX, -1);
 });

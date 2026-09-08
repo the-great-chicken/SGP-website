@@ -58,7 +58,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
         </Link>
         <PageIntro
           eyebrow="Profil joueur"
-          title="L’histoire reste à écrire."
+          title="Profil joueur"
           description="Les profils retracent les éditions dont les statistiques ont été publiées."
         />
         <EmptyState

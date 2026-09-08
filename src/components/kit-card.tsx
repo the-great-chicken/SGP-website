@@ -1,4 +1,4 @@
-import { ArrowUpRight, PackageOpen, Sparkles } from "lucide-react";
+import { ArrowUpRight, PackageOpen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
@@ -24,22 +24,33 @@ export function KitCard({ kit, stats, statsContext, compact = false }: KitCardPr
       style={style}
     >
       <article className="kit-card">
-        <div className="kit-card-glow" aria-hidden="true" />
-        <div className="kit-card-topline">
-          <span className="kit-index">{kit.id === null ? "—" : String(kit.id).padStart(2, "0")}</span>
-          <span className="kit-count">
-            <PackageOpen size={14} />
-            {kit.operationCount} emplacements
-          </span>
+        <div className="kit-card-art">
+          {compact ? (
+            <span className="kit-index">{kit.id === null ? "—" : String(kit.id).padStart(2, "0")}</span>
+          ) : null}
+          {kit.iconSrc ? (
+            <Image className="kit-icon" src={kit.iconSrc} width={96} height={96} alt="" unoptimized />
+          ) : (
+            <span className="kit-card-fallback" aria-hidden="true">{kit.name.slice(0, 1)}</span>
+          )}
+          <span className="kit-card-arrow" aria-hidden="true"><ArrowUpRight size={18} /></span>
         </div>
+
         <div className="kit-card-copy">
-          {kit.iconSrc ? <Image className="kit-icon" src={kit.iconSrc} width={48} height={48} alt="" unoptimized /> : null}
-          <p className="kit-label">{kit.abilityName ? "Kit à capacité" : "Kit spécial"}</p>
+          {compact ? <p className="kit-label">{kit.abilityName ?? "Kit spécial"}</p> : null}
           <h2>{kit.name}</h2>
-          <p className="kit-ability-name">
-            <Sparkles size={14} /> {kit.abilityName ?? "Sans capacité active"}
-          </p>
+          {compact ? (
+            <p className="kit-card-open">Équipement et capacité <ArrowUpRight size={14} /></p>
+          ) : (
+            <p className="kit-label kit-ability-below">{kit.abilityName ?? "Kit spécial"}</p>
+          )}
         </div>
+
+        <div className="kit-card-meta">
+          <span><PackageOpen size={13} /> {kit.operationCount} emplacements</span>
+          <span>{kit.itemCount} objets</span>
+        </div>
+
         <div className="kit-item-preview" aria-label="Aperçu du loadout">
           {kit.featuredItems.map((item) => (
             <span className="kit-preview-item" title={item.name} key={`${item.id}-${item.name}`}>
@@ -63,6 +74,7 @@ export function KitCard({ kit, stats, statsContext, compact = false }: KitCardPr
             <span className="kit-preview-more">+{kit.operationCount - kit.featuredItems.length}</span>
           ) : null}
         </div>
+
         {metrics.length ? (
           <div className="kit-card-stats">
             {metrics.map((metric) => (
@@ -73,12 +85,6 @@ export function KitCard({ kit, stats, statsContext, compact = false }: KitCardPr
             ))}
           </div>
         ) : null}
-        <div className="kit-card-footer">
-          <span>{kit.itemCount} objets au total</span>
-          <span className="kit-card-arrow" aria-hidden="true">
-            <ArrowUpRight size={18} />
-          </span>
-        </div>
       </article>
     </Link>
   );

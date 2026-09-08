@@ -23,10 +23,10 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const directory = await loadPlayerDirectory(search);
 
   return (
-    <div className="shell page-stack">
+    <div className="shell page-stack players-page">
       <PageIntro
         eyebrow="Profils publics"
-        title="Chaque joueur a son parcours."
+        title="Joueurs"
         description="Retrouvez les identités Minecraft, les participations et les grandes tendances enregistrées au fil des éditions publiques."
         aside={
           <div className="manifest-badge">

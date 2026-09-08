@@ -29,8 +29,8 @@ export default async function LeaderboardsPage({ searchParams }: LeaderboardsPag
   const scope = snapshot.lifetime ? "all" : snapshot.selectedEdition?.number.toString() ?? "";
 
   return (
-    <div className="shell page-stack">
-      <PageIntro eyebrow="Archives compétitives" title="Les performances, côte à côte." description="Comparez les joueurs sur une édition ou sur l’ensemble de leur parcours. Cliquez sur une colonne pour trier le classement." />
+    <div className="shell page-stack leaderboard-page">
+      <PageIntro eyebrow="Résultats par édition" title="Classements" description="Comparez les joueurs sur une édition ou sur l’ensemble de leur parcours. Cliquez sur une colonne pour trier le classement." />
       {snapshot.editions.length === 0 ? (
         <EmptyState icon={Trophy} title="Aucune édition publique" description="Les premiers classements apparaîtront ici après la publication d’une édition." />
       ) : (

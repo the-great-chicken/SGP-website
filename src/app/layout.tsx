@@ -3,10 +3,11 @@ import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
+import "./slate.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "SGP — Les archives",
+    default: "Soirée du Grand Poulet — SGP",
     template: "%s — SGP",
   },
   description: "Kits, classements, joueurs et histoire de la Soirée du Grand Poulet.",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: "dark",
-  themeColor: "#101416",
+  themeColor: "#18252f",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

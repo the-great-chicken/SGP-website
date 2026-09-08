@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const navigation = [
+  { href: "/", label: "Accueil" },
   { href: "/kits", label: "Kits" },
   { href: "/leaderboards", label: "Classements" },
   { href: "/players", label: "Joueurs" },
@@ -26,7 +27,7 @@ export function SiteHeader() {
           </span>
           <span className="brand-copy">
             <strong>SGP</strong>
-            <small>Les archives</small>
+            <small>Soirée du Grand Poulet</small>
           </span>
         </Link>
 

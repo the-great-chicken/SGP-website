@@ -1,4 +1,4 @@
-import { BoxGeometry, Group, Matrix4, Mesh, MeshLambertMaterial, NearestFilter, ShaderMaterial, SRGBColorSpace, Texture, TextureLoader, type Object3D } from "three";
+import { BoxGeometry, DoubleSide, Group, Matrix4, Mesh, MeshLambertMaterial, NearestFilter, ShaderMaterial, SRGBColorSpace, Texture, TextureLoader, type Object3D } from "three";
 import type { KitPreview } from "./kit-preview";
 
 // Minecraft 26.1 ItemInHandLayer: after the arm bone, rotate X -90°, Y 180°,
@@ -35,9 +35,10 @@ export async function createKitPlayer(preview: KitPreview) {
   if (preview.weapon) rightArm.rotation.x = -Math.PI / 10;
   root.add(head, rightArm, leftArm);
 
-  async function cube(parent: Object3D, src: string, size: [number, number, number], uv: [number, number], center: [number, number, number], grow = 0) {
+  async function cube(parent: Object3D, src: string, size: [number, number, number], uv: [number, number], center: [number, number, number], grow = 0, doubleSided = false) {
     const map = await texture(src);
-    if (!materials.has(src)) materials.set(src, new MeshLambertMaterial({ map, alphaTest: 0.5 }));
+    const materialKey = `${src}\0${doubleSided ? "double" : "front"}`;
+    if (!materials.has(materialKey)) materials.set(materialKey, new MeshLambertMaterial({ map, alphaTest: 0.5, ...(doubleSided ? { side: DoubleSide } : {}) }));
     const [w, h, d] = size;
     const [u, v] = uv;
     const geometry = new BoxGeometry(w + grow * 2, h + grow * 2, d + grow * 2);
@@ -48,7 +49,7 @@ export async function createKitPlayer(preview: KitPreview) {
       const y = position.getY(i) / (h + grow * 2) + 0.5;
       const z = position.getZ(i) / (d + grow * 2) + 0.5;
       const face = Math.floor(i / 4);
-      const [tu, tv] = face === 0 ? [u + d + w + z * d, v + d + y * h]
+      let [tu, tv] = face === 0 ? [u + d + w + z * d, v + d + y * h]
         : face === 1 ? [u + (1 - z) * d, v + d + y * h]
           : face === 2 ? [u + d + w + x * w, v + z * d]
             : face === 3 ? [u + d + x * w, v + (1 - z) * d]
@@ -56,7 +57,7 @@ export async function createKitPlayer(preview: KitPreview) {
                 : [u + d + x * w, v + d + y * h];
       coords.setXY(i, tu / map.image.width, 1 - tv / map.image.height);
     }
-    const mesh = new Mesh(geometry, materials.get(src));
+    const mesh = new Mesh(geometry, materials.get(materialKey));
     mesh.position.set(...center);
     parent.add(mesh);
   }
@@ -78,7 +79,7 @@ export async function createKitPlayer(preview: KitPreview) {
     cube(rightArm, armor.chest.src, [4, 12, 4], [40, 16], [-1, 4, 0], 0.5),
     cube(leftArm, armor.chest.src, [4, 12, 4], [40, 16], [1, 4, 0], 0.5),
   );
-  for (const side of [-1, 1]) {
+  for (const side of [-1, 1] as const) {
     const leg = new Group();
     leg.position.set(side * 1.9, 12, 0);
     root.add(leg);
@@ -86,17 +87,37 @@ export async function createKitPlayer(preview: KitPreview) {
     if (armor.legs) jobs.push(cube(leg, armor.legs.src, [4, 12, 4], [0, 16], [0, 6, 0], 0.25));
     if (armor.feet) jobs.push(cube(leg, armor.feet.src, [4, 12, 4], [0, 16], [0, 6, 0], 0.5));
     if (armor.chest?.wings) {
+      const pose = elytraWingPose(side);
       const wing = new Group();
-      wing.position.set(side * 5, 0, 2);
-      wing.rotation.set(Math.PI / 12, 0, side * Math.PI / 12);
+      wing.position.set(...pose.pivot);
+      wing.rotation.set(...pose.rotation);
+      wing.scale.x = pose.scaleX;
       root.add(wing);
-      jobs.push(cube(wing, armor.chest.src, [10, 20, 2], [22, 0], [0, 10, 1]));
+      // Minecraft renders elytra through armorCutoutNoCull. The atlas only
+      // paints one broad face of the wing cuboid, so culling would make a wing
+      // disappear as the preview turns. DoubleSide reproduces the no-cull pass.
+      jobs.push(cube(wing, armor.chest.src, [10, 20, 2], [22, 0], pose.center, 1, true));
     }
   }
   const results = await Promise.allSettled(jobs);
   const failed = results.find((result) => result.status === "rejected");
   if (failed?.status === "rejected") { disposePlayer(root); throw failed.reason; }
   return { root, head, rightArm };
+}
+
+
+export function elytraWingPose(side: -1 | 1) {
+  return {
+    // Vanilla ElytraModel defines one 10×20×2 wing cuboid from x -10..0,
+    // then mirrors the complete model part for the right wing. Mirroring the
+    // Three.js group (instead of reflecting the atlas coordinates) preserves
+    // the same UV island on both wings and mirrors the geometry exactly.
+    // ElytraLayer offsets the model 1/8 block backward.
+    pivot: [side * 5, 0, 2] as [number, number, number],
+    rotation: [Math.PI / 12, 0, -side * Math.PI / 12] as [number, number, number],
+    center: [-5, 10, 1] as [number, number, number],
+    scaleX: side === -1 ? -1 : 1,
+  };
 }
 
 export function disposePlayer(root: Object3D) {

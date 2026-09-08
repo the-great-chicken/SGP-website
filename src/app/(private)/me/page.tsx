@@ -24,7 +24,7 @@ export default async function MyProfilePage() {
     <div className="shell page-stack private-page">
       <PageIntro
         eyebrow="Espace privé"
-        title={session.player ? `Bienvenue, ${session.player.minecraftName}.` : `Bienvenue, ${discordName}.`}
+        title="Mon profil"
         description={session.player ? "Votre compte Discord est relié à votre identité Minecraft par DiscordSRV." : "Votre identité Discord est confirmée, mais DiscordSRV ne la relie encore à aucun joueur connu du site."}
         aside={<span className="status-chip protected"><LockKeyhole size={14} /> Session privée</span>}
       />

@@ -18,7 +18,13 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
   const router = useRouter();
   const [metric, setMetric] = useState(initialMetric);
   const [ascending, setAscending] = useState(false);
-  const entries = sortLeaderboard(rows, metric, ascending);
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase("fr");
+  const entries = sortLeaderboard(rows, metric, ascending).filter((entry) => {
+    if (!normalizedQuery) return true;
+    return entry.minecraftName.toLocaleLowerCase("fr").includes(normalizedQuery)
+      || entry.currentMinecraftName.toLocaleLowerCase("fr").includes(normalizedQuery);
+  });
   const metrics = Object.keys(leaderboardMetricLabels) as LeaderboardMetric[];
 
   return (
@@ -31,7 +37,19 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
             {editions.map((edition) => <option key={edition.number} value={edition.number}>{edition.label}</option>)}
           </select>
         </label>
-        <span className="leaderboard-count">{rows.length} joueurs</span>
+        <label className="leaderboard-player-search">
+          <span>Joueur</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Rechercher un joueur…"
+            autoComplete="off"
+          />
+        </label>
+        <span className="leaderboard-count" role="status" aria-live="polite">
+          {entries.length} joueur{entries.length === 1 ? "" : "s"}
+        </span>
       </div>
       <div className="stats-table-scroll" tabIndex={0} role="region" aria-label="Tableau défilant des classements">
         <table className="stats-table">
@@ -40,7 +58,7 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
               <th scope="col">Rang</th>
               <th scope="col">Joueur</th>
               {metrics.map((candidate) => (
-                <th key={candidate} scope="col" aria-sort={metric === candidate ? ascending ? "ascending" : "descending" : "none"}>
+                <th className="is-sortable" key={candidate} scope="col" aria-sort={metric === candidate ? ascending ? "ascending" : "descending" : "none"}>
                   <button type="button" onClick={() => {
                     setAscending(candidate === metric ? !ascending : false);
                     setMetric(candidate);
@@ -53,7 +71,7 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
             </tr>
           </thead>
           <tbody>
-            {entries.map((entry) => (
+            {entries.length ? entries.map((entry) => (
               <tr key={entry.playerUuid}>
                 <td className="table-rank">{entry.rank === null ? "—" : `#${entry.rank}`}</td>
                 <th scope="row">
@@ -64,7 +82,13 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
                 </th>
                 {metrics.map((candidate) => <td className={candidate === metric ? "is-sorted" : undefined} key={candidate}>{entry.values[candidate] === null ? "—" : formatLeaderboardValue(candidate, entry.values[candidate])}</td>)}
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td className="leaderboard-no-results" colSpan={metrics.length + 2}>
+                  Aucun joueur ne correspond à cette recherche.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

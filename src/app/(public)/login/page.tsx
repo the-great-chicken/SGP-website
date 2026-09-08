@@ -35,7 +35,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <section className="auth-card">
         <div className="auth-copy">
           <p className="eyebrow">Espace joueur</p>
-          <h1>Retrouver son profil SGP.</h1>
+          <h1>Connexion</h1>
           <p>Connectez-vous avec le compte Discord lié à votre joueur Minecraft pour retrouver votre profil et personnaliser vos cosmétiques.</p>
         </div>
         <div className="auth-action-panel">

@@ -37,10 +37,10 @@ const chapters = [
 
 export default function WikiPage() {
   return (
-    <div className="shell page-stack">
+    <div className="shell page-stack wiki-page">
       <PageIntro
         eyebrow="Histoire & lore"
-        title="Ce qui s’est vraiment passé. Et le reste."
+        title="Histoire"
         description="Une archive éditoriale des anciennes éditions, écrite en MDX pour mêler récits, profils, cartes et données du site."
         aside={
           <span className="round-icon large">
