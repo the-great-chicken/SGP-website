@@ -17,7 +17,7 @@
     "test:publishing": "tsx --test tests/publishing.test.ts",
     "test:database": "tsx --test tests/auth.test.ts tests/edition-import.test.ts tests/historical-stats.test.ts tests/leaderboard-table.test.ts",
     "test:cosmetics": "tsx --test tests/cosmetics.test.ts",
-    "test:kits": "tsx --test tests/item-rendering.test.ts tests/kit-presentation.test.ts tests/kit-stats.test.ts tests/kit-preview.test.ts",
+    "test:kits": "tsx --test tests/item-rendering.test.ts tests/kit-presentation.test.ts tests/kit-stats.test.ts tests/kit-preview.test.ts tests/kit-metric-scale.test.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:import-edition": "tsx src/db/import-edition.ts",

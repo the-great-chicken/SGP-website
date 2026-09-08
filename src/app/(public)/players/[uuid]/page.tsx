@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import {
   Activity,
   ArrowLeft,
@@ -16,7 +17,7 @@ import { notFound } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
 import { EmptyState } from "@/components/empty-state";
 import { loadPlayerProfile } from "@/db/historical-stats";
-import type { PlayerEditionStats } from "@/db/historical-stats-query";
+import type { PlayerAbilityMetric, PlayerEditionStats } from "@/db/historical-stats-query";
 import {
   formatCount,
   formatDecimal,
@@ -25,6 +26,8 @@ import {
   formatFavoriteKit,
   formatPlaytime,
 } from "@/lib/historical-stats";
+import { getKitAccent } from "@/lib/kit-manifest";
+import { loadKitManifest } from "@/lib/kits";
 
 type PlayerPageProps = {
   params: Promise<{ uuid: string }>;
@@ -49,10 +52,13 @@ export async function generateMetadata({ params }: PlayerPageProps): Promise<Met
 export default async function PlayerPage({ params }: PlayerPageProps) {
   const { uuid } = await params;
   if (!uuidPattern.test(uuid)) notFound();
-  const profile = await loadPlayerProfile(uuid);
+  const [profile, kitManifest] = await Promise.all([
+    loadPlayerProfile(uuid),
+    loadKitManifest(),
+  ]);
   if (!profile) {
     return (
-      <div className="shell page-stack">
+      <div className="shell page-stack player-detail-page">
         <Link className="back-link" href="/players">
           <ArrowLeft size={16} /> Tous les joueurs
         </Link>
@@ -74,9 +80,12 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
   const ratio = profile.lifetime.deaths > 0
     ? profile.lifetime.kills / profile.lifetime.deaths
     : null;
+  const kitAccents = Object.fromEntries(
+    (kitManifest?.kits ?? []).map((kit) => [kit.key, getKitAccent(kit)]),
+  );
 
   return (
-    <div className="shell page-stack">
+    <div className="shell page-stack player-detail-page">
       <Link className="back-link" href="/players">
         <ArrowLeft size={16} /> Tous les joueurs
       </Link>
@@ -143,7 +152,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
         </div>
         <div className="edition-timeline">
           {profile.editions.map((edition) => (
-            <EditionCard edition={edition} key={edition.id} />
+            <EditionCard edition={edition} kitAccents={kitAccents} key={edition.id} />
           ))}
         </div>
       </section>
@@ -151,7 +160,13 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
   );
 }
 
-function EditionCard({ edition }: { edition: PlayerEditionStats }) {
+function EditionCard({
+  edition,
+  kitAccents,
+}: {
+  edition: PlayerEditionStats;
+  kitAccents: Record<string, string>;
+}) {
   const ratio = edition.deaths > 0 ? edition.kills / edition.deaths : null;
   return (
     <article className="edition-card">
@@ -181,13 +196,32 @@ function EditionCard({ edition }: { edition: PlayerEditionStats }) {
       {edition.abilityMetrics.length ? (
         <details className="ability-history">
           <summary><Sparkles size={16} /> Statistiques de capacités <span>{edition.abilityMetrics.length}</span></summary>
-          <div className="ability-history-grid">
-            {edition.abilityMetrics.map((metric, index) => (
-              <div key={`${metric.kitKey ?? "unknown"}-${metric.name}-${index}`} title={metric.description}>
-                <span>{metric.kitKey ? `${formatFavoriteKit(metric.kitKey)} · ` : ""}{metric.name}</span>
-                <strong>{formatDecimal(metric.value)} {metric.displayUnit}</strong>
-                {metric.description ? <p>{metric.description}</p> : null}
-              </div>
+          <div className="ability-history-groups">
+            {groupAbilityMetrics(edition.abilityMetrics).map((group) => (
+              <section
+                className="ability-metric-group"
+                key={group.key}
+                style={{
+                  "--ability-group-accent": group.kitKey
+                    ? (kitAccents[group.kitKey] ?? "var(--accent-violet)")
+                    : "var(--accent-violet)",
+                } as CSSProperties}
+              >
+                <header className="ability-metric-group-heading">
+                  <div>
+                    <h4>{group.label}</h4>
+                  </div>
+                  <small>{group.metrics.length} mesure{group.metrics.length > 1 ? "s" : ""}</small>
+                </header>
+                <div className="ability-history-grid">
+                  {group.metrics.map((metric, index) => (
+                    <div key={`${metric.name}-${index}`} title={metric.description}>
+                      <strong>{formatAbilityMetric(metric)}</strong>
+                      {metric.description ? <p>{metric.description}</p> : null}
+                    </div>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         </details>
@@ -214,6 +248,80 @@ function EditionStat({ label, value, detail }: { label: string; value: string; d
       <small>{detail}</small>
     </div>
   );
+}
+
+function groupAbilityMetrics(metrics: PlayerAbilityMetric[]) {
+  const groups = new Map<string, {
+    key: string;
+    kitKey: string | null;
+    label: string;
+    metrics: PlayerAbilityMetric[];
+  }>();
+
+  for (const metric of metrics) {
+    const key = metric.kitKey ?? "__other__";
+    const group = groups.get(key) ?? {
+      key,
+      kitKey: metric.kitKey,
+      label: metric.kitKey ? formatFavoriteKit(metric.kitKey) : "Autres capacités",
+      metrics: [],
+    };
+    group.metrics.push(metric);
+    groups.set(key, group);
+  }
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      metrics: group.metrics.toSorted((left, right) => {
+        const order = abilityMetricOrder(left.name) - abilityMetricOrder(right.name);
+        return order || left.name.localeCompare(right.name, "fr-FR");
+      }),
+    }))
+    .toSorted((left, right) => {
+      if (left.kitKey === null) return 1;
+      if (right.kitKey === null) return -1;
+      return left.label.localeCompare(right.label, "fr-FR");
+    });
+}
+
+function abilityMetricOrder(name: string) {
+  const normalized = name.toLocaleLowerCase("en-US");
+  if (/\buses?\b/.test(normalized) && !normalized.includes("successful")) return 0;
+  if (normalized.includes("successful")) return 1;
+  if (normalized.includes("affected")) return 2;
+  if (normalized.includes("target") || normalized.includes("lock")) return 3;
+  if (normalized.includes("displacement") || normalized.includes("distance")) return 4;
+  return 10;
+}
+
+function formatAbilityMetric(metric: PlayerAbilityMetric) {
+  const value = formatDecimal(metric.value);
+  const singular = Math.abs(metric.value) === 1;
+  const name = metric.name.toLocaleLowerCase("en-US");
+  const unit = metric.displayUnit.toLocaleLowerCase("en-US");
+  const displayUnit = singular ? singularAbilityUnit(unit) : unit;
+
+  if (name === unit || name.endsWith(` ${unit}`)) {
+    const displayName = singular && name.endsWith(unit)
+      ? `${name.slice(0, -unit.length)}${displayUnit}`
+      : name;
+    return `${value} ${displayName}`;
+  }
+
+  return `${value} ${displayUnit} ${name}`.trim();
+}
+
+function singularAbilityUnit(unit: string) {
+  switch (unit) {
+    case "uses": return "use";
+    case "players": return "player";
+    case "decoys": return "decoy";
+    case "seconds": return "second";
+    case "blocks": return "block";
+    case "hearts": return "heart";
+    default: return unit;
+  }
 }
 
 function nullableDecimal(value: number | null) {

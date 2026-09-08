@@ -696,6 +696,14 @@ select:focus-visible,
   font-size: 0.9rem;
 }
 
+.kit-card-stats > span.has-scale-color {
+  color: color-mix(in srgb, var(--kit-metric-color) 72%, var(--paper-muted));
+}
+
+.kit-card-stats > span.has-scale-color strong {
+  color: var(--kit-metric-color);
+}
+
 .kit-card-link.is-compact .kit-card-meta,
 .kit-card-link.is-compact .kit-item-preview,
 .kit-card-link.is-compact .kit-card-stats {
@@ -1185,6 +1193,14 @@ select:focus-visible,
 
 .refined-kit-stats .kit-metric {
   padding: 16px 10px 14px;
+}
+
+.refined-kit-stats .kit-metric.has-scale-color > span {
+  color: color-mix(in srgb, var(--kit-metric-color) 72%, var(--paper-muted));
+}
+
+.refined-kit-stats .kit-metric.has-scale-color > strong {
+  color: var(--kit-metric-color);
 }
 
 .refined-kit-stats .stats-caption {
@@ -1953,5 +1969,703 @@ select:focus-visible,
 
   .home-story-copy small {
     font-size: var(--font-min);
+  }
+}
+
+/* Multi-accent content system --------------------------------------------- */
+
+:root {
+  --accent-sky: #78c7f0;
+  --accent-cyan: #69d2c1;
+  --accent-mint: #91d2a3;
+  --accent-amber: #e5bd73;
+  --accent-coral: #ee8f82;
+  --accent-orange: #f3a66d;
+  --accent-violet: #b8a3ee;
+}
+
+.kits-page {
+  --page-accent: var(--accent-mint);
+}
+
+.leaderboard-page {
+  --page-accent: var(--accent-amber);
+}
+
+.players-page {
+  --page-accent: var(--accent-cyan);
+}
+
+.player-detail-page {
+  --page-accent: var(--accent-cyan);
+}
+
+.wiki-page {
+  --page-accent: var(--accent-violet);
+}
+
+.kits-page .page-intro .eyebrow,
+.leaderboard-page .page-intro .eyebrow,
+.players-page .page-intro .eyebrow,
+.player-detail-page .page-intro .eyebrow,
+.wiki-page .page-intro .eyebrow {
+  color: var(--page-accent);
+}
+
+/* Leaderboards: one semantic accent per metric. */
+
+.leaderboard-page .leaderboard-toolbar {
+  border-top-color: color-mix(in srgb, var(--accent-amber) 32%, var(--line));
+}
+
+.leaderboard-page .leaderboard-toolbar select,
+.leaderboard-page .leaderboard-toolbar input {
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--accent-amber) 5%, transparent), transparent 62%),
+    var(--ink-soft);
+}
+
+.leaderboard-page .leaderboard-toolbar select:focus-visible,
+.leaderboard-page .leaderboard-toolbar input:focus-visible {
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-amber) 12%, transparent);
+}
+
+.leaderboard-page .leaderboard-count {
+  color: var(--accent-amber);
+}
+
+.stats-table .metric-elo {
+  --metric-accent: var(--accent-amber);
+}
+
+.stats-table .metric-kills {
+  --metric-accent: var(--accent-coral);
+}
+
+.stats-table .metric-damage {
+  --metric-accent: var(--accent-orange);
+}
+
+.stats-table .metric-playtime {
+  --metric-accent: var(--accent-sky);
+}
+
+.stats-table th[class*="metric-"] {
+  border-bottom-color: color-mix(in srgb, var(--metric-accent) 28%, var(--line));
+}
+
+.stats-table th[class*="metric-"] button svg {
+  color: var(--metric-accent);
+  opacity: 0.88;
+}
+
+.stats-table th[aria-sort="ascending"],
+.stats-table th[aria-sort="descending"] {
+  background: color-mix(in srgb, var(--metric-accent) 14%, var(--ink-soft));
+  color: var(--metric-accent);
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--metric-accent) 72%, transparent);
+}
+
+.stats-table td.is-sorted {
+  background: color-mix(in srgb, var(--metric-accent) 9%, transparent);
+  box-shadow: inset 1px 0 color-mix(in srgb, var(--metric-accent) 16%, transparent), inset -1px 0 color-mix(in srgb, var(--metric-accent) 11%, transparent);
+}
+
+.stats-table tbody tr:hover td.is-sorted {
+  background: color-mix(in srgb, var(--metric-accent) 13%, transparent);
+}
+
+.leaderboard-page .table-rank {
+  color: var(--accent-amber);
+}
+
+.leaderboard-page .table-player .player-monogram {
+  border-color: color-mix(in srgb, var(--accent-cyan) 38%, var(--line));
+  background: color-mix(in srgb, var(--accent-cyan) 11%, var(--ink-raised));
+  color: var(--accent-cyan);
+}
+
+.leaderboard-page .stats-table tbody tr:hover {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-amber) 5%, transparent), color-mix(in srgb, var(--accent-cyan) 3%, transparent));
+}
+
+/* Players directory: identity cyan, Elo amber, combat coral, kits mint. */
+
+.players-page .manifest-badge {
+  border-color: color-mix(in srgb, var(--accent-cyan) 34%, var(--line));
+  background: color-mix(in srgb, var(--accent-cyan) 9%, var(--ink-soft));
+  color: var(--accent-cyan);
+}
+
+.players-page .player-search {
+  border-color: color-mix(in srgb, var(--accent-cyan) 30%, var(--line));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-cyan) 7%, transparent), transparent 56%);
+}
+
+.players-page .player-search:focus-within {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-cyan) 11%, transparent);
+}
+
+.players-page .player-search > svg {
+  color: var(--accent-cyan);
+}
+
+.players-page .button.primary {
+  background: var(--accent-cyan);
+  color: var(--ink);
+}
+
+.players-page .button.primary:hover {
+  background: color-mix(in srgb, var(--accent-cyan) 85%, white);
+}
+
+.players-page .player-card {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--accent-cyan) 17%, var(--line));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-cyan) 3.5%, transparent), transparent 38%);
+}
+
+.players-page .player-card::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: linear-gradient(var(--accent-cyan), color-mix(in srgb, var(--accent-violet) 70%, transparent));
+  content: "";
+  opacity: 0.72;
+}
+
+.players-page .player-card:hover {
+  border-color: color-mix(in srgb, var(--accent-cyan) 54%, var(--line));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-cyan) 8%, transparent), color-mix(in srgb, var(--accent-violet) 3%, transparent));
+}
+
+.players-page .player-monogram {
+  border-color: color-mix(in srgb, var(--accent-cyan) 45%, var(--line));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent-cyan) 21%, var(--ink-raised)), color-mix(in srgb, var(--accent-violet) 8%, var(--ink-raised)));
+  color: var(--accent-cyan);
+}
+
+.players-page .player-card-stats > span:nth-child(1) svg {
+  color: var(--accent-sky);
+}
+
+.players-page .player-card-stats > span:nth-child(2) svg {
+  color: var(--accent-coral);
+}
+
+.players-page .player-card-stats > span:nth-child(3) svg {
+  color: var(--accent-mint);
+}
+
+.players-page .player-card-rating strong {
+  color: var(--accent-amber);
+}
+
+.players-page .player-card-arrow {
+  color: var(--accent-cyan);
+}
+
+/* Player profiles: use the same semantic colors as the directory/table. */
+
+.player-detail-page .profile-identity-card {
+  border-color: color-mix(in srgb, var(--accent-cyan) 25%, var(--line));
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent-cyan) 12%, transparent), transparent 50%),
+    linear-gradient(160deg, color-mix(in srgb, var(--accent-violet) 4%, transparent), transparent 55%);
+}
+
+.player-detail-page .profile-monogram {
+  border-color: color-mix(in srgb, var(--accent-cyan) 48%, var(--line));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent-cyan) 24%, var(--ink-raised)), color-mix(in srgb, var(--accent-violet) 12%, var(--ink-raised)));
+  color: var(--accent-cyan);
+}
+
+.player-detail-page .identity-facts > span:nth-child(1) svg {
+  color: var(--accent-sky);
+}
+
+.player-detail-page .identity-facts > span:nth-child(2) svg {
+  color: var(--accent-mint);
+}
+
+.player-detail-page .alias-list strong {
+  background: color-mix(in srgb, var(--accent-violet) 11%, transparent);
+  color: var(--accent-violet);
+}
+
+.player-detail-page .profile-content {
+  border-color: color-mix(in srgb, var(--accent-cyan) 16%, var(--line));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-cyan) 3%, transparent), transparent 48%);
+}
+
+.player-detail-page .profile-stat:nth-child(1),
+.player-detail-page .edition-stat-grid > div:nth-child(6) {
+  --stat-accent: var(--accent-amber);
+}
+
+.player-detail-page .profile-stat:nth-child(2),
+.player-detail-page .edition-stat-grid > div:nth-child(1) {
+  --stat-accent: var(--accent-coral);
+}
+
+.player-detail-page .profile-stat:nth-child(3),
+.player-detail-page .edition-stat-grid > div:nth-child(2) {
+  --stat-accent: var(--accent-violet);
+}
+
+.player-detail-page .profile-stat:nth-child(4),
+.player-detail-page .edition-stat-grid > div:nth-child(3) {
+  --stat-accent: var(--accent-orange);
+}
+
+.player-detail-page .profile-stat:nth-child(5),
+.player-detail-page .edition-stat-grid > div:nth-child(4) {
+  --stat-accent: var(--accent-sky);
+}
+
+.player-detail-page .profile-stat:nth-child(6),
+.player-detail-page .edition-stat-grid > div:nth-child(5) {
+  --stat-accent: var(--accent-mint);
+}
+
+.player-detail-page .profile-stat {
+  border-color: color-mix(in srgb, var(--stat-accent) 28%, var(--line));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--stat-accent) 8%, transparent), transparent 62%);
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--stat-accent) 38%, transparent);
+}
+
+.player-detail-page .profile-stat-label,
+.player-detail-page .profile-stat-label svg {
+  color: var(--stat-accent);
+}
+
+.player-detail-page .profile-stat strong {
+  color: color-mix(in srgb, var(--stat-accent) 72%, var(--paper));
+}
+
+.player-detail-page .edition-history .eyebrow {
+  color: var(--accent-sky);
+}
+
+.player-detail-page .edition-card {
+  border-color: color-mix(in srgb, var(--accent-sky) 18%, var(--line));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-sky) 3%, transparent), transparent 45%);
+}
+
+.player-detail-page .edition-card > header {
+  border-bottom-color: color-mix(in srgb, var(--accent-sky) 18%, var(--line));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-sky) 9%, transparent), color-mix(in srgb, var(--accent-violet) 3%, transparent) 60%, transparent);
+}
+
+.player-detail-page .edition-number {
+  border-color: color-mix(in srgb, var(--accent-sky) 46%, var(--line));
+  background: color-mix(in srgb, var(--accent-sky) 8%, transparent);
+  color: var(--accent-sky);
+}
+
+.player-detail-page .edition-rating strong {
+  color: var(--accent-amber);
+}
+
+.player-detail-page .edition-stat-grid > div {
+  position: relative;
+}
+
+.player-detail-page .edition-stat-grid > div::before {
+  position: absolute;
+  top: -18px;
+  right: 14px;
+  left: 14px;
+  height: 2px;
+  background: color-mix(in srgb, var(--stat-accent) 58%, transparent);
+  content: "";
+}
+
+.player-detail-page .edition-stat-grid > div:first-child::before {
+  left: 0;
+}
+
+.player-detail-page .edition-stat-grid strong {
+  color: color-mix(in srgb, var(--stat-accent) 66%, var(--paper));
+}
+
+.player-detail-page .ability-history summary {
+  color: var(--accent-violet);
+}
+
+.player-detail-page .ability-history summary > span {
+  color: var(--accent-mint);
+}
+
+.player-detail-page .ability-history-groups {
+  display: grid;
+  gap: 14px;
+  padding: 0 24px 24px;
+}
+
+.player-detail-page .ability-metric-group {
+  --ability-group-accent: var(--accent-violet);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ability-group-accent) 24%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ability-group-accent) 2.5%, var(--ink-soft));
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--ability-group-accent) 62%, transparent);
+}
+
+.player-detail-page .ability-metric-group-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ability-group-accent) 18%, var(--line));
+  background: color-mix(in srgb, var(--ability-group-accent) 5%, transparent);
+}
+
+.player-detail-page .ability-metric-group-heading > div {
+  display: grid;
+  gap: 2px;
+}
+
+.player-detail-page .ability-metric-group-heading span {
+  color: color-mix(in srgb, var(--ability-group-accent) 78%, var(--paper-muted));
+  font-size: var(--font-min);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.player-detail-page .ability-metric-group-heading h4 {
+  margin: 0;
+  color: var(--paper);
+  font-size: 1rem;
+}
+
+.player-detail-page .ability-metric-group-heading small {
+  color: color-mix(in srgb, var(--ability-group-accent) 60%, var(--paper-muted));
+  font-size: var(--font-min);
+}
+
+.player-detail-page .ability-metric-group .ability-history-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px;
+  padding: 10px;
+}
+
+.player-detail-page .ability-metric-group .ability-history-grid > div {
+  border-color: color-mix(in srgb, var(--ability-group-accent) 15%, var(--line));
+  background: color-mix(in srgb, var(--ability-group-accent) 1.75%, var(--ink-raised));
+}
+
+.player-detail-page .ability-metric-group .ability-history-grid strong {
+  color: color-mix(in srgb, var(--ability-group-accent) 72%, var(--paper));
+}
+
+@media (max-width: 700px) {
+  .player-detail-page .ability-history-groups {
+    padding-inline: 14px;
+  }
+
+  .player-detail-page .ability-metric-group .ability-history-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Story: chapter colors reuse the same semantic palette. */
+
+.wiki-page .page-intro .round-icon {
+  border-color: color-mix(in srgb, var(--accent-violet) 42%, var(--line));
+  background: color-mix(in srgb, var(--accent-violet) 10%, var(--ink-soft));
+  color: var(--accent-violet);
+}
+
+.wiki-page .chapter-card:nth-child(1) {
+  --chapter-accent: var(--accent-sky);
+}
+
+.wiki-page .chapter-card:nth-child(2) {
+  --chapter-accent: var(--accent-amber);
+}
+
+.wiki-page .chapter-card:nth-child(3) {
+  --chapter-accent: var(--accent-mint);
+}
+
+.wiki-page .chapter-card:nth-child(4) {
+  --chapter-accent: var(--accent-violet);
+}
+
+.wiki-page .chapter-card {
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--chapter-accent) 28%, var(--line));
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--chapter-accent) 10%, transparent), transparent 44%),
+    linear-gradient(145deg, color-mix(in srgb, var(--chapter-accent) 3%, transparent), transparent 58%);
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.wiki-page .chapter-card::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--chapter-accent), color-mix(in srgb, var(--chapter-accent) 12%, transparent) 72%);
+  content: "";
+}
+
+.wiki-page .chapter-card:hover {
+  border-color: color-mix(in srgb, var(--chapter-accent) 52%, var(--line));
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--chapter-accent) 15%, transparent), transparent 48%),
+    linear-gradient(145deg, color-mix(in srgb, var(--chapter-accent) 5%, transparent), transparent 62%);
+  transform: translateY(-2px);
+}
+
+.wiki-page .chapter-card .round-icon {
+  border-color: color-mix(in srgb, var(--chapter-accent) 42%, var(--line));
+  background: color-mix(in srgb, var(--chapter-accent) 10%, var(--ink-soft));
+  color: var(--chapter-accent);
+}
+
+.wiki-page .chapter-detail,
+.wiki-page .chapter-soon {
+  color: var(--chapter-accent);
+}
+
+.wiki-page .editorial-callout {
+  border-color: color-mix(in srgb, var(--accent-violet) 30%, var(--line));
+  background:
+    radial-gradient(circle at 0% 50%, color-mix(in srgb, var(--accent-violet) 12%, transparent), transparent 42%),
+    radial-gradient(circle at 100% 50%, color-mix(in srgb, var(--accent-mint) 8%, transparent), transparent 38%),
+    transparent;
+}
+
+.wiki-page .editorial-callout .eyebrow {
+  color: var(--accent-violet);
+}
+
+.wiki-page .editorial-callout .button {
+  border-color: color-mix(in srgb, var(--accent-violet) 42%, var(--line));
+}
+
+.wiki-page .editorial-callout .button:hover {
+  border-color: var(--accent-violet);
+  background: color-mix(in srgb, var(--accent-violet) 9%, transparent);
+}
+
+/* Echo the same palette in the homepage previews. */
+
+.home-map-copy .eyebrow,
+.home-map-copy .text-link {
+  color: var(--accent-sky);
+}
+
+.home-map-art {
+  border-color: color-mix(in srgb, var(--accent-sky) 24%, var(--line));
+}
+
+.home-ranking-section .eyebrow,
+.home-ranking-section .text-link,
+.home-ranking-section .table-rank,
+.home-ranking-table td:last-child {
+  color: var(--accent-amber);
+}
+
+.home-ranking-table .player-monogram {
+  border-color: color-mix(in srgb, var(--accent-cyan) 34%, var(--line));
+  background: color-mix(in srgb, var(--accent-cyan) 9%, var(--ink-raised));
+  color: var(--accent-cyan);
+}
+
+.home-lore-section .eyebrow {
+  color: var(--accent-violet);
+}
+
+.home-story-row:nth-child(1) {
+  --story-accent: var(--accent-sky);
+}
+
+.home-story-row:nth-child(2) {
+  --story-accent: var(--accent-cyan);
+}
+
+.home-story-row:nth-child(3) {
+  --story-accent: var(--accent-violet);
+}
+
+.home-story-row .home-story-number,
+.home-story-row > svg {
+  color: color-mix(in srgb, var(--story-accent) 74%, var(--paper-muted));
+}
+
+.home-story-row:hover,
+.home-story-row:focus-visible {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--story-accent) 7%, transparent), transparent 62%);
+}
+
+.home-story-row:hover > svg,
+.home-story-row:focus-visible > svg {
+  color: var(--story-accent);
+}
+
+/* Shared public-page intro treatment ------------------------------------ */
+
+/*
+ * Keep every top-level public page on the same title surface.  The previous
+ * atmospheric gradients were painted at different scopes (shell, viewport,
+ * and page-specific rules), which made their edges visible and left Kits on a
+ * different treatment.  This is deliberately a flat Slate panel: page color
+ * is carried by the eyebrow and a stronger bottom rule, never by a gradient.
+ */
+.kits-page .page-intro,
+.leaderboard-page .page-intro,
+.players-page .page-intro,
+.player-detail-page .page-intro,
+.wiki-page .page-intro {
+  position: relative;
+  isolation: isolate;
+  margin-inline: -18px;
+  padding-inline: 18px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 1.5%, var(--ink-soft));
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--page-accent) 72%, transparent);
+}
+
+.kits-page .page-intro::before,
+.kits-page .page-intro::after,
+.leaderboard-page .page-intro::before,
+.leaderboard-page .page-intro::after,
+.players-page .page-intro::before,
+.players-page .page-intro::after,
+.player-detail-page .page-intro::before,
+.player-detail-page .page-intro::after,
+.wiki-page .page-intro::before,
+.wiki-page .page-intro::after {
+  content: none;
+}
+
+.kits-page .page-intro .manifest-badge,
+.leaderboard-page .page-intro .manifest-badge,
+.players-page .page-intro .manifest-badge {
+  border-color: color-mix(in srgb, var(--page-accent) 26%, var(--line));
+  background: color-mix(in srgb, var(--page-accent) 5%, var(--ink-raised));
+  color: var(--page-accent);
+}
+
+@media (max-width: 560px) {
+  .kits-page .page-intro,
+  .leaderboard-page .page-intro,
+  .players-page .page-intro,
+  .player-detail-page .page-intro,
+  .wiki-page .page-intro {
+    margin-inline: -10px;
+    padding-inline: 10px;
+  }
+}
+
+/* Player-detail stat-card motion ---------------------------------------- */
+
+.player-detail-page .profile-stat,
+.player-detail-page .edition-stat-grid > div {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transform: translateY(0) scale(1);
+  transform-origin: 50% 50%;
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 220ms ease;
+  will-change: transform;
+}
+
+.player-detail-page .profile-stat > *,
+.player-detail-page .edition-stat-grid > div > * {
+  position: relative;
+  z-index: 1;
+}
+
+.player-detail-page .profile-stat::after,
+.player-detail-page .edition-stat-grid > div::after {
+  position: absolute;
+  top: -80%;
+  bottom: -80%;
+  left: -65%;
+  z-index: 0;
+  width: 42%;
+  background: linear-gradient(
+    108deg,
+    transparent 15%,
+    color-mix(in srgb, var(--stat-accent) 3%, transparent) 34%,
+    color-mix(in srgb, var(--stat-accent) 24%, white) 50%,
+    color-mix(in srgb, var(--stat-accent) 4%, transparent) 66%,
+    transparent 84%
+  );
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transform: skewX(-15deg);
+  transition:
+    left 430ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    opacity 140ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .player-detail-page .profile-stat:hover,
+  .player-detail-page .edition-stat-grid > div:hover {
+    border-color: color-mix(in srgb, var(--stat-accent) 58%, var(--line));
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--stat-accent) 13%, transparent),
+      color-mix(in srgb, var(--stat-accent) 3%, transparent) 56%,
+      transparent 82%
+    );
+    box-shadow:
+      0 13px 30px color-mix(in srgb, var(--stat-accent) 11%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--stat-accent) 12%, transparent),
+      inset 0 2px 0 color-mix(in srgb, var(--stat-accent) 54%, transparent);
+  }
+
+  .player-detail-page .profile-stat:hover,
+  .player-detail-page .edition-stat-grid > div:hover {
+    transform: translateY(-3px) scale(1.008);
+  }
+
+  .player-detail-page .profile-stat:hover::after,
+  .player-detail-page .edition-stat-grid > div:hover::after {
+    left: 125%;
+    opacity: 0.7;
+  }
+
+  .player-detail-page .profile-stat:hover .profile-stat-label svg {
+    transform: translateY(-1px) scale(1.08);
+  }
+
+  .player-detail-page .profile-stat-label svg {
+    transition: transform 180ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-detail-page .profile-stat,
+  .player-detail-page .edition-stat-grid > div,
+  .player-detail-page .profile-stat-label svg {
+    transition: none;
+  }
+
+  .player-detail-page .profile-stat:hover,
+  .player-detail-page .edition-stat-grid > div:hover {
+    transform: none;
+  }
+
+  .player-detail-page .profile-stat::after,
+  .player-detail-page .edition-stat-grid > div::after {
+    display: none;
   }
 }

@@ -4,7 +4,7 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { KitCard } from "@/components/kit-card";
 import type { KitCardView } from "@/lib/kit-manifest";
-import type { KitStatsSnapshot } from "@/lib/kit-stats";
+import { getKitMetricDomains, type KitStatsSnapshot } from "@/lib/kit-stats";
 
 type KitBrowserProps = {
   kits: KitCardView[];
@@ -16,6 +16,7 @@ type SortOrder = "sgp" | "name" | "popularity";
 export function KitBrowser({ kits, stats }: KitBrowserProps) {
   const [query, setQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<SortOrder>("sgp");
+  const metricDomains = useMemo(() => getKitMetricDomains(kits, stats), [kits, stats]);
   const visibleKits = useMemo(() => {
     const normalizedQuery = normalizeSearch(query);
     return kits
@@ -62,6 +63,7 @@ export function KitBrowser({ kits, stats }: KitBrowserProps) {
               kit={kit}
               stats={stats.byKitKey[kit.key]}
               statsContext={stats}
+              metricDomains={metricDomains}
               key={kit.key}
             />
           ))}

@@ -3,16 +3,23 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { KitCardView } from "@/lib/kit-manifest";
-import { getKitMetrics, type KitAggregateStats, type KitStatsSnapshot } from "@/lib/kit-stats";
+import {
+  getKitMetricColor,
+  getKitMetrics,
+  type KitAggregateStats,
+  type KitMetricDomains,
+  type KitStatsSnapshot,
+} from "@/lib/kit-stats";
 
 type KitCardProps = {
   kit: KitCardView;
   stats?: KitAggregateStats;
   statsContext?: Pick<KitStatsSnapshot, "editionCount" | "totalPicks">;
+  metricDomains?: KitMetricDomains;
   compact?: boolean;
 };
 
-export function KitCard({ kit, stats, statsContext, compact = false }: KitCardProps) {
+export function KitCard({ kit, stats, statsContext, metricDomains, compact = false }: KitCardProps) {
   const style = { "--kit-accent": kit.accent } as CSSProperties;
   const metrics = statsContext ? getKitMetrics(kit.id, stats, statsContext) : [];
 
@@ -77,12 +84,18 @@ export function KitCard({ kit, stats, statsContext, compact = false }: KitCardPr
 
         {metrics.length ? (
           <div className="kit-card-stats">
-            {metrics.map((metric) => (
-              <span key={metric.label}>
-                <strong>{metric.value}</strong>
-                {metric.label}
-              </span>
-            ))}
+            {metrics.map((metric) => {
+              const metricColor = getKitMetricColor(metric.rawValue, metricDomains?.[metric.key]);
+              const metricStyle = metricColor
+                ? ({ "--kit-metric-color": metricColor } as CSSProperties)
+                : undefined;
+              return (
+                <span className={metricColor ? "has-scale-color" : undefined} style={metricStyle} key={metric.label}>
+                  <strong>{metric.value}</strong>
+                  {metric.label}
+                </span>
+              );
+            })}
           </div>
         ) : null}
       </article>

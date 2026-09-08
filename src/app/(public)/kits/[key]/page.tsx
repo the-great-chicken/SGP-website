@@ -17,7 +17,7 @@ import {
 import { resolveKitLoadout, type ResolvedKitSlot } from "@/lib/kit-loadout";
 import { loadItemImageResolver } from "@/lib/item-renders";
 import { getKitIconSrc, getKitPreview } from "@/lib/kit-preview";
-import { getKitMetrics } from "@/lib/kit-stats";
+import { getKitMetricColor, getKitMetricDomains, getKitMetrics } from "@/lib/kit-stats";
 import { loadKitManifest } from "@/lib/kits";
 
 type KitPageProps = {
@@ -69,6 +69,7 @@ export default async function KitPage({ params }: KitPageProps) {
   }
 
   const allKits = manifest.kits.toSorted(compareKits);
+  const metricDomains = getKitMetricDomains(allKits, statsSnapshot);
   const name = getKitDisplayName(kit);
   const metrics = getKitMetrics(kit.id, statsSnapshot.byKitKey[kit.key], statsSnapshot);
   const itemCount = kit.operations.reduce((sum, operation) => sum + operation.item.count, 0);
@@ -259,13 +260,23 @@ export default async function KitPage({ params }: KitPageProps) {
                   <BarChart3 size={19} />
                 </div>
                 <div className="kit-metric-grid">
-                  {metrics.map((metric) => (
-                    <article className="kit-metric" key={metric.label}>
-                      <span>{metric.label}</span>
-                      <strong>{metric.value}</strong>
-                      <small>{metric.detail}</small>
-                    </article>
-                  ))}
+                  {metrics.map((metric) => {
+                    const metricColor = getKitMetricColor(metric.rawValue, metricDomains[metric.key]);
+                    const metricStyle = metricColor
+                      ? ({ "--kit-metric-color": metricColor } as CSSProperties)
+                      : undefined;
+                    return (
+                      <article
+                        className={metricColor ? "kit-metric has-scale-color" : "kit-metric"}
+                        style={metricStyle}
+                        key={metric.label}
+                      >
+                        <span>{metric.label}</span>
+                        <strong>{metric.value}</strong>
+                        <small>{metric.detail}</small>
+                      </article>
+                    );
+                  })}
                 </div>
                 <p className="stats-caption">
                   {statsSnapshot.editionCount

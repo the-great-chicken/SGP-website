@@ -58,7 +58,7 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
               <th scope="col">Rang</th>
               <th scope="col">Joueur</th>
               {metrics.map((candidate) => (
-                <th className="is-sortable" key={candidate} scope="col" aria-sort={metric === candidate ? ascending ? "ascending" : "descending" : "none"}>
+                <th className={`is-sortable metric-${candidate}`} key={candidate} scope="col" aria-sort={metric === candidate ? ascending ? "ascending" : "descending" : "none"}>
                   <button type="button" onClick={() => {
                     setAscending(candidate === metric ? !ascending : false);
                     setMetric(candidate);
@@ -80,7 +80,7 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
                     <span><strong>{entry.minecraftName}</strong>{entry.minecraftName !== entry.currentMinecraftName ? <small>{entry.currentMinecraftName}</small> : null}</span>
                   </Link>
                 </th>
-                {metrics.map((candidate) => <td className={candidate === metric ? "is-sorted" : undefined} key={candidate}>{entry.values[candidate] === null ? "—" : formatLeaderboardValue(candidate, entry.values[candidate])}</td>)}
+                {metrics.map((candidate) => <td className={`metric-${candidate}${candidate === metric ? " is-sorted" : ""}`} key={candidate}>{entry.values[candidate] === null ? "—" : formatLeaderboardValue(candidate, entry.values[candidate])}</td>)}
               </tr>
             )) : (
               <tr>
