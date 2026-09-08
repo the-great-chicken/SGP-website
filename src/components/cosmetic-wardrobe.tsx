@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, RefreshCw, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { Check, RefreshCw } from "lucide-react";
 import { categories, categoryLabels, type CosmeticView, type Selection } from "@/cosmetics/model";
 
 export function CosmeticWardrobe({ initialView }: { initialView: CosmeticView }) {
@@ -94,8 +94,12 @@ export function CosmeticWardrobe({ initialView }: { initialView: CosmeticView })
               <ul className="cosmetic-grid">
                 {entries.map((cosmetic) => {
                   const selected = cosmetic.id === equipped?.id;
-                  return <li key={cosmetic.id} className={selected ? "cosmetic-tile is-equipped" : "cosmetic-tile"}>
-                    <Sparkles size={22} aria-hidden="true" />
+                  return <li key={cosmetic.id} className={selected ? "cosmetic-tile is-equipped" : "cosmetic-tile"} style={{ "--cosmetic-color": cosmetic.color } as CSSProperties}>
+                    {view.icons?.[cosmetic.id]
+                      // Generated local images already have their final size and content hash.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img className="cosmetic-image" src={view.icons[cosmetic.id]} width={64} height={64} alt="" />
+                      : <span className="cosmetic-image-unavailable">Aperçu indisponible</span>}
                     <strong>{cosmetic.name}</strong>
                     <button type="button" className={selected ? "button ghost" : "button primary"}
                       disabled={!canChange || selected}

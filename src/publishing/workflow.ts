@@ -56,7 +56,8 @@ export async function promoteCurrent(root: string, stage: string) {
   // Image filenames include the resource-pack identity. Keep previous images usable by open pages.
   await cp(path.join(stage, "public/generated/item-icons"), path.join(root, "public/generated/item-icons"), { recursive: true, force: false });
   await cp(path.join(stage, "public/generated/kit-models"), path.join(root, "public/generated/kit-models"), { recursive: true });
-  const files = ["data/kit-manifest.json", "data/item-renders.json", "public/bluemap/overlays.json"];
+  await cp(path.join(stage, "public/generated/cosmetic-icons"), path.join(root, "public/generated/cosmetic-icons"), { recursive: true });
+  const files = ["data/kit-manifest.json", "data/item-renders.json", "data/cosmetic-renders.json", "public/bluemap/overlays.json"];
   const previous = new Map<string, Buffer | null>();
   const changed: string[] = [];
   try {
@@ -150,6 +151,18 @@ export async function runPublishing(options: {
     const data = path.join(stage, "data");
     await mkdir(data);
     console.log(`Preparing ${mode.kind === "refresh" ? "current content" : `edition ${mode.number}`} in ${stage}`);
+    if (mode.kind === "refresh") {
+      await command(process.execPath, ["--import", "tsx", path.join(root, "scripts/render-cosmetics.mts"),
+        "--datapack", source.datapack, "--resource-pack", source.resourcePack,
+        "--minecraft-client", source.minecraftClient, "--minecraft-version", source.minecraftVersion], stage);
+      const cosmeticIndex = JSON.parse(await readFile(path.join(data, "cosmetic-renders.json"), "utf8"));
+      if (cosmeticIndex.schemaVersion !== 1 || !Object.keys(cosmeticIndex.cosmetics ?? {}).length) throw new Error("Missing cosmetic image catalogue");
+      for (const entry of Object.values(cosmeticIndex.cosmetics) as { image: string }[]) {
+        if (!/^\/generated\/cosmetic-icons\/[a-zA-Z0-9_.-]+\.png$/.test(entry.image) || !await exists(path.join(stage, "public", entry.image.slice(1)))) {
+          throw new Error(`Missing or invalid cosmetic image: ${entry.image}`);
+        }
+      }
+    }
     await command(python(".venv"), ["-m", "sgp_kit_exporter", "--datapack", source.datapack,
       "--minecraft-version", source.minecraftVersion, "--datapack-release", source.datapackRelease,
       "--resource-pack-release", source.resourcePackRelease, "--output", path.join(data, "kit-manifest.json")], root);
@@ -201,7 +214,7 @@ export async function runPublishing(options: {
     }
     if (mode.kind === "refresh") {
       await promoteCurrent(root, stage);
-      console.log("Current kits, item images and map overlays refreshed. Include generated files in the next website deployment.");
+      console.log("Current kits, cosmetic images and map overlays refreshed. Include generated files in the next website deployment.");
     } else {
       const summary = await publishEdition(root, stage, databaseUrl!, bundle!);
       console.log(`Published edition ${summary.editionNumber}: ${summary.players} players. Current kits and map overlays unchanged.`);

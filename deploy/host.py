@@ -96,7 +96,7 @@ def package(source, output):
     shutil.copytree(source / "drizzle", output / "drizzle")
     shutil.copy2(HERE / "migrate.mjs", output / "migrate.mjs")
     (output / "data").mkdir()
-    for name in ("kit-manifest.json", "item-renders.json"):
+    for name in ("kit-manifest.json", "item-renders.json", "cosmetic-renders.json"):
         if (source / "data" / name).exists():
             shutil.copy2(source / "data" / name, output / "data" / name)
     metadata = {"revision": revision, "node_version": node_version, "platform": sys.platform,

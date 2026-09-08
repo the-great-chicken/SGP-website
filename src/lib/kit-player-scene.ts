@@ -134,7 +134,7 @@ export async function createKitPlayer(preview: KitPreview) {
       const y = position.getY(i) / (h + grow * 2) + 0.5;
       const z = position.getZ(i) / (d + grow * 2) + 0.5;
       const face = Math.floor(i / 4);
-      let [tu, tv] = face === 0 ? [u + d + w + z * d, v + d + y * h]
+      const [tu, tv] = face === 0 ? [u + d + w + z * d, v + d + y * h]
         : face === 1 ? [u + (1 - z) * d, v + d + y * h]
           : face === 2 ? [u + d + w + x * w, v + z * d]
             : face === 3 ? [u + d + x * w, v + (1 - z) * d]

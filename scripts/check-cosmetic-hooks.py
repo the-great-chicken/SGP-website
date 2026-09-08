@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 import re
+import nbtlib
 
 from mecha import Mecha
 
@@ -17,9 +17,11 @@ def check(datapack: Path) -> None:
         command = line.strip()
         if not re.match(r"scoreboard\s+objectives\s+add\s+sgp\.(particle|intensity|kill)\.", command):
             continue
-        match = re.fullmatch(r'scoreboard\s+objectives\s+add\s+sgp\.((particle|intensity|kill)\.[a-z_]+)_unlocked\s+dummy\s+("(?:[^"\\]|\\.)*")', command)
-        assert match, f"Expected a quoted cosmetic display name: {command}"
-        name = json.loads(match[3])
+        match = re.fullmatch(r'scoreboard\s+objectives\s+add\s+sgp\.((particle|intensity|kill)\.[a-z_]+)_unlocked\s+dummy\s+(\{.*})', command)
+        assert match, f"Expected a cosmetic text/color component: {command}"
+        display = nbtlib.parse_nbt(match[3]).unpack()
+        assert set(display) == {"text", "color"} and re.fullmatch(r"#[0-9a-fA-F]{6}", display["color"])
+        name = display["text"]
         assert name.strip() and len(name) <= 100, f"Invalid display name: {name!r}"
         catalogue.append({"id": match[1], "category": match[2], "name": name})
     assert 1 <= len(catalogue) <= 128 and len({c["id"] for c in catalogue}) == len(catalogue)

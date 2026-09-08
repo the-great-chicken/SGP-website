@@ -18,11 +18,12 @@ export const catalogueEntrySchema = z.strictObject({
   id: cosmeticId,
   category: categorySchema,
   name: z.string().min(1).max(100),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   sortOrder: z.number().int().nonnegative(),
 });
 export type Cosmetic = z.infer<typeof catalogueEntrySchema>;
 export const snapshotSchema = z.strictObject({
-  protocolVersion: z.literal(1),
+  protocolVersion: z.literal(2),
   playerUuid: z.uuid(),
   observedAt: z.number().int().positive(),
   catalogue: z.array(catalogueEntrySchema).min(1).max(128),
@@ -53,6 +54,7 @@ export type CosmeticView = {
   cosmetics: Cosmetic[];
   equipment: Record<Category, Cosmetic | null>;
   issues: string[];
+  icons?: Record<string, string>;
 };
 export type MutationResult = { confirmed: boolean; message: string; view: CosmeticView };
 export class CosmeticError extends Error {

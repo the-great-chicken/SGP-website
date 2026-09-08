@@ -1,0 +1,1584 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "2346fe88-af5e-4bdb-8d08-7eb40473702a",
+  "prevId": "f7da768c-205f-46e7-bbf8-f318d1de280d",
+  "tables": {
+    "auth_sessions": {
+      "name": "auth_sessions",
+      "columns": {
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "discord_id": {
+          "name": "discord_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "discord_username": {
+          "name": "discord_username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "discord_display_name": {
+          "name": "discord_display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "discord_avatar_url": {
+          "name": "discord_avatar_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {
+        "auth_sessions_discord_id_idx": {
+          "name": "auth_sessions_discord_id_idx",
+          "columns": [
+            "discord_id"
+          ],
+          "isUnique": false
+        },
+        "auth_sessions_expires_at_idx": {
+          "name": "auth_sessions_expires_at_idx",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "cosmetics": {
+      "name": "cosmetics",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "icon": {
+          "name": "icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'#ffffff'"
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "active": {
+          "name": "active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        }
+      },
+      "indexes": {
+        "cosmetics_category_sort_idx": {
+          "name": "cosmetics_category_sort_idx",
+          "columns": [
+            "category",
+            "sort_order"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "edition_ability_metric_definitions": {
+      "name": "edition_ability_metric_definitions",
+      "columns": {
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kit_id": {
+          "name": "kit_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ability_path": {
+          "name": "ability_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "metric_id": {
+          "name": "metric_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cooldown_ticks": {
+          "name": "cooldown_ticks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "duration_ticks": {
+          "name": "duration_ticks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "settings": {
+          "name": "settings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "stored_unit": {
+          "name": "stored_unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_unit": {
+          "name": "display_unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_scale": {
+          "name": "display_scale",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "edition_ability_metric_definitions_edition_id_editions_id_fk": {
+          "name": "edition_ability_metric_definitions_edition_id_editions_id_fk",
+          "tableFrom": "edition_ability_metric_definitions",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "edition_ability_metric_definitions_edition_id_kit_id_ability_path_metric_id_pk": {
+          "columns": [
+            "edition_id",
+            "kit_id",
+            "ability_path",
+            "metric_id"
+          ],
+          "name": "edition_ability_metric_definitions_edition_id_kit_id_ability_path_metric_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "edition_ability_metrics": {
+      "name": "edition_ability_metrics",
+      "columns": {
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "player_uuid": {
+          "name": "player_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kit_id": {
+          "name": "kit_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ability_path": {
+          "name": "ability_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "metric_id": {
+          "name": "metric_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "edition_ability_metrics_player_idx": {
+          "name": "edition_ability_metrics_player_idx",
+          "columns": [
+            "player_uuid"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "edition_ability_metrics_edition_id_editions_id_fk": {
+          "name": "edition_ability_metrics_edition_id_editions_id_fk",
+          "tableFrom": "edition_ability_metrics",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "edition_ability_metrics_player_uuid_players_uuid_fk": {
+          "name": "edition_ability_metrics_player_uuid_players_uuid_fk",
+          "tableFrom": "edition_ability_metrics",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "edition_ability_metrics_edition_id_player_uuid_kit_id_ability_path_metric_id_pk": {
+          "columns": [
+            "edition_id",
+            "player_uuid",
+            "kit_id",
+            "ability_path",
+            "metric_id"
+          ],
+          "name": "edition_ability_metrics_edition_id_player_uuid_kit_id_ability_path_metric_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "edition_damage_causes": {
+      "name": "edition_damage_causes",
+      "columns": {
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cause_id": {
+          "name": "cause_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "edition_damage_causes_edition_id_editions_id_fk": {
+          "name": "edition_damage_causes_edition_id_editions_id_fk",
+          "tableFrom": "edition_damage_causes",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "edition_damage_causes_edition_id_cause_id_pk": {
+          "columns": [
+            "edition_id",
+            "cause_id"
+          ],
+          "name": "edition_damage_causes_edition_id_cause_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "edition_damage_received": {
+      "name": "edition_damage_received",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "target_uuid": {
+          "name": "target_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "target_kit_id": {
+          "name": "target_kit_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_uuid": {
+          "name": "source_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source_kit_id": {
+          "name": "source_kit_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cause_id": {
+          "name": "cause_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "edition_damage_edition_idx": {
+          "name": "edition_damage_edition_idx",
+          "columns": [
+            "edition_id"
+          ],
+          "isUnique": false
+        },
+        "edition_damage_target_idx": {
+          "name": "edition_damage_target_idx",
+          "columns": [
+            "target_uuid"
+          ],
+          "isUnique": false
+        },
+        "edition_damage_source_idx": {
+          "name": "edition_damage_source_idx",
+          "columns": [
+            "source_uuid"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "edition_damage_received_edition_id_editions_id_fk": {
+          "name": "edition_damage_received_edition_id_editions_id_fk",
+          "tableFrom": "edition_damage_received",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "edition_damage_received_target_uuid_players_uuid_fk": {
+          "name": "edition_damage_received_target_uuid_players_uuid_fk",
+          "tableFrom": "edition_damage_received",
+          "tableTo": "players",
+          "columnsFrom": [
+            "target_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "edition_damage_received_source_uuid_players_uuid_fk": {
+          "name": "edition_damage_received_source_uuid_players_uuid_fk",
+          "tableFrom": "edition_damage_received",
+          "tableTo": "players",
+          "columnsFrom": [
+            "source_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "edition_death_positions": {
+      "name": "edition_death_positions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dimension": {
+          "name": "dimension",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "x": {
+          "name": "x",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "y": {
+          "name": "y",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "z": {
+          "name": "z",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deaths": {
+          "name": "deaths",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "edition_death_positions_edition_idx": {
+          "name": "edition_death_positions_edition_idx",
+          "columns": [
+            "edition_id",
+            "dimension"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "edition_death_positions_edition_id_editions_id_fk": {
+          "name": "edition_death_positions_edition_id_editions_id_fk",
+          "tableFrom": "edition_death_positions",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "edition_kills": {
+      "name": "edition_kills",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "killer_uuid": {
+          "name": "killer_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "killer_kit_id": {
+          "name": "killer_kit_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "victim_uuid": {
+          "name": "victim_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "victim_kit_id": {
+          "name": "victim_kit_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cause_id": {
+          "name": "cause_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "edition_kills_edition_idx": {
+          "name": "edition_kills_edition_idx",
+          "columns": [
+            "edition_id"
+          ],
+          "isUnique": false
+        },
+        "edition_kills_killer_idx": {
+          "name": "edition_kills_killer_idx",
+          "columns": [
+            "killer_uuid"
+          ],
+          "isUnique": false
+        },
+        "edition_kills_victim_idx": {
+          "name": "edition_kills_victim_idx",
+          "columns": [
+            "victim_uuid"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "edition_kills_edition_id_editions_id_fk": {
+          "name": "edition_kills_edition_id_editions_id_fk",
+          "tableFrom": "edition_kills",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "edition_kills_killer_uuid_players_uuid_fk": {
+          "name": "edition_kills_killer_uuid_players_uuid_fk",
+          "tableFrom": "edition_kills",
+          "tableTo": "players",
+          "columnsFrom": [
+            "killer_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "edition_kills_victim_uuid_players_uuid_fk": {
+          "name": "edition_kills_victim_uuid_players_uuid_fk",
+          "tableFrom": "edition_kills",
+          "tableTo": "players",
+          "columnsFrom": [
+            "victim_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "edition_picks": {
+      "name": "edition_picks",
+      "columns": {
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "player_uuid": {
+          "name": "player_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kit_id": {
+          "name": "kit_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "total_time_ticks": {
+          "name": "total_time_ticks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "edition_picks_player_idx": {
+          "name": "edition_picks_player_idx",
+          "columns": [
+            "player_uuid"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "edition_picks_edition_id_editions_id_fk": {
+          "name": "edition_picks_edition_id_editions_id_fk",
+          "tableFrom": "edition_picks",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "edition_picks_player_uuid_players_uuid_fk": {
+          "name": "edition_picks_player_uuid_players_uuid_fk",
+          "tableFrom": "edition_picks",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "edition_picks_edition_id_player_uuid_kit_id_pk": {
+          "columns": [
+            "edition_id",
+            "player_uuid",
+            "kit_id"
+          ],
+          "name": "edition_picks_edition_id_player_uuid_kit_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "edition_players": {
+      "name": "edition_players",
+      "columns": {
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "player_uuid": {
+          "name": "player_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sgp_id": {
+          "name": "sgp_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "minecraft_name_at_event": {
+          "name": "minecraft_name_at_event",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "edition_players_sgp_id_unique": {
+          "name": "edition_players_sgp_id_unique",
+          "columns": [
+            "edition_id",
+            "sgp_id"
+          ],
+          "isUnique": true
+        },
+        "edition_players_player_idx": {
+          "name": "edition_players_player_idx",
+          "columns": [
+            "player_uuid"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "edition_players_edition_id_editions_id_fk": {
+          "name": "edition_players_edition_id_editions_id_fk",
+          "tableFrom": "edition_players",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "edition_players_player_uuid_players_uuid_fk": {
+          "name": "edition_players_player_uuid_players_uuid_fk",
+          "tableFrom": "edition_players",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "edition_players_edition_id_player_uuid_pk": {
+          "columns": [
+            "edition_id",
+            "player_uuid"
+          ],
+          "name": "edition_players_edition_id_player_uuid_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "edition_statistics_metadata": {
+      "name": "edition_statistics_metadata",
+      "columns": {
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "death_position_metadata": {
+          "name": "death_position_metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "elo": {
+          "name": "elo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "edition_statistics_metadata_edition_id_editions_id_fk": {
+          "name": "edition_statistics_metadata_edition_id_editions_id_fk",
+          "tableFrom": "edition_statistics_metadata",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "editions": {
+      "name": "editions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "number": {
+          "name": "number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'draft'"
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "minecraft_version": {
+          "name": "minecraft_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "datapack_version": {
+          "name": "datapack_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resource_pack_version": {
+          "name": "resource_pack_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "statistics_schema_version": {
+          "name": "statistics_schema_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {
+        "editions_number_unique": {
+          "name": "editions_number_unique",
+          "columns": [
+            "number"
+          ],
+          "isUnique": true
+        },
+        "editions_status_idx": {
+          "name": "editions_status_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "kit_snapshots": {
+      "name": "kit_snapshots",
+      "columns": {
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kit_key": {
+          "name": "kit_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kit_id": {
+          "name": "kit_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "manifest_schema_version": {
+          "name": "manifest_schema_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "manifest": {
+          "name": "manifest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {
+        "kit_snapshots_edition_kit_id_unique": {
+          "name": "kit_snapshots_edition_kit_id_unique",
+          "columns": [
+            "edition_id",
+            "kit_id"
+          ],
+          "isUnique": true
+        },
+        "kit_snapshots_kit_idx": {
+          "name": "kit_snapshots_kit_idx",
+          "columns": [
+            "kit_key"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "kit_snapshots_edition_id_editions_id_fk": {
+          "name": "kit_snapshots_edition_id_editions_id_fk",
+          "tableFrom": "kit_snapshots",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "kit_snapshots_edition_id_kit_key_pk": {
+          "columns": [
+            "edition_id",
+            "kit_key"
+          ],
+          "name": "kit_snapshots_edition_id_kit_key_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "player_cosmetic_sync": {
+      "name": "player_cosmetic_sync",
+      "columns": {
+        "player_uuid": {
+          "name": "player_uuid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "observed_at": {
+          "name": "observed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "issues": {
+          "name": "issues",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "player_cosmetic_sync_player_uuid_players_uuid_fk": {
+          "name": "player_cosmetic_sync_player_uuid_players_uuid_fk",
+          "tableFrom": "player_cosmetic_sync",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "player_cosmetic_unlocks": {
+      "name": "player_cosmetic_unlocks",
+      "columns": {
+        "player_uuid": {
+          "name": "player_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cosmetic_id": {
+          "name": "cosmetic_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unlocked_at": {
+          "name": "unlocked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "player_cosmetic_unlocks_player_uuid_players_uuid_fk": {
+          "name": "player_cosmetic_unlocks_player_uuid_players_uuid_fk",
+          "tableFrom": "player_cosmetic_unlocks",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "player_cosmetic_unlocks_cosmetic_id_cosmetics_id_fk": {
+          "name": "player_cosmetic_unlocks_cosmetic_id_cosmetics_id_fk",
+          "tableFrom": "player_cosmetic_unlocks",
+          "tableTo": "cosmetics",
+          "columnsFrom": [
+            "cosmetic_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "player_cosmetic_unlocks_player_uuid_cosmetic_id_pk": {
+          "columns": [
+            "player_uuid",
+            "cosmetic_id"
+          ],
+          "name": "player_cosmetic_unlocks_player_uuid_cosmetic_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "player_equipment": {
+      "name": "player_equipment",
+      "columns": {
+        "player_uuid": {
+          "name": "player_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cosmetic_id": {
+          "name": "cosmetic_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {
+        "player_equipment_cosmetic_idx": {
+          "name": "player_equipment_cosmetic_idx",
+          "columns": [
+            "cosmetic_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "player_equipment_player_uuid_players_uuid_fk": {
+          "name": "player_equipment_player_uuid_players_uuid_fk",
+          "tableFrom": "player_equipment",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "player_equipment_cosmetic_id_cosmetics_id_fk": {
+          "name": "player_equipment_cosmetic_id_cosmetics_id_fk",
+          "tableFrom": "player_equipment",
+          "tableTo": "cosmetics",
+          "columnsFrom": [
+            "cosmetic_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "player_equipment_player_uuid_category_pk": {
+          "columns": [
+            "player_uuid",
+            "category"
+          ],
+          "name": "player_equipment_player_uuid_category_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "player_ratings": {
+      "name": "player_ratings",
+      "columns": {
+        "edition_id": {
+          "name": "edition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "player_uuid": {
+          "name": "player_uuid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rating": {
+          "name": "rating",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rated_encounters": {
+          "name": "rated_encounters",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "player_ratings_edition_rating_idx": {
+          "name": "player_ratings_edition_rating_idx",
+          "columns": [
+            "edition_id",
+            "rating"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "player_ratings_edition_id_editions_id_fk": {
+          "name": "player_ratings_edition_id_editions_id_fk",
+          "tableFrom": "player_ratings",
+          "tableTo": "editions",
+          "columnsFrom": [
+            "edition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "player_ratings_player_uuid_players_uuid_fk": {
+          "name": "player_ratings_player_uuid_players_uuid_fk",
+          "tableFrom": "player_ratings",
+          "tableTo": "players",
+          "columnsFrom": [
+            "player_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "player_ratings_edition_id_player_uuid_pk": {
+          "columns": [
+            "edition_id",
+            "player_uuid"
+          ],
+          "name": "player_ratings_edition_id_player_uuid_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "players": {
+      "name": "players",
+      "columns": {
+        "uuid": {
+          "name": "uuid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "current_minecraft_name": {
+          "name": "current_minecraft_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "discord_id": {
+          "name": "discord_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "discord_username": {
+          "name": "discord_username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "discord_display_name": {
+          "name": "discord_display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "discord_avatar_url": {
+          "name": "discord_avatar_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {
+        "players_discord_id_unique": {
+          "name": "players_discord_id_unique",
+          "columns": [
+            "discord_id"
+          ],
+          "isUnique": true
+        },
+        "players_minecraft_name_idx": {
+          "name": "players_minecraft_name_idx",
+          "columns": [
+            "current_minecraft_name"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

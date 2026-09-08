@@ -1891,7 +1891,9 @@ h3 {
 .cosmetic-category-heading p strong { color: var(--paper); }
 .cosmetic-grid { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .cosmetic-tile { display: flex; align-items: flex-start; flex-direction: column; gap: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, 0.025); }
-.cosmetic-tile > svg { color: var(--gold); }
+.cosmetic-tile { box-shadow: inset 0 3px 0 var(--cosmetic-color); }
+.cosmetic-image { width: 64px; height: 64px; object-fit: contain; image-rendering: pixelated; }
+.cosmetic-image-unavailable { display: flex; align-items: center; min-height: 64px; color: var(--paper-muted); font-size: 0.75rem; }
 .cosmetic-tile > strong { flex: 1; line-height: 1.5; }
 .cosmetic-tile .button { width: 100%; min-height: 36px; padding: 8px 12px; font-size: 0.82rem; }
 .cosmetic-tile.is-equipped { border-color: #5f8d62; background: rgba(100, 170, 110, 0.07); }

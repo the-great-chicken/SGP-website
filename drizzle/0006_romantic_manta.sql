@@ -1,0 +1,1 @@
+ALTER TABLE `cosmetics` ADD `color` text DEFAULT '#ffffff' NOT NULL;

@@ -23,12 +23,12 @@ const session: AuthSession = {
 };
 function snapshot(playerUuid = alpha): Snapshot {
   return {
-    protocolVersion: 1, playerUuid, observedAt: Date.now(),
+    protocolVersion: 2, playerUuid, observedAt: Date.now(),
     catalogue: [
-      { id: "particle.cloud", category: "particle", name: "Nuage", sortOrder: 0 },
-      { id: "particle.smoke", category: "particle", name: "Fumée", sortOrder: 1 },
-      { id: "intensity.light", category: "intensity", name: "Légère", sortOrder: 0 },
-      { id: "kill.anvil", category: "kill", name: "Enclume", sortOrder: 0 },
+      { id: "particle.cloud", category: "particle", name: "Nuage", color: "#ffffff", sortOrder: 0 },
+      { id: "particle.smoke", category: "particle", name: "Fumée", color: "#ffffff", sortOrder: 1 },
+      { id: "intensity.light", category: "intensity", name: "Légère", color: "#ffffff", sortOrder: 0 },
+      { id: "kill.anvil", category: "kill", name: "Enclume", color: "#ffffff", sortOrder: 0 },
     ],
     unlocked: ["particle.cloud", "intensity.light"],
     equipment: { particle: null, intensity: null, kill: null }, issues: [],
@@ -180,12 +180,14 @@ test("Minecraft rejects stale unlocks even when the website read allowed them", 
 test("offline and unavailable states show dated cache and never queue changes", async () => {
   const f = await fixture();
   try {
+    f.bridge.current.catalogue[0].color = "#123456";
     await f.service.read(session);
     f.bridge.readError = new CosmeticError("OFFLINE", 409);
     const result = await f.service.change(session, { category: "particle", cosmeticId: "particle.cloud" });
     assert.equal(result.confirmed, false);
     assert.equal(result.view.status, "offline");
     assert.equal(result.view.cosmetics.length, 2);
+    assert.equal(result.view.cosmetics.find((cosmetic) => cosmetic.id === "particle.cloud")?.color, "#123456");
     assert.ok(result.view.observedAt);
     assert.equal(f.bridge.changes.length, 0);
     f.bridge.readError = new CosmeticError("UNCONFIRMED");

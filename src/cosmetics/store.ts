@@ -36,7 +36,7 @@ export async function readCosmeticCache(database: Database, playerUuid: string):
     .innerJoin(cosmetics, eq(cosmetics.id, playerEquipment.cosmeticId))
     .where(and(eq(playerEquipment.playerUuid, playerUuid), eq(cosmetics.active, true)));
   const convert = (row: typeof cosmetics.$inferSelect): Cosmetic => ({
-    id: row.id, category: categorySchema.parse(row.category), name: row.name, sortOrder: row.sortOrder,
+    id: row.id, category: categorySchema.parse(row.category), name: row.name, color: row.color, sortOrder: row.sortOrder,
   });
   return {
     status: "unavailable", observedAt: sync?.observedAt.getTime() ?? null,

@@ -316,6 +316,7 @@ export const cosmetics = sqliteTable(
     name: text("name").notNull(),
     description: text("description"),
     icon: text("icon"),
+    color: text("color").notNull().default("#ffffff"),
     sortOrder: integer("sort_order").notNull().default(0),
     active: integer("active", { mode: "boolean" }).notNull().default(false),
   },

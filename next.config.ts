@@ -4,6 +4,10 @@ import { blueMapDevelopmentRewrites } from "./src/lib/bluemap-routing";
 const nextConfig: NextConfig = {
   agentRules: false,
   output: "standalone",
+  outputFileTracingIncludes: {
+    "/me": ["./data/cosmetic-renders.json"],
+    "/api/me/cosmetics": ["./data/cosmetic-renders.json"],
+  },
   turbopack: {
     root: process.cwd(),
   },

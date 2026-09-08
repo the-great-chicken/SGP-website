@@ -146,7 +146,7 @@ class HostingTests(unittest.TestCase):
                  ".next/standalone/node_modules/fixture/index.js": "fixture", ".next/standalone/.next/server/fixture.js": "fixture",
                  ".next/static/chunk.js": "fixture", "public/bluemap/sgp.js": "theme",
                  "node_modules/drizzle-orm/migrator.js": "migration runner", "drizzle/meta/_journal.json": "{}",
-                 "data/kit-manifest.json": "{}", "data/statistics-snapshot.json": "do-not-ship",
+                 "data/kit-manifest.json": "{}", "data/cosmetic-renders.json": "{}", "data/statistics-snapshot.json": "do-not-ship",
                  ".node-version": "24.20.0", "package-lock.json": "{}"}
         for name, contents in files.items():
             (source / name).parent.mkdir(parents=True, exist_ok=True)
@@ -162,6 +162,7 @@ class HostingTests(unittest.TestCase):
         self.assertTrue((output / "public/bluemap/sgp.js").is_file())
         self.assertTrue((output / "drizzle/meta/_journal.json").is_file())
         self.assertTrue((output / "data/kit-manifest.json").is_file())
+        self.assertTrue((output / "data/cosmetic-renders.json").is_file())
         self.assertTrue((output / "migrate.mjs").is_file())
 
     def prepare_activation(self):

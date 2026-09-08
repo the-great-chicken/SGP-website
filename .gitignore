@@ -7,9 +7,11 @@ __pycache__/
 /data/kit-manifest.json
 /data/statistics-snapshot.json
 /data/item-renders.json
+/data/cosmetic-renders.json
 /public/bluemap/overlays.json
 /publish.json
 /public/generated/item-icons/
+/public/generated/cosmetic-icons/
 /public/generated/kit-models/
 
 # Next.js

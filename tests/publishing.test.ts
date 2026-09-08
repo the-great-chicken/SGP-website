@@ -46,6 +46,12 @@ async function fixture() {
         players: [{ sgpId: 1, uuid, minecraftName: "TestPlayer" }], damageCauses: [], kills: [], damageReceived: [], picks: [], abilityMetricDefinitions: [], abilityMetrics: [],
         deathPositions: { metadata: { storedUnit: "block", displayUnit: "block", displayScale: 1, quantization: "none", positionReference: "feet" }, entries: [] },
         elo: { metadata: { initialRating: 1000, kFactor: 32, ratingDivisor: 400, metrics: [] }, ratings: [] } }));
+    } else if (args.some((arg) => arg.endsWith("render-cosmetics.mts"))) {
+      await mkdir(path.join(cwd, "public/generated/cosmetic-icons"), { recursive: true });
+      await writeFile(path.join(cwd, "public/generated/cosmetic-icons/example.png"), "cosmetic image");
+      await writeFile(path.join(cwd, "data/cosmetic-renders.json"), JSON.stringify({ schemaVersion: 1, cosmetics: {
+        "particle.example": { name: "Example", color: "#ffffff", image: "/generated/cosmetic-icons/example.png" },
+      } }));
     } else {
       await mkdir(path.join(cwd, "public/generated/item-icons"), { recursive: true });
       await mkdir(path.join(cwd, "public/generated/kit-models"), { recursive: true });
@@ -76,6 +82,7 @@ test("refresh promotes validated current content without exporting statistics", 
     assert.equal(JSON.parse(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8")).datapackRelease, "dp-test");
     assert.equal(JSON.parse(await readFile(path.join(f.workspace, "public/bluemap/overlays.json"), "utf8")).schemaVersion, 1);
     assert.equal(await readFile(path.join(f.workspace, "public/generated/kit-models/steve.png"), "utf8"), "player texture");
+    assert.equal(await readFile(path.join(f.workspace, "public/generated/cosmetic-icons/example.png"), "utf8"), "cosmetic image");
     assert.ok(!f.calls.some((args) => args[0].endsWith("export_web.py")));
     const mapExport = f.calls.find((args) => args.includes("sgp_map_exporter"))!;
     assert.equal(mapExport[mapExport.indexOf("--resource-pack") + 1], path.join(f.workspace, "inputs/pack"));
@@ -137,6 +144,33 @@ test("missing item images prevent promotion", async () => {
   } finally { await f.cleanup(); }
 });
 
+test("invalid cosmetic sources stop refresh before kit export or item rendering", async () => {
+  const f = await fixture();
+  try {
+    f.failAt("render-cosmetics");
+    await assert.rejects(runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "refresh" }, command: f.command }), /Simulated/);
+    assert.equal(f.calls.length, 1);
+    assert.ok(f.calls[0].some((arg) => arg.endsWith("render-cosmetics.mts")));
+    assert.equal(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8"), "current manifest");
+  } finally { await f.cleanup(); }
+});
+
+test("missing cosmetic images prevent promotion", async () => {
+  const f = await fixture();
+  try {
+    const command = async (executable: string, args: string[], cwd: string) => {
+      await f.command(executable, args, cwd);
+      if (args.some((arg) => arg.endsWith("render-cosmetics.mts"))) {
+        await writeFile(path.join(cwd, "data/cosmetic-renders.json"), JSON.stringify({ schemaVersion: 1, cosmetics: {
+          "particle.example": { image: "/generated/cosmetic-icons/missing.png" },
+        } }));
+      }
+    };
+    await assert.rejects(runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "refresh" }, command }), /Missing or invalid cosmetic image/);
+    assert.equal(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8"), "current manifest");
+  } finally { await f.cleanup(); }
+});
+
 test("promotion restores earlier files when a later file cannot be copied", async () => {
   const f = await fixture();
   try {
@@ -144,8 +178,10 @@ test("promotion restores earlier files when a later file cannot be copied", asyn
     await mkdir(path.join(stage, "data"), { recursive: true });
     await mkdir(path.join(stage, "public/generated/item-icons"), { recursive: true });
     await mkdir(path.join(stage, "public/generated/kit-models"), { recursive: true });
+    await mkdir(path.join(stage, "public/generated/cosmetic-icons"), { recursive: true });
     await writeFile(path.join(stage, "data/kit-manifest.json"), "replacement manifest");
     await writeFile(path.join(stage, "data/item-renders.json"), "replacement index");
+    await writeFile(path.join(stage, "data/cosmetic-renders.json"), "replacement cosmetic index");
     await assert.rejects(promoteCurrent(f.workspace, stage), /ENOENT/);
     assert.equal(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8"), "current manifest");
     assert.ok(!(await readdir(path.join(f.workspace, "data"))).includes("item-renders.json"));
