@@ -87,11 +87,59 @@ export async function renderKitVisuals(manifest: KitManifest, assets: PreparedAs
         layers.push({ input: await recolorTrim(texture, palette, replacement) });
       }
       const { width, height } = await sharp(layers[0].input).metadata();
-      await sharp({ create: { width: width!, height: height!, channels: 4, background: "transparent" } })
-        .composite(layers).png().toFile(path.join(directory, `${slot.slice(6)}.png`));
+      const composed = await sharp({ create: { width: width!, height: height!, channels: 4, background: "transparent" } })
+        .composite(layers).png().toBuffer();
+      const outputTexture = slot === "armor.head" ? composed : await expandHumanoidArmorTexture(composed);
+      await writeFile(path.join(directory, `${slot.slice(6)}.png`), outputTexture);
     }
   }
   return heads;
+}
+
+
+// Minecraft humanoid armor textures are authored as 64x32, where both limbs
+// share the right-limb UVs and the model mirrors the left cuboids. For a plain
+// Three.js BoxGeometry renderer, expand that texture to the modern 64x64 skin
+// layout first. The face-copy coordinates below intentionally match
+// bs-community/skinview-utils v0.7.1 convertSkinTo1_8 (MIT), so the
+// left arm/leg are mirrored exactly as Minecraft expects instead of transposed.
+export async function expandHumanoidArmorTexture(texture: Buffer) {
+  const metadata = await sharp(texture).metadata();
+  const width = metadata.width;
+  const height = metadata.height;
+  if (!width || !height || width !== height * 2 || width % 64 !== 0) {
+    throw new Error(`Bad humanoid armor texture size: ${width}x${height}`);
+  }
+  const scale = width / 64;
+  const mirrorRegion = async (sX: number, sY: number, w: number, h: number, dX: number, dY: number) => ({
+    input: await sharp(texture).extract({
+      left: sX * scale,
+      top: sY * scale,
+      width: w * scale,
+      height: h * scale,
+    }).flop().png().toBuffer(),
+    left: dX * scale,
+    top: dY * scale,
+  });
+  const regions = await Promise.all([
+    // Left leg, mirrored from the authored right leg.
+    mirrorRegion(4, 16, 4, 4, 20, 48),
+    mirrorRegion(8, 16, 4, 4, 24, 48),
+    mirrorRegion(0, 20, 4, 12, 24, 52),
+    mirrorRegion(4, 20, 4, 12, 20, 52),
+    mirrorRegion(8, 20, 4, 12, 16, 52),
+    mirrorRegion(12, 20, 4, 12, 28, 52),
+    // Left arm, mirrored from the authored right arm.
+    mirrorRegion(44, 16, 4, 4, 36, 48),
+    mirrorRegion(48, 16, 4, 4, 40, 48),
+    mirrorRegion(40, 20, 4, 12, 40, 52),
+    mirrorRegion(44, 20, 4, 12, 36, 52),
+    mirrorRegion(48, 20, 4, 12, 32, 52),
+    mirrorRegion(52, 20, 4, 12, 44, 52),
+  ]);
+  return sharp({ create: { width, height: width, channels: 4, background: "transparent" } })
+    .composite([{ input: texture, left: 0, top: 0 }, ...regions])
+    .png().toBuffer();
 }
 
 async function recolorTrim(texture: Buffer, palette: Buffer, replacement: Buffer) {

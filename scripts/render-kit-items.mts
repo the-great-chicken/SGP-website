@@ -15,6 +15,7 @@ const projectRoot = process.cwd();
 const manifestPath = path.join(projectRoot, "data", "kit-manifest.json");
 const outputDirectory = path.join(projectRoot, "public", "generated", "item-icons");
 const indexPath = path.join(projectRoot, "data", "item-renders.json");
+const ITEM_RENDER_PIPELINE_VERSION = "3-custom-potion-colors";
 
 async function main() {
   const options = parseOptions(process.argv.slice(2));
@@ -70,7 +71,7 @@ async function main() {
   for (const [index, [key, item]] of uniqueItems.entries()) {
     const headSkin = heads.get(JSON.stringify(item.components["minecraft:profile"]));
     const headHash = headSkin ? createHash("sha256").update(headSkin).digest("hex") : "";
-    const assetKey = createHash("sha256").update(`${resourcePackRelease}\0${manifest.minecraftVersion}\0${assetFingerprint}\0${key}${headHash}`).digest("hex");
+    const assetKey = createHash("sha256").update(`${ITEM_RENDER_PIPELINE_VERSION}\0${resourcePackRelease}\0${manifest.minecraftVersion}\0${assetFingerprint}\0${key}${headHash}`).digest("hex");
     const fileName = `${slugItemId(item.id)}-${assetKey.slice(0, 20)}.png`;
     const outputPath = path.join(outputDirectory, fileName);
     const input = getItemRenderInput(item);

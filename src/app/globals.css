@@ -2615,13 +2615,10 @@ h3 {
 }
 
 .minecraft-tooltip {
-  position: absolute;
-  bottom: calc(100% - 8px);
-  left: -8px;
-  z-index: 40;
+  position: fixed;
+  z-index: 10000;
   width: max-content;
-  max-width: min(330px, calc(100vw - 54px));
-  display: none;
+  max-width: min(330px, calc(100vw - 24px));
   padding: 8px 10px 9px;
   border: 2px solid #2a0a56;
   background: rgba(16, 0, 16, 0.97);
@@ -2634,20 +2631,11 @@ h3 {
   font-size: var(--font-min);
   font-weight: 400;
   line-height: 1.35;
+  pointer-events: none;
   text-align: left;
   text-shadow: 1px 1px #1f1f1f;
+  transform: translateY(-100%);
   white-space: pre-wrap;
-}
-
-.inventory-entry:hover .minecraft-tooltip,
-.inventory-entry:focus .minecraft-tooltip,
-.inventory-entry:focus-within .minecraft-tooltip {
-  display: block;
-}
-
-.inventory-entry:nth-child(n + 6) .minecraft-tooltip {
-  right: -8px;
-  left: auto;
 }
 
 .minecraft-tooltip-name,
@@ -3259,10 +3247,6 @@ h3 {
     grid-template-columns: repeat(5, minmax(40px, 1fr));
   }
 
-  .inventory-entry:nth-child(n + 4) .minecraft-tooltip {
-    right: -8px;
-    left: auto;
-  }
 
   .footer-grid {
     padding-block: 30px;

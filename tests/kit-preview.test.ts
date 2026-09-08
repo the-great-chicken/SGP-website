@@ -49,18 +49,27 @@ test("native hand attachment uses Minecraft bone-relative coordinates without im
 });
 
 
-test("elytra wings use vanilla shoulder pivots, opposing rotations, and mirrored right-wing geometry", () => {
+test("elytra wings use separate vanilla cuboids instead of a negative-scale mirror", () => {
   const left = elytraWingPose(1);
   const right = elytraWingPose(-1);
 
   assert.deepEqual(left.pivot, [5, 0, 2]);
   assert.deepEqual(right.pivot, [-5, 0, 2]);
-  assert.deepEqual(left.center, [-5, 10, 1]);
-  assert.deepEqual(right.center, [-5, 10, 1]);
+  assert.deepEqual(left.origin, [-10, 0, 0]);
+  assert.deepEqual(right.origin, [0, 0, 0]);
   assert.equal(left.rotation[0], Math.PI / 12);
   assert.equal(right.rotation[0], Math.PI / 12);
   assert.equal(left.rotation[2], -Math.PI / 12);
   assert.equal(right.rotation[2], Math.PI / 12);
-  assert.equal(left.scaleX, 1);
-  assert.equal(right.scaleX, -1);
+  assert.equal(left.mirror, false);
+  assert.equal(right.mirror, true);
+  assert.equal("scaleX" in left, false);
+  assert.equal("scaleX" in right, false);
+});
+
+
+test("armor renderer uses Minecraft mirrored left-limb atlas positions", async () => {
+  const source = await import("node:fs/promises").then(({ readFile }) => readFile(new URL("../src/lib/kit-player-scene.ts", import.meta.url), "utf8"));
+  assert.match(source, /leftArm, armor\.chest\.src[\s\S]*?\[32, 48\]/);
+  assert.match(source, /side === -1 \? \[0, 16\] : \[16, 48\]/);
 });

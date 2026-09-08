@@ -35,6 +35,60 @@ test("custom item models and shorthand potion contents become renderer inputs", 
   assert.equal(input.components.count, 1);
 });
 
+test("custom potion effects receive their Minecraft tint for item rendering", () => {
+  const input = getItemRenderInput(
+    makeItem({
+      "minecraft:potion_contents": {
+        custom_effects: [{ id: "minecraft:slowness", amplifier: 1, duration: 1760 }],
+      },
+    }),
+  );
+
+  assert.deepEqual(input.components["minecraft:potion_contents"], {
+    custom_effects: [{ id: "minecraft:slowness", amplifier: 1, duration: 1760 }],
+    custom_color: 0x8bafe0,
+  });
+});
+
+test("mixed custom effects use amplifier-weighted potion colors", () => {
+  const input = getItemRenderInput(
+    makeItem({
+      "minecraft:item_model": "sgp.kits:tank/turtle_arrow",
+      "minecraft:potion_contents": {
+        custom_effects: [
+          { id: "slowness", amplifier: 5, duration: 160 },
+          { id: "resistance", amplifier: 1, duration: 160 },
+        ],
+      },
+    }),
+  );
+
+  assert.equal(input.id, "sgp.kits:tank/turtle_arrow");
+  assert.deepEqual(input.components["minecraft:potion_contents"], {
+    custom_effects: [
+      { id: "slowness", amplifier: 5, duration: 160 },
+      { id: "resistance", amplifier: 1, duration: 160 },
+    ],
+    custom_color: 0x8d95e4,
+  });
+});
+
+test("an explicit custom potion color is preserved", () => {
+  const input = getItemRenderInput(
+    makeItem({
+      "minecraft:potion_contents": {
+        custom_effects: [{ id: "slowness" }],
+        custom_color: 0x123456,
+      },
+    }),
+  );
+
+  assert.deepEqual(input.components["minecraft:potion_contents"], {
+    custom_effects: [{ id: "slowness" }],
+    custom_color: 0x123456,
+  });
+});
+
 test("render indexes are tied to the kit and resource-pack releases", () => {
   const index = {
     schemaVersion: 2 as const,

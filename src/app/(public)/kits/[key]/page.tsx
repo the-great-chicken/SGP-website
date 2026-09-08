@@ -13,8 +13,8 @@ import {
   formatKitName,
   getKitAccent,
   getKitDisplayName,
-  type KitOperation,
 } from "@/lib/kit-manifest";
+import { resolveKitLoadout, type ResolvedKitSlot } from "@/lib/kit-loadout";
 import { loadItemImageResolver } from "@/lib/item-renders";
 import { getKitIconSrc, getKitPreview } from "@/lib/kit-preview";
 import { getKitMetrics } from "@/lib/kit-stats";
@@ -37,10 +37,6 @@ const hotbarSlots = Array.from({ length: 9 }, (_, index) => ({
   slot: `hotbar.${index}`,
   label: String(index + 1),
 }));
-
-const positionedSlots = new Set(
-  [...armorSlots, offhandSlot, ...hotbarSlots].map(({ slot }) => slot),
-);
 
 export const dynamic = "force-dynamic";
 
@@ -76,10 +72,8 @@ export default async function KitPage({ params }: KitPageProps) {
   const name = getKitDisplayName(kit);
   const metrics = getKitMetrics(kit.id, statsSnapshot.byKitKey[kit.key], statsSnapshot);
   const itemCount = kit.operations.reduce((sum, operation) => sum + operation.item.count, 0);
-  const reserves = kit.operations.filter(
-    (operation) => !operation.slot || !positionedSlots.has(operation.slot),
-  );
-  const offhandOperation = findOperation(kit.operations, offhandSlot.slot);
+  const loadout = resolveKitLoadout(kit.operations);
+  const offhandEntry = loadout.bySlot.get(offhandSlot.slot);
   const iconSrc = getKitIconSrc(kit);
 
   return (
@@ -152,19 +146,36 @@ export default async function KitPage({ params }: KitPageProps) {
               </div>
               <div className="kit-model-stage">
                 <div className="kit-model-equipment inventory-slots" aria-label="Armure portée">
-                  {armorSlots.map(({ slot, label }) => (
-                    <ItemSlot
-                      operation={findOperation(kit.operations, slot)}
-                      slotLabel={label}
-                      imageSrc={getOperationImage(kit.operations, slot, resolveItemImage)}
-                      key={slot}
-                    />
-                  ))}
+                  {armorSlots.map(({ slot, label }) => {
+                    const entry = loadout.bySlot.get(slot);
+                    return (
+                      <ItemSlot
+                        operation={entry?.operation}
+                        slotLabel={label}
+                        imageSrc={getResolvedItemImage(entry, resolveItemImage)}
+                        showLabel={false}
+                        key={slot}
+                      />
+                    );
+                  })}
                 </div>
                 <div className="kit-model-surface">
                   <KitPlayerModel preview={getKitPreview(kit)} name={name} />
                 </div>
               </div>
+              {offhandEntry ? (
+                <div className="kit-model-offhand">
+                  <span>Main secondaire</span>
+                  <div className="kit-model-offhand-slot inventory-slots">
+                    <ItemSlot
+                      operation={offhandEntry.operation}
+                      slotLabel={offhandSlot.label}
+                      imageSrc={getResolvedItemImage(offhandEntry, resolveItemImage)}
+                      showLabel={false}
+                    />
+                  </div>
+                </div>
+              ) : null}
             </section>
 
             <div className="kit-information">
@@ -191,45 +202,52 @@ export default async function KitPage({ params }: KitPageProps) {
                 <div className="loadout-group hotbar-group">
                   <h3>Barre rapide</h3>
                   <div className="hotbar-slots inventory-slots">
-                    {hotbarSlots.map(({ slot, label }) => (
-                      <ItemSlot
-                        operation={findOperation(kit.operations, slot)}
-                        slotLabel={label}
-                        imageSrc={getOperationImage(kit.operations, slot, resolveItemImage)}
-                        key={slot}
-                      />
-                    ))}
+                    {hotbarSlots.map(({ slot, label }) => {
+                      const entry = loadout.bySlot.get(slot);
+                      return (
+                        <ItemSlot
+                          operation={entry?.operation}
+                          slotLabel={label}
+                          imageSrc={getResolvedItemImage(entry, resolveItemImage)}
+                          key={slot}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
 
-                {reserves.length ? (
+                {loadout.inventory.length ? (
                   <div className="loadout-group reserve-group">
                     <h3>Inventaire</h3>
                     <div className="reserve-slots inventory-slots">
-                      {reserves.map((operation, index) => (
+                      {loadout.inventory.map((entry, index) => (
                         <ItemSlot
-                          operation={operation}
-                          slotLabel={operation.slot ? "Inventaire" : "Ajout direct"}
-                          imageSrc={resolveItemImage(operation.item)}
-                          key={`${operation.source.line}-${index}`}
+                          operation={entry.operation}
+                          slotLabel="Inventaire"
+                          imageSrc={getResolvedItemImage(entry, resolveItemImage)}
+                          key={`${entry.slot}-${entry.operation.source.line}-${index}`}
                         />
                       ))}
                     </div>
                   </div>
                 ) : null}
 
-                {offhandOperation ? (
-                  <div className="loadout-group offhand-group">
-                    <h3>Main secondaire</h3>
-                    <div className="offhand-slots inventory-slots">
-                      <ItemSlot
-                        operation={offhandOperation}
-                        slotLabel={offhandSlot.label}
-                        imageSrc={resolveItemImage(offhandOperation.item)}
-                      />
+                {loadout.overflow.length ? (
+                  <div className="loadout-group reserve-group">
+                    <h3>Surplus hors inventaire</h3>
+                    <div className="reserve-slots inventory-slots">
+                      {loadout.overflow.map((entry, index) => (
+                        <ItemSlot
+                          operation={entry.operation}
+                          slotLabel="Objet donné au sol"
+                          imageSrc={getResolvedItemImage(entry, resolveItemImage)}
+                          key={`overflow-${entry.operation.source.line}-${index}`}
+                        />
+                      ))}
                     </div>
                   </div>
                 ) : null}
+
               </section>
 
               <section className="kit-stats-panel refined-kit-stats">
@@ -263,15 +281,9 @@ export default async function KitPage({ params }: KitPageProps) {
   );
 }
 
-function findOperation(operations: KitOperation[], slot: string) {
-  return operations.find((operation) => operation.slot === slot);
-}
-
-function getOperationImage(
-  operations: KitOperation[],
-  slot: string,
-  resolveItemImage: (item: KitOperation["item"]) => string | null,
+function getResolvedItemImage(
+  entry: ResolvedKitSlot | undefined,
+  resolveItemImage: (item: ResolvedKitSlot["renderItem"]) => string | null,
 ) {
-  const operation = findOperation(operations, slot);
-  return operation ? resolveItemImage(operation.item) : null;
+  return entry ? resolveItemImage(entry.renderItem) : null;
 }
