@@ -1,12 +1,10 @@
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
-import path, { resolve } from "node:path";
+import path from "node:path";
 import test from "node:test";
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
 import * as schema from "../../src/db/schema";
+import { createTestDatabase } from "../support/database";
 
 const playerUuid = "11111111-1111-4111-8111-111111111111";
 const discordId = "111111111111111111";
@@ -67,9 +65,8 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
   process.env.COSMETICS_BRIDGE_SECRET = bridgeSecret;
   process.env.BLUEMAP_INTERNAL_URL = "http://127.0.0.1:8100";
 
-  const migrationClient = createClient({ url: databaseUrl });
-  const database = drizzle(migrationClient, { schema });
-  await migrate(database, { migrationsFolder: resolve("drizzle") });
+  const migratedDatabase = await createTestDatabase(t, { url: databaseUrl });
+  const { client: migrationClient, database } = migratedDatabase;
   await database.insert(schema.players).values({
     uuid: playerUuid,
     currentMinecraftName: "Alpha",
@@ -382,7 +379,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
   } finally {
     globalThis.fetch = originalFetch;
     applicationDatabaseClient?.close();
-    migrationClient.close();
+    migratedDatabase.close();
     for (const [name, value] of previousEnvironment) {
       setEnvironmentVariable(name, value);
     }

@@ -70,6 +70,8 @@ npm run check
 
 The gate runs lint, TypeScript typechecking, every TypeScript/JavaScript test under `tests/`, every Python `test_*.py` test, the production Next.js build, and five Playwright browser smoke journeys against that production build. CI installs the pinned Chromium automatically. For a first local browser run, use `npx playwright install chromium` (on Linux, `npx playwright install --with-deps chromium` if the browser system libraries are not already installed). The narrower `test:*` scripts remain available for faster iteration on one area; `npm run test:app` runs the Next route-boundary suite and, after a production build exists, `npm run test:e2e` runs only the browser smoke suite. `scripts/check-cosmetic-hooks.py` validates the datapack cosmetic hooks without starting Minecraft.
 
+Database-backed TypeScript tests should use `createTestDatabase(t)` from `tests/support/database.ts`; it applies the real Drizzle migrations and registers idempotent client cleanup with the Node test context.
+
 Dependency install scripts are allowlisted by exact package version in `package.json`, and `.npmrc` makes unreviewed install scripts a hard failure. When an install fails after a dependency update, review the package first, then use `npm install-scripts ls` / `npm install-scripts approve <package>` rather than disabling the policy.
 
 For schema changes, run `npm run db:generate` and commit the migration, then apply it with `npm run db:migrate`. `npm run db:studio` opens the local database editor.

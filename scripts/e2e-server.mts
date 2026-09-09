@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { access, mkdir, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
@@ -24,6 +24,7 @@ const nextPort = Number(new URL(e2eBaseUrl).port);
 const mockUrl = new URL(e2eMockServerUrl);
 
 await ensureProductionBuild();
+await prepareStandaloneAssets();
 await prepareFixtures();
 
 const mockServer = createServer(handleMockRequest);
@@ -34,13 +35,15 @@ await new Promise<void>((resolveReady, reject) => {
 
 const nextProcess = spawn(
   process.execPath,
-  ["node_modules/next/dist/bin/next", "start", "-H", "0.0.0.0", "-p", String(nextPort)],
+  [resolve(".next/standalone/server.js")],
   {
     cwd: process.cwd(),
     stdio: "inherit",
     env: {
       ...process.env,
       NODE_ENV: "production",
+      HOSTNAME: "0.0.0.0",
+      PORT: String(nextPort),
       DATABASE_URL: `file:${databasePath}`,
       KIT_MANIFEST_PATH: manifestPath,
       DISCORD_CLIENT_ID: "e2e-client-id",
@@ -81,11 +84,34 @@ nextProcess.once("exit", (code, signal) => {
 });
 
 async function ensureProductionBuild() {
+  const requiredBuildPaths = [
+    ".next/BUILD_ID",
+    ".next/standalone/server.js",
+    ".next/static",
+  ];
   try {
-    await access(resolve(".next/BUILD_ID"));
+    await Promise.all(requiredBuildPaths.map((path) => access(resolve(path))));
   } catch {
-    throw new Error("Playwright smoke tests require a production build. Run `npm run build` before `npm run test:e2e`.");
+    throw new Error(
+      "Playwright smoke tests require a complete standalone production build. Run `npm run build` before `npm run test:e2e`.",
+    );
   }
+}
+
+async function prepareStandaloneAssets() {
+  // Next intentionally leaves public/ and .next/static out of standalone output;
+  // copy them in so the smoke server exercises the same self-contained shape we deploy.
+  const standaloneRoot = resolve(".next/standalone");
+  const standaloneStatic = resolve(standaloneRoot, ".next/static");
+  const standalonePublic = resolve(standaloneRoot, "public");
+  await Promise.all([
+    rm(standaloneStatic, { recursive: true, force: true }),
+    rm(standalonePublic, { recursive: true, force: true }),
+  ]);
+  await Promise.all([
+    cp(resolve(".next/static"), standaloneStatic, { recursive: true }),
+    cp(resolve("public"), standalonePublic, { recursive: true }),
+  ]);
 }
 
 async function prepareFixtures() {

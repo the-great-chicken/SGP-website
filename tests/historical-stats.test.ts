@@ -1,22 +1,19 @@
 import assert from "node:assert/strict";
-import { resolve } from "node:path";
-import test from "node:test";
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
+import test, { type TestContext } from "node:test";
 import {
   queryLeaderboard,
   queryPlayerDirectory,
   queryPlayerProfile,
 } from "../src/db/historical-stats-query";
 import * as schema from "../src/db/schema";
+import { createTestDatabase } from "./support/database";
 
 const alpha = "11111111-1111-4111-8111-111111111111";
 const bravo = "22222222-2222-4222-8222-222222222222";
 const charlie = "33333333-3333-4333-8333-333333333333";
 
-test("historical leaderboards preserve edition names and exclude drafts", async () => {
-  const fixture = await createFixture();
+test("historical leaderboards preserve edition names and exclude drafts", async (t) => {
+  const fixture = await createFixture(t);
   try {
     const edition = await queryLeaderboard(fixture.database, {
       editionNumber: 1,
@@ -58,12 +55,12 @@ test("historical leaderboards preserve edition names and exclude drafts", async 
     );
     assert.match(lifetimeElo.entries[0].detail, /édition 2/);
   } finally {
-    fixture.client.close();
+    fixture.close();
   }
 });
 
-test("player directory searches historical names and aggregates kit history", async () => {
-  const fixture = await createFixture();
+test("player directory searches historical names and aggregates kit history", async (t) => {
+  const fixture = await createFixture(t);
   try {
     const directory = await queryPlayerDirectory(fixture.database, "oldalpha");
 
@@ -80,12 +77,12 @@ test("player directory searches historical names and aggregates kit history", as
       favoriteKitKey: "mage",
     });
   } finally {
-    fixture.client.close();
+    fixture.close();
   }
 });
 
-test("public profiles include lifetime and per-edition statistics", async () => {
-  const fixture = await createFixture();
+test("public profiles include lifetime and per-edition statistics", async (t) => {
+  const fixture = await createFixture(t);
   try {
     const profile = await queryPlayerProfile(fixture.database, alpha);
     assert.ok(profile);
@@ -186,14 +183,12 @@ test("public profiles include lifetime and per-edition statistics", async () => 
     assert.equal((await queryPlayerProfile(fixture.database, alpha.toUpperCase()))?.uuid, alpha);
     assert.equal(await queryPlayerProfile(fixture.database, charlie), null);
   } finally {
-    fixture.client.close();
+    fixture.close();
   }
 });
 
-async function createFixture() {
-  const client = createClient({ url: "file::memory:" });
-  const database = drizzle(client, { schema });
-  await migrate(database, { migrationsFolder: resolve("drizzle") });
+async function createFixture(t: TestContext) {
+  const { database, close } = await createTestDatabase(t);
 
   const insertedEditions = await database
     .insert(schema.editions)
@@ -297,5 +292,5 @@ async function createFixture() {
     value: 3,
   });
 
-  return { client, database };
+  return { database, close };
 }

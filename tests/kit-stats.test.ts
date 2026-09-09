@@ -1,18 +1,13 @@
 import assert from "node:assert/strict";
-import { resolve } from "node:path";
 import test from "node:test";
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
 import { queryKitStats } from "../src/db/kit-stats-query";
 import * as schema from "../src/db/schema";
+import { createTestDatabase } from "./support/database";
 
-test("kit aggregates follow edition kit snapshots instead of assuming stable numeric IDs", async () => {
-  const client = createClient({ url: "file::memory:" });
-  const database = drizzle(client, { schema });
+test("kit aggregates follow edition kit snapshots instead of assuming stable numeric IDs", async (t) => {
+  const { database, close } = await createTestDatabase(t);
 
   try {
-    await migrate(database, { migrationsFolder: resolve("drizzle") });
     const [edition] = await database
       .insert(schema.editions)
       .values({
@@ -112,6 +107,6 @@ test("kit aggregates follow edition kit snapshots instead of assuming stable num
       damageDealt: 24,
     });
   } finally {
-    client.close();
+    close();
   }
 });

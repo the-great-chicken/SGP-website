@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
-import { resolve } from "node:path";
-import test from "node:test";
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
+import test, { type TestContext } from "node:test";
 import { eq } from "drizzle-orm";
 import * as schema from "../src/db/schema";
+import { createTestDatabase } from "./support/database";
 import { queryAuthSession, storeAuthSession, type AuthSession } from "../src/auth/session-query";
 import { syncDiscordSrvLinks } from "../src/db/discordsrv";
 import { createCosmeticBridge, type CosmeticBridge } from "../src/cosmetics/bridge";
@@ -56,10 +53,8 @@ class FakeBridge implements CosmeticBridge {
     return structuredClone(this.current);
   }
 }
-async function fixture() {
-  const client = createClient({ url: "file::memory:" });
-  const database = drizzle(client, { schema });
-  await migrate(database, { migrationsFolder: resolve("drizzle") });
+async function fixture(t: TestContext) {
+  const { database, close } = await createTestDatabase(t);
   await database.insert(schema.players).values([
     { uuid: alpha, currentMinecraftName: "Alpha", discordId },
     { uuid: bravo, currentMinecraftName: "Bravo" },
@@ -70,15 +65,15 @@ async function fixture() {
     read: (uuid: string) => readCosmeticCache(database, uuid),
   };
   const service = createCosmeticService(bridge, store);
-  return { client, database, bridge, store, service };
+  return { database, bridge, store, service, close };
 }
 function request(body: unknown, origin = "https://sgp.test") {
   return new Request("https://sgp.test/api/me/cosmetics", {
     method: "PUT", headers: { Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify(body),
   });
 }
-test("HTTP rejects anonymous, expired and unlinked sessions before contacting Minecraft", async () => {
-  const f = await fixture();
+test("HTTP rejects anonymous, expired and unlinked sessions before contacting Minecraft", async (t) => {
+  const f = await fixture(t);
   try {
     for (const [user, status] of [
       [null, 401], [{ ...session, expiresAt: new Date(0) }, 401], [{ ...session, player: null }, 403],
@@ -89,10 +84,10 @@ test("HTTP rejects anonymous, expired and unlinked sessions before contacting Mi
     }
     assert.equal(f.bridge.reads.length, 0);
     assert.equal(f.bridge.changes.length, 0);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("HTTP rejects forged identities, cross-site requests, malformed and oversized JSON", async () => {
-  const f = await fixture();
+test("HTTP rejects forged identities, cross-site requests, malformed and oversized JSON", async (t) => {
+  const f = await fixture(t);
   try {
     const handlers = cosmeticHandlers(async () => session, f.service);
     const selection = { category: "particle", cosmeticId: "particle.cloud" };
@@ -105,10 +100,10 @@ test("HTTP rejects forged identities, cross-site requests, malformed and oversiz
       method: "PUT", headers: { Origin: "https://sgp.test", "Content-Type": "application/json" }, body: "{",
     }))).status, 400);
     assert.equal(f.bridge.changes.length, 0);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("only session identity reaches Minecraft and another player's cache is untouched", async () => {
-  const f = await fixture();
+test("only session identity reaches Minecraft and another player's cache is untouched", async (t) => {
+  const f = await fixture(t);
   try {
     const other = snapshot(bravo);
     other.equipment.intensity = "intensity.light";
@@ -119,10 +114,10 @@ test("only session identity reaches Minecraft and another player's cache is unto
     assert.equal((await f.store.read(alpha)).equipment.particle?.id, "particle.cloud");
     assert.equal((await f.store.read(bravo)).equipment.intensity?.id, "intensity.light");
     assert.equal((await f.store.read(bravo)).equipment.particle, null);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("same-origin mutations work behind a TLS proxy preserving the public Host", async () => {
-  const f = await fixture();
+test("same-origin mutations work behind a TLS proxy preserving the public Host", async (t) => {
+  const f = await fixture(t);
   try {
     const handlers = cosmeticHandlers(async () => session, f.service);
     const reply = await handlers.PUT(new Request("http://localhost:3000/api/me/cosmetics", {
@@ -136,10 +131,10 @@ test("same-origin mutations work behind a TLS proxy preserving the public Host",
       body: JSON.stringify({ category: "particle", cosmeticId: null }),
     }));
     assert.equal(forged.status, 403);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("unknown categories, cosmetics, locked and wrong-category selections cannot mutate", async () => {
-  const f = await fixture();
+test("unknown categories, cosmetics, locked and wrong-category selections cannot mutate", async (t) => {
+  const f = await fixture(t);
   try {
     await assert.rejects(f.service.change(session, { category: "title", cosmeticId: null }), /INVALID_REQUEST/);
     for (const selection of [
@@ -148,10 +143,10 @@ test("unknown categories, cosmetics, locked and wrong-category selections cannot
       { category: "kill", cosmeticId: "particle.cloud" },
     ]) assert.equal((await f.service.change(session, selection)).confirmed, false);
     assert.equal(f.bridge.changes.length, 0);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("repeated equip and unequip preserve one row per slot and other slots", async () => {
-  const f = await fixture();
+test("repeated equip and unequip preserve one row per slot and other slots", async (t) => {
+  const f = await fixture(t);
   try {
     for (let i = 0; i < 2; i++) {
       assert.equal((await f.service.change(session, { category: "particle", cosmeticId: "particle.cloud" })).confirmed, true);
@@ -164,10 +159,10 @@ test("repeated equip and unequip preserve one row per slot and other slots", asy
     const equipment = await f.database.select().from(schema.playerEquipment);
     assert.equal(equipment.length, 1);
     assert.equal(equipment[0].category, "intensity");
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("Minecraft rejects stale unlocks even when the website read allowed them", async () => {
-  const f = await fixture();
+test("Minecraft rejects stale unlocks even when the website read allowed them", async (t) => {
+  const f = await fixture(t);
   try {
     f.bridge.current.equipment.intensity = "intensity.light";
     f.bridge.changeError = new CosmeticError("LOCKED", 403);
@@ -175,10 +170,10 @@ test("Minecraft rejects stale unlocks even when the website read allowed them", 
     assert.equal(result.confirmed, false);
     assert.equal(result.view.equipment.particle, null);
     assert.equal(result.view.equipment.intensity?.id, "intensity.light");
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("offline and unavailable states show dated cache and never queue changes", async () => {
-  const f = await fixture();
+test("offline and unavailable states show dated cache and never queue changes", async (t) => {
+  const f = await fixture(t);
   try {
     f.bridge.current.catalogue[0].color = "#123456";
     await f.service.read(session);
@@ -192,10 +187,10 @@ test("offline and unavailable states show dated cache and never queue changes", 
     assert.equal(f.bridge.changes.length, 0);
     f.bridge.readError = new CosmeticError("UNCONFIRMED");
     assert.equal((await f.service.read(session)).status, "unavailable");
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("a lost reply refreshes actual state without claiming or replaying success", async () => {
-  const f = await fixture();
+test("a lost reply refreshes actual state without claiming or replaying success", async (t) => {
+  const f = await fixture(t);
   try {
     f.bridge.loseReply = true;
     const result = await f.service.change(session, { category: "particle", cosmeticId: "particle.cloud" });
@@ -203,10 +198,10 @@ test("a lost reply refreshes actual state without claiming or replaying success"
     assert.equal(result.view.equipment.particle?.id, "particle.cloud");
     assert.equal((await f.store.read(alpha)).equipment.particle?.id, "particle.cloud");
     assert.equal(f.bridge.changes.length, 1);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("wrong readback is unconfirmed, and cache failures distinguish confirmed Minecraft state", async () => {
-  const f = await fixture();
+test("wrong readback is unconfirmed, and cache failures distinguish confirmed Minecraft state", async (t) => {
+  const f = await fixture(t);
   try {
     f.bridge.wrongReadback = true;
     assert.equal((await f.service.change(session, { category: "particle", cosmeticId: "particle.cloud" })).confirmed, false);
@@ -219,10 +214,10 @@ test("wrong readback is unconfirmed, and cache failures distinguish confirmed Mi
     assert.equal(result.confirmed, true);
     assert.match(result.message, /copie du site/);
     assert.equal((await f.store.read(alpha)).equipment.particle, null);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("DiscordSRV unlink invalidates existing sessions and stale link caches fail closed", async () => {
-  const f = await fixture();
+test("DiscordSRV unlink invalidates existing sessions and stale link caches fail closed", async (t) => {
+  const f = await fixture(t);
   try {
     await storeAuthSession(f.database, "token-hash", session.discord, session.expiresAt);
     await f.service.read(session);
@@ -233,10 +228,10 @@ test("DiscordSRV unlink invalidates existing sessions and stale link caches fail
     await syncDiscordSrvLinks(f.database, []);
     const unlinked = await queryAuthSession(f.database, "token-hash");
     await assert.rejects(f.service.change(unlinked, { category: "particle", cosmeticId: null }), /UNLINKED/);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("fresh snapshots reconcile in-game changes, removed unlocks and catalogue entries", async () => {
-  const f = await fixture();
+test("fresh snapshots reconcile in-game changes, removed unlocks and catalogue entries", async (t) => {
+  const f = await fixture(t);
   try {
     f.bridge.current.equipment.particle = "particle.cloud";
     await f.service.read(session);
@@ -249,10 +244,10 @@ test("fresh snapshots reconcile in-game changes, removed unlocks and catalogue e
     const [removed] = await f.database.select().from(schema.cosmetics).where(eq(schema.cosmetics.id, "particle.cloud"));
     assert.equal(removed.active, false);
     assert.equal((await f.store.read(alpha)).cosmetics.length, 1);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
-test("simultaneous changes and refreshes are serialized for the authenticated player", async () => {
-  const f = await fixture();
+test("simultaneous changes and refreshes are serialized for the authenticated player", async (t) => {
+  const f = await fixture(t);
   try {
     await Promise.all([
       f.service.change(session, { category: "particle", cosmeticId: "particle.cloud" }),
@@ -261,7 +256,7 @@ test("simultaneous changes and refreshes are serialized for the authenticated pl
     ]);
     assert.equal((await f.store.read(alpha)).equipment.particle, null);
     assert.equal(f.bridge.changes.length, 2);
-  } finally { f.client.close(); }
+  } finally { f.close(); }
 });
 test("bridge authenticates requests and rejects malformed, foreign, redirected and unavailable replies", async () => {
   const config = { url: "http://127.0.0.1:8766", secret: "a".repeat(43) };

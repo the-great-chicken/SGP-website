@@ -30,11 +30,15 @@ async function stubFallbackSkin(page: Page) {
 }
 
 async function authenticate(context: BrowserContext) {
+  // Supplying `url` makes Playwright derive `secure` from the URL scheme. Use
+  // a host-only domain/path pair so the production __Host- cookie keeps its
+  // Secure attribute while Chromium treats localhost as a trustworthy host.
   await context.addCookies([
     {
       name: "__Host-sgp_session",
       value: e2eSessionToken,
-      url: e2eBaseUrl,
+      domain: new URL(e2eBaseUrl).hostname,
+      path: "/",
       httpOnly: true,
       secure: true,
       sameSite: "Lax",
@@ -67,7 +71,7 @@ test.describe("high-value browser smoke journeys", () => {
     await page.getByLabel("Édition").selectOption("all");
     await expect(page).toHaveURL(/edition=all/);
 
-    await page.getByLabel("Joueur").fill("Bravo");
+    await page.getByRole("searchbox", { name: "Joueur" }).fill("Bravo");
     await expect(page.getByRole("status")).toHaveText("1 joueur");
     const table = page.getByRole("table");
     await expect(table.getByRole("link", { name: /Bravo/ })).toBeVisible();

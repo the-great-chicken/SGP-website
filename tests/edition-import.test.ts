@@ -1,10 +1,6 @@
 import assert from "node:assert/strict";
-import { resolve } from "node:path";
 import test from "node:test";
-import { createClient } from "@libsql/client";
 import { count, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
 import {
   assembleEditionBundle,
   editionDetailsSchema,
@@ -14,15 +10,14 @@ import {
 } from "../src/db/edition-bundle";
 import { replaceEdition } from "../src/db/importer";
 import * as schema from "../src/db/schema";
+import { createTestDatabase } from "./support/database";
 
 const playerUuid = "11111111-1111-4111-8111-111111111111";
 
-test("edition imports are atomic replacements", async () => {
-  const client = createClient({ url: "file::memory:" });
-  const db = drizzle(client, { schema });
+test("edition imports are atomic replacements", async (t) => {
+  const { database: db, close } = await createTestDatabase(t);
 
   try {
-    await migrate(db, { migrationsFolder: resolve("drizzle") });
     const bundle = makeBundle(5, "Premier nom");
 
     await replaceEdition(db, bundle);
@@ -48,16 +43,14 @@ test("edition imports are atomic replacements", async () => {
     assert.equal(edition.datapackVersion, "dp-release-1");
     assert.equal(edition.resourcePackVersion, "rp-release-1");
   } finally {
-    client.close();
+    close();
   }
 });
 
-test("reimporting an older edition does not regress the current player name", async () => {
-  const client = createClient({ url: "file::memory:" });
-  const db = drizzle(client, { schema });
+test("reimporting an older edition does not regress the current player name", async (t) => {
+  const { database: db, close } = await createTestDatabase(t);
 
   try {
-    await migrate(db, { migrationsFolder: resolve("drizzle") });
     await replaceEdition(db, makeBundle(6, "Nom récent"));
     await replaceEdition(db, makeBundle(5, "Ancien nom"));
 
@@ -68,7 +61,7 @@ test("reimporting an older edition does not regress the current player name", as
 
     assert.equal(player.name, "Nom récent");
   } finally {
-    client.close();
+    close();
   }
 });
 

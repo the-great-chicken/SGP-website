@@ -1,10 +1,6 @@
 import assert from "node:assert/strict";
-import { resolve } from "node:path";
-import test from "node:test";
-import { createClient } from "@libsql/client";
+import test, { type TestContext } from "node:test";
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
 import {
   authenticateDiscordCode,
   buildDiscordAuthorizationUrl,
@@ -22,6 +18,7 @@ import {
   syncDiscordSrvLinks,
 } from "../src/db/discordsrv";
 import * as schema from "../src/db/schema";
+import { createTestDatabase } from "./support/database";
 
 const alpha = "11111111-1111-4111-8111-111111111111";
 const bravo = "22222222-2222-4222-8222-222222222222";
@@ -97,8 +94,8 @@ test("Minecraft usercache provides current UUID/name identities", () => {
   assert.throws(() => parseMinecraftUsercache("not-json"), /expected valid JSON/);
 });
 
-test("DiscordSRV sync atomically imports Minecraft identities, applies links and clears stale identities", async () => {
-  const fixture = await createFixture();
+test("DiscordSRV sync atomically imports Minecraft identities, applies links and clears stale identities", async (t) => {
+  const fixture = await createFixture(t);
   try {
     await fixture.database.insert(schema.players).values([
       {
@@ -155,12 +152,12 @@ test("DiscordSRV sync atomically imports Minecraft identities, applies links and
       { uuid: delta, discordId: "444444444444444444", discordUsername: null, minecraftName: "Delta" },
     ]);
   } finally {
-    fixture.client.close();
+    fixture.close();
   }
 });
 
-test("opaque sessions resolve the current DiscordSRV Minecraft link", async () => {
-  const fixture = await createFixture();
+test("opaque sessions resolve the current DiscordSRV Minecraft link", async (t) => {
+  const fixture = await createFixture(t);
   try {
     const now = new Date("2026-09-05T12:00:00Z");
     const expiresAt = new Date("2026-10-05T12:00:00Z");
@@ -196,13 +193,10 @@ test("opaque sessions resolve the current DiscordSRV Minecraft link", async () =
     await removeAuthSession(fixture.database, "second-hashed-token");
     assert.equal(await queryAuthSession(fixture.database, "hashed-token", now), null);
   } finally {
-    fixture.client.close();
+    fixture.close();
   }
 });
 
-async function createFixture() {
-  const client = createClient({ url: "file::memory:" });
-  const database = drizzle(client, { schema });
-  await migrate(database, { migrationsFolder: resolve("drizzle") });
-  return { client, database };
+async function createFixture(t: TestContext) {
+  return createTestDatabase(t);
 }
