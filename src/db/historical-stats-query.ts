@@ -67,6 +67,18 @@ export type PlayerAbilityMetric = {
   displayUnit: string;
 };
 
+export type PlayerKitEditionStats = {
+  kitId: number;
+  kitKey: string | null;
+  picks: number;
+  totalTimeTicks: number;
+  kills: number;
+  deaths: number;
+  damageDealt: number;
+  damageReceived: number;
+  abilityMetrics: PlayerAbilityMetric[];
+};
+
 export type PlayerEditionStats = {
   id: number;
   number: number;
@@ -84,6 +96,7 @@ export type PlayerEditionStats = {
   totalTimeTicks: number;
   favoriteKitKey: string | null;
   abilityMetrics: PlayerAbilityMetric[];
+  kitStats: PlayerKitEditionStats[];
 };
 
 export type PlayerProfile = {
@@ -138,6 +151,7 @@ type WorkingDirectoryEntry = {
 
 type WorkingPlayerEdition = PlayerEditionStats & {
   kitTime: Map<string, number>;
+  kitStatsById: Map<number, PlayerKitEditionStats>;
 };
 
 export async function queryLeaderboard(
@@ -462,8 +476,20 @@ export async function queryPlayerProfile(
         .from(playerRatings)
         .where(inArray(playerRatings.editionId, editionIds)),
       database
-        .select({ editionId: editionKills.editionId, value: editionKills.count })
+        .select({
+          editionId: editionKills.editionId,
+          kitId: editionKills.killerKitId,
+          kitKey: kitSnapshots.kitKey,
+          value: editionKills.count,
+        })
         .from(editionKills)
+        .leftJoin(
+          kitSnapshots,
+          and(
+            eq(editionKills.editionId, kitSnapshots.editionId),
+            eq(editionKills.killerKitId, kitSnapshots.kitId),
+          ),
+        )
         .where(
           and(
             eq(editionKills.killerUuid, storedUuid),
@@ -471,8 +497,20 @@ export async function queryPlayerProfile(
           ),
         ),
       database
-        .select({ editionId: editionKills.editionId, value: editionKills.count })
+        .select({
+          editionId: editionKills.editionId,
+          kitId: editionKills.victimKitId,
+          kitKey: kitSnapshots.kitKey,
+          value: editionKills.count,
+        })
         .from(editionKills)
+        .leftJoin(
+          kitSnapshots,
+          and(
+            eq(editionKills.editionId, kitSnapshots.editionId),
+            eq(editionKills.victimKitId, kitSnapshots.kitId),
+          ),
+        )
         .where(
           and(
             eq(editionKills.victimUuid, storedUuid),
@@ -482,9 +520,18 @@ export async function queryPlayerProfile(
       database
         .select({
           editionId: editionDamageReceived.editionId,
+          kitId: editionDamageReceived.sourceKitId,
+          kitKey: kitSnapshots.kitKey,
           value: editionDamageReceived.amount,
         })
         .from(editionDamageReceived)
+        .leftJoin(
+          kitSnapshots,
+          and(
+            eq(editionDamageReceived.editionId, kitSnapshots.editionId),
+            eq(editionDamageReceived.sourceKitId, kitSnapshots.kitId),
+          ),
+        )
         .where(
           and(
             eq(editionDamageReceived.sourceUuid, storedUuid),
@@ -495,9 +542,18 @@ export async function queryPlayerProfile(
       database
         .select({
           editionId: editionDamageReceived.editionId,
+          kitId: editionDamageReceived.targetKitId,
+          kitKey: kitSnapshots.kitKey,
           value: editionDamageReceived.amount,
         })
         .from(editionDamageReceived)
+        .leftJoin(
+          kitSnapshots,
+          and(
+            eq(editionDamageReceived.editionId, kitSnapshots.editionId),
+            eq(editionDamageReceived.targetKitId, kitSnapshots.kitId),
+          ),
+        )
         .where(
           and(
             eq(editionDamageReceived.targetUuid, storedUuid),
@@ -507,6 +563,7 @@ export async function queryPlayerProfile(
       database
         .select({
           editionId: editionPicks.editionId,
+          kitId: editionPicks.kitId,
           kitKey: kitSnapshots.kitKey,
           count: editionPicks.count,
           totalTimeTicks: editionPicks.totalTimeTicks,
@@ -528,6 +585,7 @@ export async function queryPlayerProfile(
       database
         .select({
           editionId: editionAbilityMetrics.editionId,
+          kitId: editionAbilityMetrics.kitId,
           kitKey: kitSnapshots.kitKey,
           name: editionAbilityMetricDefinitions.name,
           description: editionAbilityMetricDefinitions.description,
@@ -576,7 +634,9 @@ export async function queryPlayerProfile(
         totalTimeTicks: 0,
         favoriteKitKey: null,
         abilityMetrics: [],
+        kitStats: [],
         kitTime: new Map<string, number>(),
+        kitStatsById: new Map<number, PlayerKitEditionStats>(),
       },
     ]),
   );
@@ -592,6 +652,10 @@ export async function queryPlayerProfile(
   addEditionValues(byEdition, deathRows, "deaths");
   addEditionValues(byEdition, damageDealtRows, "damageDealt");
   addEditionValues(byEdition, damageReceivedRows, "damageReceived");
+  addKitValues(byEdition, killRows, "kills");
+  addKitValues(byEdition, deathRows, "deaths");
+  addKitValues(byEdition, damageDealtRows, "damageDealt");
+  addKitValues(byEdition, damageReceivedRows, "damageReceived");
 
   const lifetimeKitTime = new Map<string, number>();
   for (const row of pickRows) {
@@ -599,6 +663,9 @@ export async function queryPlayerProfile(
     if (!edition) continue;
     edition.picks += row.count;
     edition.totalTimeTicks += row.totalTimeTicks;
+    const kitStats = getOrCreateKitStats(edition, row.kitId, row.kitKey);
+    kitStats.picks += row.count;
+    kitStats.totalTimeTicks += row.totalTimeTicks;
     if (row.kitKey !== null) {
       edition.kitTime.set(
         row.kitKey,
@@ -611,13 +678,17 @@ export async function queryPlayerProfile(
     }
   }
   for (const row of abilityRows) {
-    byEdition.get(row.editionId)?.abilityMetrics.push({
+    const edition = byEdition.get(row.editionId);
+    if (!edition) continue;
+    const metric = {
       kitKey: row.kitKey,
       name: row.name,
       description: row.description,
       value: row.value * row.displayScale,
       displayUnit: row.displayUnit,
-    });
+    };
+    edition.abilityMetrics.push(metric);
+    getOrCreateKitStats(edition, row.kitId, row.kitKey).abilityMetrics.push(metric);
   }
 
   const ratingsByEdition = new Map<number, typeof allRatingRows>();
@@ -647,8 +718,22 @@ export async function queryPlayerProfile(
     edition.abilityMetrics.sort((left, right) =>
       left.name.localeCompare(right.name, "fr-FR"),
     );
-    const { kitTime, ...publicEdition } = edition;
+    edition.kitStats = [...edition.kitStatsById.values()]
+      .map((kit) => ({
+        ...kit,
+        abilityMetrics: kit.abilityMetrics.toSorted((left, right) =>
+          left.name.localeCompare(right.name, "fr-FR"),
+        ),
+      }))
+      .toSorted((left, right) =>
+        right.totalTimeTicks - left.totalTimeTicks ||
+        right.picks - left.picks ||
+        (left.kitKey ?? "\uffff").localeCompare(right.kitKey ?? "\uffff", "fr-FR") ||
+        left.kitId - right.kitId,
+      );
+    const { kitTime, kitStatsById, ...publicEdition } = edition;
     void kitTime;
+    void kitStatsById;
     return publicEdition;
   });
   const aliases = new Set(
@@ -754,6 +839,44 @@ function getFavoriteKit(kitTime: Map<string, number>): string | null {
     }
   }
   return favorite;
+}
+
+function getOrCreateKitStats(
+  edition: WorkingPlayerEdition,
+  kitId: number,
+  kitKey: string | null,
+): PlayerKitEditionStats {
+  const existing = edition.kitStatsById.get(kitId);
+  if (existing) {
+    if (existing.kitKey === null && kitKey !== null) existing.kitKey = kitKey;
+    return existing;
+  }
+
+  const kitStats: PlayerKitEditionStats = {
+    kitId,
+    kitKey,
+    picks: 0,
+    totalTimeTicks: 0,
+    kills: 0,
+    deaths: 0,
+    damageDealt: 0,
+    damageReceived: 0,
+    abilityMetrics: [],
+  };
+  edition.kitStatsById.set(kitId, kitStats);
+  return kitStats;
+}
+
+function addKitValues(
+  editionsById: Map<number, WorkingPlayerEdition>,
+  rows: Array<{ editionId: number; kitId: number; kitKey: string | null; value: number }>,
+  field: "kills" | "deaths" | "damageDealt" | "damageReceived",
+) {
+  for (const row of rows) {
+    const edition = editionsById.get(row.editionId);
+    if (!edition) continue;
+    getOrCreateKitStats(edition, row.kitId, row.kitKey)[field] += row.value;
+  }
 }
 
 function addEditionValues(

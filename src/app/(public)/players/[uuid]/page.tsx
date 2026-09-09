@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Boxes,
   CalendarRange,
+  ChevronDown,
   Clock3,
   Crosshair,
   Gauge,
@@ -12,12 +13,17 @@ import {
   Sparkles,
   Trophy,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageIntro } from "@/components/page-intro";
 import { EmptyState } from "@/components/empty-state";
 import { loadPlayerProfile } from "@/db/historical-stats";
-import type { PlayerAbilityMetric, PlayerEditionStats } from "@/db/historical-stats-query";
+import type {
+  PlayerAbilityMetric,
+  PlayerEditionStats,
+  PlayerKitEditionStats,
+} from "@/db/historical-stats-query";
 import {
   formatCount,
   formatDecimal,
@@ -27,7 +33,16 @@ import {
   formatPlaytime,
 } from "@/lib/historical-stats";
 import { getKitAccent } from "@/lib/kit-manifest";
+import { getKitIconSrc } from "@/lib/kit-preview";
 import { loadKitManifest } from "@/lib/kits";
+import {
+  getPlayerKitMetricColor,
+  getPlayerKitMetricComparisonLabel,
+  getPlayerKitMetricDomains,
+  getPlayerKitMetricValues,
+  type PlayerKitComparisonMetric,
+  type PlayerKitMetricDomains,
+} from "@/lib/player-kit-stat-scale";
 
 type PlayerPageProps = {
   params: Promise<{ uuid: string }>;
@@ -82,6 +97,9 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
     : null;
   const kitAccents = Object.fromEntries(
     (kitManifest?.kits ?? []).map((kit) => [kit.key, getKitAccent(kit)]),
+  );
+  const kitIcons = Object.fromEntries(
+    (kitManifest?.kits ?? []).map((kit) => [kit.key, getKitIconSrc(kit)]),
   );
 
   return (
@@ -152,7 +170,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
         </div>
         <div className="edition-timeline">
           {profile.editions.map((edition) => (
-            <EditionCard edition={edition} kitAccents={kitAccents} key={edition.id} />
+            <EditionCard edition={edition} kitAccents={kitAccents} kitIcons={kitIcons} key={edition.id} />
           ))}
         </div>
       </section>
@@ -163,10 +181,13 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
 function EditionCard({
   edition,
   kitAccents,
+  kitIcons,
 }: {
   edition: PlayerEditionStats;
   kitAccents: Record<string, string>;
+  kitIcons: Record<string, string | null>;
 }) {
+  const kitMetricDomains = getPlayerKitMetricDomains(edition.kitStats);
   const ratio = edition.deaths > 0 ? edition.kills / edition.deaths : null;
   return (
     <article className="edition-card">
@@ -193,35 +214,30 @@ function EditionCard({
         <EditionStat label="Kit favori" value={formatFavoriteKit(edition.favoriteKitKey)} detail="Selon le temps de jeu" />
         <EditionStat label="Rencontres Elo" value={formatCount(edition.ratedEncounters)} detail={edition.rating === null ? "Non classé" : "Prises en compte"} />
       </div>
-      {edition.abilityMetrics.length ? (
-        <details className="ability-history">
-          <summary><Sparkles size={16} /> Statistiques de capacités <span>{edition.abilityMetrics.length}</span></summary>
-          <div className="ability-history-groups">
-            {groupAbilityMetrics(edition.abilityMetrics).map((group) => (
-              <section
-                className="ability-metric-group"
-                key={group.key}
-                style={{
-                  "--ability-group-accent": group.kitKey
-                    ? (kitAccents[group.kitKey] ?? "var(--accent-violet)")
-                    : "var(--accent-violet)",
-                } as CSSProperties}
-              >
-                <header className="ability-metric-group-heading">
-                  <div>
-                    <h4>{group.label}</h4>
-                  </div>
-                  <small>{group.metrics.length} mesure{group.metrics.length > 1 ? "s" : ""}</small>
-                </header>
-                <div className="ability-history-grid">
-                  {group.metrics.map((metric, index) => (
-                    <div key={`${metric.name}-${index}`} title={metric.description}>
-                      <strong>{formatAbilityMetric(metric)}</strong>
-                      {metric.description ? <p>{metric.description}</p> : null}
-                    </div>
-                  ))}
-                </div>
-              </section>
+      {edition.kitStats.length ? (
+        <details className="ability-history kit-history">
+          <summary className="kit-history-summary">
+            <span className="kit-history-summary-title">
+              <Boxes size={16} />
+              Statistiques par kit
+            </span>
+            <span className="kit-history-summary-meta">
+              {edition.kitStats.length} kit{edition.kitStats.length > 1 ? "s" : ""}
+              <ChevronDown className="kit-history-chevron" size={15} aria-hidden="true" />
+            </span>
+          </summary>
+          <div className="kit-history-list">
+            {edition.kitStats.map((kit) => (
+              <KitStatsGroup
+                editionTotalTimeTicks={edition.totalTimeTicks}
+                kit={kit}
+                accent={kit.kitKey
+                  ? (kitAccents[kit.kitKey] ?? "var(--accent-violet)")
+                  : "var(--accent-violet)"}
+                iconSrc={kit.kitKey ? (kitIcons[kit.kitKey] ?? null) : null}
+                metricDomains={kitMetricDomains}
+                key={kit.kitId}
+              />
             ))}
           </div>
         </details>
@@ -250,39 +266,158 @@ function EditionStat({ label, value, detail }: { label: string; value: string; d
   );
 }
 
-function groupAbilityMetrics(metrics: PlayerAbilityMetric[]) {
-  const groups = new Map<string, {
-    key: string;
-    kitKey: string | null;
-    label: string;
-    metrics: PlayerAbilityMetric[];
-  }>();
+function KitStatsGroup({
+  kit,
+  editionTotalTimeTicks,
+  accent,
+  iconSrc,
+  metricDomains,
+}: {
+  kit: PlayerKitEditionStats;
+  editionTotalTimeTicks: number;
+  accent: string;
+  iconSrc: string | null;
+  metricDomains: PlayerKitMetricDomains;
+}) {
+  const metricValues = getPlayerKitMetricValues(kit);
+  const playtimeShare = editionTotalTimeTicks > 0
+    ? (kit.totalTimeTicks / editionTotalTimeTicks) * 100
+    : 0;
+  const label = kit.kitKey
+    ? formatFavoriteKit(kit.kitKey)
+    : kit.kitId >= 0
+      ? `Kit #${kit.kitId}`
+      : "Kit non identifié";
+  const abilityMetrics = sortAbilityMetrics(kit.abilityMetrics);
 
-  for (const metric of metrics) {
-    const key = metric.kitKey ?? "__other__";
-    const group = groups.get(key) ?? {
-      key,
-      kitKey: metric.kitKey,
-      label: metric.kitKey ? formatFavoriteKit(metric.kitKey) : "Autres capacités",
-      metrics: [],
-    };
-    group.metrics.push(metric);
-    groups.set(key, group);
-  }
+  return (
+    <section
+      className="kit-stat-row"
+      style={{ "--ability-group-accent": accent } as CSSProperties}
+    >
+      <header className="kit-stat-row-heading">
+        {iconSrc ? (
+          <span className="kit-stat-row-icon" aria-hidden="true">
+            <Image src={iconSrc} alt="" width={28} height={28} unoptimized />
+          </span>
+        ) : (
+          <span className="kit-stat-row-icon is-fallback" aria-hidden="true">
+            {label.slice(0, 1)}
+          </span>
+        )}
+        <h4>{label}</h4>
+      </header>
 
-  return [...groups.values()]
-    .map((group) => ({
-      ...group,
-      metrics: group.metrics.toSorted((left, right) => {
-        const order = abilityMetricOrder(left.name) - abilityMetricOrder(right.name);
-        return order || left.name.localeCompare(right.name, "fr-FR");
-      }),
-    }))
-    .toSorted((left, right) => {
-      if (left.kitKey === null) return 1;
-      if (right.kitKey === null) return -1;
-      return left.label.localeCompare(right.label, "fr-FR");
-    });
+      <dl className="kit-stat-compact-grid">
+        <KitPlaytimeStat
+          value={formatPlaytime(kit.totalTimeTicks)}
+          share={playtimeShare}
+        />
+        <ComparableKitStat metric="picks" label="Sélections" value={formatCount(kit.picks)} rawValue={metricValues.picks} domains={metricDomains} />
+        <ComparableKitStat metric="kills" label="Éliminations" value={formatCount(kit.kills)} rawValue={metricValues.kills} domains={metricDomains} />
+        <ComparableKitStat metric="deaths" label="Morts" value={formatCount(kit.deaths)} rawValue={metricValues.deaths} domains={metricDomains} />
+        <ComparableKitStat metric="ratio" label="Ratio E/M" value={metricValues.ratio === null ? "—" : formatDecimal(metricValues.ratio)} rawValue={metricValues.ratio} domains={metricDomains} />
+        <ComparableKitStat metric="damageDealt" label="Dégâts infligés" value={formatCount(kit.damageDealt)} rawValue={metricValues.damageDealt} domains={metricDomains} />
+        <ComparableKitStat metric="damageReceived" label="Dégâts reçus" value={formatCount(kit.damageReceived)} rawValue={metricValues.damageReceived} domains={metricDomains} />
+        <ComparableKitStat metric="damagePerMinute" label="Dégâts/min" value={metricValues.damagePerMinute === null ? "—" : formatDecimal(metricValues.damagePerMinute)} rawValue={metricValues.damagePerMinute} domains={metricDomains} />
+      </dl>
+
+      {abilityMetrics.length ? (
+        <div className="kit-ability-strip">
+          <span className="kit-ability-strip-label">
+            <Sparkles size={13} aria-hidden="true" />
+            Capacités
+          </span>
+          <div className="kit-ability-chips">
+            {abilityMetrics.map((metric, index) => (
+              <AbilityMetricChip
+                key={`${metric.name}-${index}`}
+                metric={metric}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function KitPlaytimeStat({ value, share }: { value: string; share: number }) {
+  const clampedShare = Math.min(100, Math.max(0, share));
+  return (
+    <div className="kit-stat-compact-item kit-playtime-stat">
+      <dt>Temps de jeu</dt>
+      <dd>
+        <span>{value} <small>({formatPlaytimeShare(share)})</small></span>
+        <span className="kit-playtime-track" aria-hidden="true">
+          <span style={{ width: `${clampedShare}%` }} />
+        </span>
+      </dd>
+    </div>
+  );
+}
+
+function ComparableKitStat({
+  metric,
+  label,
+  value,
+  rawValue,
+  domains,
+}: {
+  metric: PlayerKitComparisonMetric;
+  label: string;
+  value: string;
+  rawValue: number | null;
+  domains: PlayerKitMetricDomains;
+}) {
+  const color = getPlayerKitMetricColor(metric, rawValue, domains[metric]);
+  const comparisonLabel = getPlayerKitMetricComparisonLabel(metric, rawValue, domains[metric]);
+  return (
+    <div className="kit-stat-compact-item">
+      <dt>{label}</dt>
+      <dd
+        className={color ? "is-comparison-colored" : undefined}
+        style={color ? { "--kit-stat-value-color": color } as CSSProperties : undefined}
+        title={comparisonLabel ?? undefined}
+      >
+        {value}
+        {comparisonLabel ? <span className="sr-only"> — {comparisonLabel}</span> : null}
+      </dd>
+    </div>
+  );
+}
+
+function AbilityMetricChip({ metric }: { metric: PlayerAbilityMetric }) {
+  const formattedMetric = formatAbilityMetric(metric);
+  const description = metric.description?.trim();
+  const hasDescription = Boolean(description);
+
+  return (
+    <span
+      className={`kit-ability-chip${hasDescription ? " has-tooltip" : ""}`}
+      tabIndex={hasDescription ? 0 : undefined}
+      aria-label={hasDescription ? `${formattedMetric}. ${description}` : undefined}
+    >
+      {formattedMetric}
+      {hasDescription ? (
+        <span className="kit-ability-tooltip" aria-hidden="true">
+          {description}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function sortAbilityMetrics(metrics: PlayerAbilityMetric[]) {
+  return metrics.toSorted((left, right) => {
+    const order = abilityMetricOrder(left.name) - abilityMetricOrder(right.name);
+    return order || left.name.localeCompare(right.name, "fr-FR");
+  });
+}
+
+function formatPlaytimeShare(percentage: number) {
+  if (percentage > 0 && percentage < 0.1) return "< 0,1 %";
+  return `${formatDecimal(percentage)} %`;
 }
 
 function abilityMetricOrder(name: string) {

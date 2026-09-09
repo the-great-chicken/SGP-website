@@ -117,6 +117,70 @@ test("public profiles include lifetime and per-edition statistics", async () => 
         displayUnit: "utilisations",
       },
     ]);
+    assert.deepEqual(profile.editions[0].kitStats, [
+      {
+        kitId: 8,
+        kitKey: "mage",
+        picks: 2,
+        totalTimeTicks: 4800,
+        kills: 5,
+        deaths: 2,
+        damageDealt: 70,
+        damageReceived: 20,
+        abilityMetrics: [
+          {
+            kitKey: "mage",
+            name: "Utilisations",
+            description: "Activations réussies.",
+            value: 3,
+            displayUnit: "utilisations",
+          },
+        ],
+      },
+      {
+        kitId: 7,
+        kitKey: "warrior",
+        picks: 3,
+        totalTimeTicks: 2400,
+        kills: 0,
+        deaths: 0,
+        damageDealt: 0,
+        damageReceived: 0,
+        abilityMetrics: [],
+      },
+    ]);
+    assert.deepEqual(profile.editions[1].kitStats, [
+      {
+        kitId: 10,
+        kitKey: "warrior",
+        picks: 2,
+        totalTimeTicks: 1200,
+        kills: 3,
+        deaths: 1,
+        damageDealt: 40,
+        damageReceived: 110,
+        abilityMetrics: [],
+      },
+      {
+        kitId: 20,
+        kitKey: "mage",
+        picks: 1,
+        totalTimeTicks: 600,
+        kills: 0,
+        deaths: 0,
+        damageDealt: 0,
+        damageReceived: 0,
+        abilityMetrics: [],
+      },
+    ]);
+    for (const edition of profile.editions) {
+      assert.equal(edition.kitStats.reduce((sum, kit) => sum + kit.kills, 0), edition.kills);
+      assert.equal(edition.kitStats.reduce((sum, kit) => sum + kit.deaths, 0), edition.deaths);
+      assert.equal(edition.kitStats.reduce((sum, kit) => sum + kit.damageDealt, 0), edition.damageDealt);
+      assert.equal(edition.kitStats.reduce((sum, kit) => sum + kit.damageReceived, 0), edition.damageReceived);
+      assert.equal(edition.kitStats.reduce((sum, kit) => sum + kit.picks, 0), edition.picks);
+      assert.equal(edition.kitStats.reduce((sum, kit) => sum + kit.totalTimeTicks, 0), edition.totalTimeTicks);
+    }
     assert.equal(profile.editions[1].minecraftNameAtEvent, "OldAlpha");
     assert.equal(profile.editions[1].rank, 2);
     assert.equal((await queryPlayerProfile(fixture.database, alpha.toUpperCase()))?.uuid, alpha);
