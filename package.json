@@ -30,7 +30,8 @@
     "db:sync-discordsrv": "tsx src/db/sync-discordsrv.ts",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
-    "test:map-shell": "tsx --test tests/map-shell.test.ts"
+    "test:map-shell": "tsx --test tests/map-shell.test.ts",
+    "test:app": "node --conditions=react-server --import tsx --test tests/app/routes.test.ts"
   },
   "dependencies": {
     "@libsql/client": "0.18.0",

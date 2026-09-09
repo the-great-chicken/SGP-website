@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 import { db } from "@/db/client";
 import type { DiscordIdentity } from "./discord";
 import { queryAuthSession, removeAuthSession, storeAuthSession } from "./session-query";
@@ -51,7 +52,14 @@ export async function createSession(discord: DiscordIdentity) {
 
 export async function getCurrentSession() {
   const cookieStore = await cookies();
-  const token = cookieStore.get(sessionCookieName())?.value;
+  return getSessionByToken(cookieStore.get(sessionCookieName())?.value);
+}
+
+export async function getSessionFromRequest(request: NextRequest) {
+  return getSessionByToken(request.cookies.get(sessionCookieName())?.value);
+}
+
+async function getSessionByToken(token: string | undefined) {
   return token ? queryAuthSession(db, hashSessionToken(token)) : null;
 }
 

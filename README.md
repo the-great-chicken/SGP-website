@@ -68,7 +68,7 @@ CI runs the complete gate on every pull request targeting `main` and again on ev
 npm run check
 ```
 
-The gate runs lint, TypeScript typechecking, every TypeScript/JavaScript test under `tests/`, every Python `test_*.py` test, and the production Next.js build. The narrower `test:*` scripts remain available for faster iteration on one area. `scripts/check-cosmetic-hooks.py` validates the datapack cosmetic hooks without starting Minecraft.
+The gate runs lint, TypeScript typechecking, every TypeScript/JavaScript test under `tests/`, every Python `test_*.py` test, and the production Next.js build. The narrower `test:*` scripts remain available for faster iteration on one area; `npm run test:app` runs the Next route-boundary suite. `scripts/check-cosmetic-hooks.py` validates the datapack cosmetic hooks without starting Minecraft.
 
 Dependency install scripts are allowlisted by exact package version in `package.json`, and `.npmrc` makes unreviewed install scripts a hard failure. When an install fails after a dependency update, review the package first, then use `npm install-scripts ls` / `npm install-scripts approve <package>` rather than disabling the policy.
 

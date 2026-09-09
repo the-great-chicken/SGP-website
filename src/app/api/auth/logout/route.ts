@@ -8,8 +8,16 @@ import {
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  if (origin && new URL(origin).origin !== request.nextUrl.origin) {
-    return new NextResponse("Forbidden", { status: 403 });
+  if (origin) {
+    let sourceOrigin: string;
+    try {
+      sourceOrigin = new URL(origin).origin;
+    } catch {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+    if (sourceOrigin !== request.nextUrl.origin) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
   }
 
   await deleteCurrentSession(request.cookies.get(sessionCookieName())?.value);
