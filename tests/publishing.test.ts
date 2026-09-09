@@ -171,6 +171,76 @@ test("missing cosmetic images prevent promotion", async () => {
   } finally { await f.cleanup(); }
 });
 
+test("invalid kit manifests fail before map export or rendering", async () => {
+  const f = await fixture();
+  try {
+    const command = async (executable: string, args: string[], cwd: string) => {
+      await f.command(executable, args, cwd);
+      if (args.includes("sgp_kit_exporter")) {
+        const out = args[args.indexOf("--output") + 1];
+        await writeFile(out, "{not-json");
+      }
+    };
+    await assert.rejects(
+      runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "refresh" }, command }),
+      /Could not read kit manifest/,
+    );
+    assert.ok(!f.calls.some((args) => args.includes("sgp_map_exporter")));
+    assert.ok(!f.calls.some((args) => args.some((arg) => arg.endsWith("render-kit-items.mts"))));
+    assert.equal(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8"), "current manifest");
+  } finally { await f.cleanup(); }
+});
+
+test("schema-invalid kit manifests fail before map export or rendering", async () => {
+  const f = await fixture();
+  try {
+    const command = async (executable: string, args: string[], cwd: string) => {
+      await f.command(executable, args, cwd);
+      if (args.includes("sgp_kit_exporter")) {
+        const out = args[args.indexOf("--output") + 1];
+        await writeFile(out, JSON.stringify({ schemaVersion: 999 }));
+      }
+    };
+    await assert.rejects(
+      runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "refresh" }, command }),
+      /Invalid kit manifest/,
+    );
+    assert.ok(!f.calls.some((args) => args.includes("sgp_map_exporter")));
+    assert.equal(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8"), "current manifest");
+  } finally { await f.cleanup(); }
+});
+
+test("invalid rendered item URLs prevent promotion", async () => {
+  const f = await fixture();
+  try {
+    const command = async (executable: string, args: string[], cwd: string) => {
+      await f.command(executable, args, cwd);
+      if (args.some((arg) => arg.endsWith("render-kit-items.mts"))) {
+        const out = path.join(cwd, "data/item-renders.json");
+        const index = JSON.parse(await readFile(out, "utf8"));
+        index.items[itemKey] = "https://example.test/stone.png";
+        await writeFile(out, JSON.stringify(index));
+      }
+    };
+    await assert.rejects(
+      runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "refresh" }, command }),
+      /Missing or invalid rendered item/,
+    );
+    assert.equal(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8"), "current manifest");
+  } finally { await f.cleanup(); }
+});
+
+test("publishing without prepared exporter environments fails before acquiring the lock", async () => {
+  const f = await fixture();
+  try {
+    await assert.rejects(
+      runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "refresh" } }),
+      /content:setup/,
+    );
+    assert.ok(!(await readdir(path.join(f.workspace, ".data")).catch((): string[] => [])).includes("publishing"));
+  } finally { await f.cleanup(); }
+});
+
 test("promotion restores earlier files when a later file cannot be copied", async () => {
   const f = await fixture();
   try {
@@ -194,6 +264,10 @@ test("runCommand reports child-process failures", async () => {
   await assert.rejects(
     runCommand(process.execPath, ["-e", "process.exit(7)"], root),
     /Command failed \(7\)/,
+  );
+  await assert.rejects(
+    runCommand(path.join(root, "definitely-missing-publishing-command"), [], root),
+    /ENOENT|spawn/,
   );
 });
 

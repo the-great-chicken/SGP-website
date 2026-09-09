@@ -26,7 +26,7 @@ const coverageTargets = [
     slug: "edition-importer",
     source: "src/db/importer.ts",
     tests: ["tests/edition-import.test.ts"],
-    thresholds: { lines: 80, branches: 70, functions: 85 },
+    thresholds: { lines: 95, branches: 85, functions: 90 },
   },
   {
     name: "Kit statistics query",
@@ -43,18 +43,26 @@ const coverageTargets = [
     thresholds: { lines: 90, branches: 80, functions: 80 },
   },
   {
+    name: "Discord OAuth boundary",
+    slug: "discord-auth",
+    source: "src/auth/discord.ts",
+    tests: ["tests/auth.test.ts"],
+    thresholds: { lines: 85, branches: 70, functions: 75 },
+    requiredFunctions: ["getDiscordAuthConfig", "buildDiscordAuthorizationUrl", "authenticateDiscordCode", "discordAvatarUrl"],
+  },
+  {
     name: "Publishing workflow",
     slug: "publishing-workflow",
     source: "src/publishing/workflow.ts",
     tests: ["tests/publishing.test.ts"],
-    thresholds: { lines: 80, branches: 70, functions: 65 },
+    thresholds: { lines: 95, branches: 80, functions: 85 },
   },
   {
     name: "Edition bundle contracts",
     slug: "edition-bundle",
     source: "src/db/edition-bundle.ts",
     tests: ["tests/edition-import.test.ts", "tests/publishing.test.ts"],
-    thresholds: { lines: 75, branches: 55, functions: 70 },
+    thresholds: { lines: 90, branches: 70, functions: 80 },
   },
   {
     name: "DiscordSRV reconciliation",
@@ -96,7 +104,12 @@ const coverageTargets = [
     slug: "bluemap-routing",
     source: "src/lib/bluemap-routing.ts",
     tests: ["tests/map-shell.test.ts"],
-    thresholds: { lines: 85, branches: 70, functions: 85 },
+    // Node's source-map coverage reports two non-callable synthetic functions
+    // for this tiny module (the exported constant and module wrapper), making
+    // 75% the effective percentage ceiling. Keep the numeric gate at that
+    // ceiling and separately require every callable export by name below.
+    thresholds: { lines: 85, branches: 70, functions: 75 },
+    requiredFunctions: ["blueMapDevRewriteDestination", "blueMapDevelopmentRewrites", "resolveBlueMapOrigin"],
   },
   {
     name: "Item render contract",
@@ -104,6 +117,14 @@ const coverageTargets = [
     source: "src/lib/item-rendering.ts",
     tests: ["tests/item-rendering.test.ts"],
     thresholds: { lines: 80, branches: 60, functions: 80 },
+  },
+  {
+    name: "Minecraft skin profile boundary",
+    slug: "minecraft-skin-profile",
+    source: "src/lib/minecraft-skin-profile.ts",
+    tests: ["tests/kit-preview.test.ts"],
+    thresholds: { lines: 85, branches: 75, functions: 75 },
+    requiredFunctions: ["normalizeMinecraftUuid", "parseMinecraftSkinProfile"],
   },
   {
     name: "Kit loadout resolution",
@@ -153,10 +174,20 @@ function parseLcov(contents, source) {
     if (Number(match[2]) === 0) uncoveredLines.push(Number(match[1]));
   }
 
+  const functionHits = new Map();
+  for (const match of record.matchAll(/^FNDA:(\d+),(.+)$/gm)) {
+    const count = Number(match[1]);
+    const name = match[2].trim();
+    functionHits.set(name, (functionHits.get(name) ?? 0) + count);
+  }
+
   return {
     lines: metric("LH", "LF"),
     branches: metric("BRH", "BRF"),
     functions: metric("FNH", "FNF"),
+    coveredFunctions: [...functionHits.entries()]
+      .filter(([, count]) => count > 0)
+      .map(([name]) => name),
     uncoveredLines,
   };
 }
@@ -236,19 +267,26 @@ for (const target of coverageTargets) {
     if (error?.code !== "ENOENT") throw error;
   }
 
+  const missingRequiredFunctions = metrics
+    ? (target.requiredFunctions ?? []).filter((name) => !metrics.coveredFunctions.includes(name))
+    : [];
   const meetsThresholds =
     metrics !== null &&
     metrics.lines.percent >= target.thresholds.lines &&
     metrics.branches.percent >= target.thresholds.branches &&
-    metrics.functions.percent >= target.thresholds.functions;
+    metrics.functions.percent >= target.thresholds.functions &&
+    missingRequiredFunctions.length === 0;
   if (!metrics) {
     console.error(`Coverage report did not contain ${target.source}; treating this as a failure.`);
+  } else if (missingRequiredFunctions.length > 0) {
+    console.error(`Required functions were not exercised: ${missingRequiredFunctions.join(", ")}`);
   }
   if (result.status !== 0 || !meetsThresholds) failed = true;
 
   results.push({
     ...target,
     metrics,
+    missingRequiredFunctions,
     passed: result.status === 0 && meetsThresholds,
   });
 }
@@ -272,6 +310,8 @@ const jsonReport = results.map((result) => ({
   source: result.source,
   tests: result.tests,
   thresholds: result.thresholds,
+  requiredFunctions: result.requiredFunctions ?? [],
+  missingRequiredFunctions: result.missingRequiredFunctions,
   actual: result.metrics,
   passed: result.passed,
 }));
@@ -309,6 +349,18 @@ const markdown = [
       ? `- \`${result.source}\`: ${compactLineRanges(result.metrics.uncoveredLines)}`
       : `- \`${result.source}\`: coverage record missing`,
   ),
+  "",
+  "## Required callable exports",
+  "",
+  "Named callable checks protect small modules where source-map instrumentation adds synthetic functions that distort percentages.",
+  "",
+  ...results
+    .filter((result) => (result.requiredFunctions ?? []).length > 0)
+    .map((result) =>
+      result.missingRequiredFunctions.length === 0
+        ? `- \`${result.source}\`: all required callables exercised`
+        : `- \`${result.source}\`: missing ${result.missingRequiredFunctions.map((name) => `\`${name}\``).join(", ")}`,
+    ),
   "",
   "The per-module `.lcov` files and combined `lcov.info` retain the complete line-level detail.",
   "",

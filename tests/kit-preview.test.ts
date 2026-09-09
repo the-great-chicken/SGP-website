@@ -107,3 +107,33 @@ test("Minecraft skin profiles reject non-Mojang texture hosts", () => {
 
   assert.equal(parseMinecraftSkinProfile(profile), null);
 });
+
+test("Minecraft skin profiles reject malformed texture payloads and accept the default wide model", () => {
+  const hash = "fedcba9876543210".repeat(4);
+  const encode = (value: unknown) => btoa(JSON.stringify(value));
+
+  assert.equal(parseMinecraftSkinProfile(null), null);
+  assert.equal(parseMinecraftSkinProfile({ properties: "not-an-array" }), null);
+  assert.equal(parseMinecraftSkinProfile({ properties: [] }), null);
+  assert.equal(parseMinecraftSkinProfile({ properties: [{ name: "textures", value: 123 }] }), null);
+  assert.equal(parseMinecraftSkinProfile({ properties: [{ name: "textures", value: btoa("{") }] }), null);
+  assert.equal(parseMinecraftSkinProfile({ properties: [{ name: "textures", value: encode({ textures: {} }) }] }), null);
+  assert.equal(
+    parseMinecraftSkinProfile({
+      properties: [{ name: "textures", value: encode({ textures: { SKIN: { url: `ftp://textures.minecraft.net/texture/${hash}` } } }) }],
+    }),
+    null,
+  );
+  assert.equal(
+    parseMinecraftSkinProfile({
+      properties: [{ name: "textures", value: encode({ textures: { SKIN: { url: `https://textures.minecraft.net/not-texture/${hash}` } } }) }],
+    }),
+    null,
+  );
+  assert.deepEqual(
+    parseMinecraftSkinProfile({
+      properties: [{ name: "textures", value: encode({ textures: { SKIN: { url: `https://textures.minecraft.net/texture/${hash}` } } }) }],
+    }),
+    { textureHash: hash, model: "wide" },
+  );
+});

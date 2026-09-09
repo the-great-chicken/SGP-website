@@ -152,11 +152,30 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
     const sessionCookieName = session.sessionCookieName();
     assert.equal(oauthCookieName, "__Host-sgp_oauth_state");
     assert.equal(sessionCookieName, "__Host-sgp_session");
-    let oauthState = "";
-    let sessionToken = "";
+
+    const beginOAuth = async () => {
+      const response = await authStartRoute.GET(new Request("https://sgp.test/api/auth/discord"));
+      const state = new URL(response.headers.get("location")!).searchParams.get("state") ?? "";
+      assert.match(state, /^[A-Za-z0-9_-]{43}$/);
+      return { response, state };
+    };
+
+    const createAuthenticatedSessionToken = async () => {
+      await database.delete(schema.authSessions);
+      const { state } = await beginOAuth();
+      const request = new NextRequest(
+        `https://sgp.test/api/auth/discord/callback?code=authorization-code&state=${encodeURIComponent(state)}`,
+        { headers: { cookie: cookieHeader(oauthCookieName, state) } },
+      );
+      const response = await authCallbackRoute.GET(request);
+      assert.equal(response.status, 307);
+      const token = response.cookies.get(sessionCookieName)?.value ?? "";
+      assert.match(token, /^[A-Za-z0-9_-]{43}$/);
+      return token;
+    };
 
     await t.test("OAuth start creates a short-lived HttpOnly state cookie matching the Discord redirect", async () => {
-      const response = await authStartRoute.GET(new Request("https://sgp.test/api/auth/discord"));
+      const { response, state: oauthState } = await beginOAuth();
       assert.equal(response.status, 307);
       const location = new URL(response.headers.get("location")!);
       assert.equal(location.origin, "https://discord.com");
@@ -165,8 +184,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
       assert.equal(location.searchParams.get("scope"), "identify");
       assert.equal(location.searchParams.get("redirect_uri"), process.env.DISCORD_REDIRECT_URI);
 
-      oauthState = location.searchParams.get("state") ?? "";
-      assert.match(oauthState, /^[A-Za-z0-9_-]{43}$/);
+      assert.equal(location.searchParams.get("state"), oauthState);
       assert.equal(response.cookies.get(oauthCookieName)?.value, oauthState);
       const stateCookie = setCookieHeader(response, oauthCookieName);
       assert.match(stateCookie, /HttpOnly/i);
@@ -177,6 +195,8 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
     });
 
     await t.test("OAuth callback rejects a mismatched state before contacting Discord and clears the state cookie", async () => {
+      await database.delete(schema.authSessions);
+      const { state: oauthState } = await beginOAuth();
       const discordCallsBefore = calls.filter((call) => call.url.startsWith("https://discord.com/")).length;
       const request = new NextRequest(
         "https://sgp.test/api/auth/discord/callback?code=authorization-code&state=attacker-state",
@@ -194,6 +214,8 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
     });
 
     await t.test("OAuth callback exchanges the code, persists only a token hash, clears state and sets the session cookie", async () => {
+      await database.delete(schema.authSessions);
+      const { state: oauthState } = await beginOAuth();
       const request = new NextRequest(
         `https://sgp.test/api/auth/discord/callback?code=authorization-code&state=${encodeURIComponent(oauthState)}`,
         { headers: { cookie: cookieHeader(oauthCookieName, oauthState) } },
@@ -203,7 +225,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
       assert.equal(new URL(response.headers.get("location")!).href, "https://sgp.test/me");
       assert.equal(response.cookies.get(oauthCookieName)?.value, "");
 
-      sessionToken = response.cookies.get(sessionCookieName)?.value ?? "";
+      const sessionToken = response.cookies.get(sessionCookieName)?.value ?? "";
       assert.match(sessionToken, /^[A-Za-z0-9_-]{43}$/);
       const sessionCookie = setCookieHeader(response, sessionCookieName);
       assert.match(sessionCookie, /HttpOnly/i);
@@ -287,6 +309,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
     });
 
     await t.test("/api/me/cosmetics uses the request session at the real route boundary and reaches the authenticated bridge", async () => {
+      const sessionToken = await createAuthenticatedSessionToken();
       const bridgeCallsBeforeAnonymous = calls.filter((call) => call.url.startsWith("http://127.0.0.1:8766/")).length;
       const anonymous = await cosmeticsRoute.GET(new NextRequest("https://sgp.test/api/me/cosmetics"));
       assert.equal(anonymous.status, 401);
@@ -334,6 +357,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
     });
 
     await t.test("logout rejects cross-origin and opaque-origin mutations, then deletes the session and expires the cookie", async () => {
+      const sessionToken = await createAuthenticatedSessionToken();
       const cookie = cookieHeader(sessionCookieName, sessionToken);
       const forbidden = await logoutRoute.POST(new NextRequest("https://sgp.test/api/auth/logout", {
         method: "POST",

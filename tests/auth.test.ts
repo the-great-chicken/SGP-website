@@ -5,6 +5,7 @@ import {
   authenticateDiscordCode,
   buildDiscordAuthorizationUrl,
   discordAvatarUrl,
+  getDiscordAuthConfig,
   type DiscordAuthConfig,
 } from "../src/auth/discord";
 import {
@@ -61,6 +62,72 @@ test("Discord OAuth requests only identity and converts the returned user", asyn
   });
   assert.match(String(requests[0].init?.body), /grant_type=authorization_code/);
   assert.equal(requests[1].init?.headers && (requests[1].init.headers as Record<string, string>).Authorization, "Bearer short-lived-token");
+});
+
+test("Discord OAuth rejects upstream failures and malformed identities", async () => {
+  const config: DiscordAuthConfig = {
+    clientId: "client-id",
+    clientSecret: "client-secret",
+    redirectUri: "https://sgp.test/api/auth/discord/callback",
+  };
+
+  await assert.rejects(
+    authenticateDiscordCode(config, "authorization-code", async () => new Response("nope", { status: 503 })),
+    /token exchange failed with status 503/,
+  );
+
+  let requestNumber = 0;
+  await assert.rejects(
+    authenticateDiscordCode(config, "authorization-code", async () => {
+      requestNumber += 1;
+      return requestNumber === 1
+        ? Response.json({ access_token: "token", token_type: "Bearer" })
+        : new Response("nope", { status: 502 });
+    }),
+    /user request failed with status 502/,
+  );
+
+  requestNumber = 0;
+  await assert.rejects(
+    authenticateDiscordCode(config, "authorization-code", async () => {
+      requestNumber += 1;
+      return requestNumber === 1
+        ? Response.json({ access_token: "token", token_type: "Bearer" })
+        : Response.json({ id: "not-a-discord-id", username: "alpha" });
+    }),
+    (error) => error instanceof Error && error.name === "ZodError",
+  );
+
+  assert.equal(discordAvatarUrl(discordAlpha, null), null);
+  assert.match(discordAvatarUrl(discordAlpha, "a_animated") ?? "", /\.gif\?size=128$/);
+});
+
+test("Discord auth configuration rejects partial or malformed environment values", () => {
+  const names = ["DISCORD_CLIENT_ID", "DISCORD_CLIENT_SECRET", "DISCORD_REDIRECT_URI"] as const;
+  const previous = new Map(names.map((name) => [name, process.env[name]] as const));
+  try {
+    delete process.env.DISCORD_CLIENT_ID;
+    process.env.DISCORD_CLIENT_SECRET = "secret";
+    process.env.DISCORD_REDIRECT_URI = "https://sgp.test/callback";
+    assert.equal(getDiscordAuthConfig(), null);
+
+    process.env.DISCORD_CLIENT_ID = " client ";
+    process.env.DISCORD_CLIENT_SECRET = " secret ";
+    process.env.DISCORD_REDIRECT_URI = " https://sgp.test/callback ";
+    assert.deepEqual(getDiscordAuthConfig(), {
+      clientId: "client",
+      clientSecret: "secret",
+      redirectUri: "https://sgp.test/callback",
+    });
+
+    process.env.DISCORD_REDIRECT_URI = "not a URL";
+    assert.throws(() => getDiscordAuthConfig(), /Invalid URL/);
+  } finally {
+    for (const [name, value] of previous) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
 });
 
 test("DiscordSRV AOF replay produces the current one-to-one links", () => {

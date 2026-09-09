@@ -114,6 +114,45 @@ test.describe("high-value browser smoke journeys", () => {
     await expect(page.getByLabel("Identités du compte")).toContainText("Alpha Discord");
   });
 
+  test("mobile navigation and editorial pages stay usable without horizontal overflow", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/wiki");
+
+    await expect(page.getByRole("heading", { level: 1, name: "Histoire" })).toBeVisible();
+    await expect(page.locator(".chapter-card")).toHaveCount(4);
+
+    const menuButton = page.getByRole("button", { name: "Ouvrir le menu" });
+    await menuButton.click();
+    const mobileNavigation = page.getByRole("navigation", { name: "Navigation mobile" });
+    await expect(mobileNavigation).toBeVisible();
+    await expect(mobileNavigation.getByRole("link", { name: "Histoire" })).toHaveClass(/is-active/);
+
+    const hasHorizontalOverflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+  });
+
+  test("kit detail remains readable at a narrow mobile viewport", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await stubFallbackSkin(page);
+    await page.goto("/kits/mage");
+
+    await expect(page.getByRole("heading", { level: 1, name: "Mage" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Équipement porté" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Équipement", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Boule de feu" })).toBeVisible();
+
+    const viewportState = await page.evaluate(() => ({
+      hasHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+      modelWidth: document.querySelector<HTMLElement>(".kit-model-panel")?.getBoundingClientRect().width ?? 0,
+      informationWidth: document.querySelector<HTMLElement>(".kit-information")?.getBoundingClientRect().width ?? 0,
+    }));
+    expect(viewportState.hasHorizontalOverflow).toBe(false);
+    expect(viewportState.modelWidth).toBeGreaterThan(250);
+    expect(viewportState.informationWidth).toBeGreaterThan(250);
+  });
+
   test("cosmetics can be changed and a failed mutation surfaces a recoverable error", async ({ page, context, request }) => {
     await resetCosmetics(request);
     await authenticate(context);

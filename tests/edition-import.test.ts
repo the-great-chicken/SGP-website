@@ -3,12 +3,13 @@ import test from "node:test";
 import { count, eq } from "drizzle-orm";
 import {
   assembleEditionBundle,
+  editionBundleSchema,
   editionDetailsSchema,
   kitManifestSchema,
   statisticsSnapshotSchema,
   type EditionBundle,
 } from "../src/db/edition-bundle";
-import { replaceEdition } from "../src/db/importer";
+import { replaceEdition, validateBundleRelations } from "../src/db/importer";
 import * as schema from "../src/db/schema";
 import { createTestDatabase } from "./support/database";
 
@@ -103,6 +104,177 @@ test("assembly rejects statistics and kits from different datapack releases", ()
     /different datapack releases/,
   );
 });
+
+test("edition imports persist damage/death rows and report imported counts", async (t) => {
+  const { database: db, close } = await createTestDatabase(t);
+
+  try {
+    const bundle = cloneBundle();
+    bundle.damageReceived = [{
+      targetUuid: playerUuid,
+      targetKitId: 0,
+      sourceUuid: playerUuid,
+      sourceKitId: 0,
+      causeId: 1,
+      amount: 12.5,
+    }];
+    bundle.deathPositions.entries = [{
+      dimension: "minecraft:overworld",
+      x: 10.5,
+      y: 64,
+      z: -3.25,
+      deaths: 2,
+    }];
+
+    const summary = await replaceEdition(db, bundle);
+    const [damageCount] = await db.select({ value: count() }).from(schema.editionDamageReceived);
+    const [deathCount] = await db.select({ value: count() }).from(schema.editionDeathPositions);
+
+    assert.equal(summary.damage, 1);
+    assert.equal(damageCount.value, 1);
+    assert.equal(deathCount.value, 1);
+  } finally {
+    close();
+  }
+});
+
+test("relation validation rejects dangling player, damage-cause, and metric references", () => {
+  const unknownPlayer = "22222222-2222-4222-8222-222222222222";
+
+  const cases: Array<{ name: string; mutate(bundle: EditionBundle): void; message: RegExp }> = [
+    {
+      name: "kill killer",
+      mutate: (bundle) => { bundle.kills[0].killerUuid = unknownPlayer; },
+      message: /kill killer references unknown player/,
+    },
+    {
+      name: "kill cause",
+      mutate: (bundle) => { bundle.kills[0].causeId = 999; },
+      message: /kill references unknown damage cause 999/,
+    },
+    {
+      name: "damage target",
+      mutate: (bundle) => {
+        bundle.damageReceived = [{ targetUuid: unknownPlayer, targetKitId: 0, sourceUuid: null, sourceKitId: -1, causeId: 1, amount: 1 }];
+      },
+      message: /damage target references unknown player/,
+    },
+    {
+      name: "damage cause",
+      mutate: (bundle) => {
+        bundle.damageReceived = [{ targetUuid: playerUuid, targetKitId: 0, sourceUuid: null, sourceKitId: -1, causeId: 999, amount: 1 }];
+      },
+      message: /damage row references unknown damage cause 999/,
+    },
+    {
+      name: "pick player",
+      mutate: (bundle) => { bundle.picks[0].playerUuid = unknownPlayer; },
+      message: /pick references unknown player/,
+    },
+    {
+      name: "ability metric player",
+      mutate: (bundle) => { bundle.abilityMetrics[0].playerUuid = unknownPlayer; },
+      message: /ability metric references unknown player/,
+    },
+    {
+      name: "ability metric definition",
+      mutate: (bundle) => { bundle.abilityMetrics[0].metricId = "missing"; },
+      message: /Ability metric has no definition/,
+    },
+    {
+      name: "rating player",
+      mutate: (bundle) => { bundle.elo.ratings[0].playerUuid = unknownPlayer; },
+      message: /Elo rating references unknown player/,
+    },
+  ];
+
+  for (const scenario of cases) {
+    const bundle = cloneBundle();
+    scenario.mutate(bundle);
+    assert.throws(() => validateBundleRelations(bundle), scenario.message, scenario.name);
+  }
+});
+
+test("relation validation rejects duplicate identities and inconsistent ability definitions", () => {
+  const secondPlayerUuid = "33333333-3333-4333-8333-333333333333";
+  const cases: Array<{ name: string; mutate(bundle: EditionBundle): void; message: RegExp }> = [
+    {
+      name: "duplicate player uuid",
+      mutate: (bundle) => { bundle.players.push({ sgpId: 2, uuid: playerUuid, minecraftName: "Duplicate" }); },
+      message: /duplicate player UUID/,
+    },
+    {
+      name: "duplicate sgp id",
+      mutate: (bundle) => { bundle.players.push({ sgpId: 1, uuid: secondPlayerUuid, minecraftName: "Second" }); },
+      message: /duplicate sgp\.id/,
+    },
+    {
+      name: "duplicate damage cause",
+      mutate: (bundle) => { bundle.damageCauses.push({ ...bundle.damageCauses[0] }); },
+      message: /duplicate damage cause/,
+    },
+    {
+      name: "duplicate kit id",
+      mutate: (bundle) => { bundle.kitManifest.kits.push({ ...structuredClone(bundle.kitManifest.kits[0]), key: "second" }); },
+      message: /duplicate kit id/,
+    },
+    {
+      name: "duplicate kit key",
+      mutate: (bundle) => { bundle.kitManifest.kits.push({ ...structuredClone(bundle.kitManifest.kits[0]), id: 2 }); },
+      message: /duplicate kit key/,
+    },
+    {
+      name: "duplicate ability definition",
+      mutate: (bundle) => { bundle.abilityMetricDefinitions.push(structuredClone(bundle.abilityMetricDefinitions[0])); },
+      message: /duplicate ability metric definition/,
+    },
+    {
+      name: "unknown definition kit",
+      mutate: (bundle) => {
+        bundle.abilityMetricDefinitions[0].kitId = 99;
+        bundle.abilityMetrics[0].kitId = 99;
+      },
+      message: /Ability definition references unknown kit id 99/,
+    },
+    {
+      name: "definition path not in snapshot",
+      mutate: (bundle) => {
+        bundle.abilityMetricDefinitions[0].abilityPath = "missing";
+        bundle.abilityMetrics[0].abilityPath = "missing";
+      },
+      message: /Ability definition does not match the kit snapshot/,
+    },
+  ];
+
+  for (const scenario of cases) {
+    const bundle = cloneBundle();
+    scenario.mutate(bundle);
+    assert.throws(() => validateBundleRelations(bundle), scenario.message, scenario.name);
+  }
+});
+
+test("edition bundle contracts reject release/version drift and incomplete publication metadata", () => {
+  const resourcePackMismatch = cloneBundle();
+  resourcePackMismatch.edition.resourcePackVersion = "rp-release-2";
+  assert.throws(() => editionBundleSchema.parse(resourcePackMismatch), /different resource-pack releases/);
+
+  const minecraftMismatch = cloneBundle();
+  minecraftMismatch.edition.minecraftVersion = "26.2";
+  assert.throws(() => editionBundleSchema.parse(minecraftMismatch), /Minecraft versions differ/);
+
+  assert.throws(() => editionDetailsSchema.parse({
+    number: 5,
+    name: "Edition 5",
+    status: "published",
+    startsAt: null,
+    endsAt: null,
+    publishedAt: null,
+  }), /Published editions require publishedAt/);
+});
+
+function cloneBundle() {
+  return structuredClone(makeBundle(5, "Premier nom")) as EditionBundle;
+}
 
 function makeBundle(editionNumber: number, minecraftName: string): EditionBundle {
   const combined = {

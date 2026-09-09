@@ -60,7 +60,7 @@ def write_command_storage(world: Path) -> None:
     ).save(storage, gzipped=True)
     saved = nbtlib.load(storage)
     saved.root["data"]["contents"]["data"]["spawns"][0]["list"][0]["icon"] = nbtlib.String(
-        '\",{text:"\\ue007",font:"sgp.misc:spawn_icons",color:"white",bold:false},\"'
+        '\",{text:"\ue007",font:"sgp.misc:spawn_icons",color:"white",bold:false},\"'
     )
     saved.save(storage, gzipped=True)
 
