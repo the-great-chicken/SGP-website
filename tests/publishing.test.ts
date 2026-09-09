@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { createClient } from "@libsql/client";
-import { promoteCurrent, publishingConfigSchema, runPublishing } from "../src/publishing/workflow";
+import { promoteCurrent, publishingConfigSchema, runCommand, runPublishing } from "../src/publishing/workflow";
 import { getItemRenderSignature } from "../src/lib/item-rendering";
 
 const root = process.cwd();
@@ -186,6 +186,76 @@ test("promotion restores earlier files when a later file cannot be copied", asyn
     assert.equal(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8"), "current manifest");
     assert.ok(!(await readdir(path.join(f.workspace, "data"))).includes("item-renders.json"));
     assert.equal(await readFile(path.join(f.workspace, "public/bluemap/overlays.json"), "utf8"), "current overlays");
+  } finally { await f.cleanup(); }
+});
+
+test("runCommand reports child-process failures", async () => {
+  await runCommand(process.execPath, ["-e", "process.exit(0)"], root);
+  await assert.rejects(
+    runCommand(process.execPath, ["-e", "process.exit(7)"], root),
+    /Command failed \(7\)/,
+  );
+});
+
+test("publishing rejects a database inside a read-only source directory", async () => {
+  const f = await fixture();
+  try {
+    f.config.databaseUrl = "file:inputs/world/website.sqlite";
+    await assert.rejects(
+      runPublishing({
+        root: f.workspace,
+        configDirectory: f.workspace,
+        config: f.config,
+        mode: { kind: "edition", number: 5 },
+        command: f.command,
+      }),
+      /publication database must be outside the read-only source directories/,
+    );
+    assert.equal(f.calls.length, 0);
+  } finally { await f.cleanup(); }
+});
+
+test("an active publishing lock rejects a second run before exporters start", async () => {
+  const f = await fixture();
+  try {
+    const work = path.join(f.workspace, ".data/publishing");
+    await mkdir(work, { recursive: true });
+    await writeFile(path.join(work, "active.lock"), "other-process");
+    await assert.rejects(
+      runPublishing({
+        root: f.workspace,
+        configDirectory: f.workspace,
+        config: f.config,
+        mode: { kind: "refresh" },
+        command: f.command,
+      }),
+      /Another publishing run holds/,
+    );
+    assert.equal(f.calls.length, 0);
+  } finally { await f.cleanup(); }
+});
+
+test("map overlays must contain every configured map before publication", async () => {
+  const f = await fixture();
+  try {
+    const command = async (executable: string, args: string[], cwd: string) => {
+      await f.command(executable, args, cwd);
+      if (args.includes("sgp_map_exporter")) {
+        const out = args[args.indexOf("--output") + 1];
+        await writeFile(out, JSON.stringify({ schemaVersion: 1, maps: {} }));
+      }
+    };
+    await assert.rejects(
+      runPublishing({
+        root: f.workspace,
+        configDirectory: f.workspace,
+        config: f.config,
+        mode: { kind: "refresh" },
+        command,
+      }),
+      /Map overlays do not match the configured maps/,
+    );
+    assert.equal(await readFile(path.join(f.workspace, "data/kit-manifest.json"), "utf8"), "current manifest");
   } finally { await f.cleanup(); }
 });
 

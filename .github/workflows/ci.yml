@@ -63,6 +63,22 @@ jobs:
       - name: Run full test gate
         run: npm run check
 
+      - name: Add coverage summary to job
+        if: ${{ !cancelled() }}
+        run: |
+          if [[ -f coverage/summary.md ]]; then
+            cat coverage/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload critical-module coverage
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: critical-module-coverage
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v6

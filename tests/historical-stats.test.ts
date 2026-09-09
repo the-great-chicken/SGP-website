@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
+import { and, eq } from "drizzle-orm";
 import {
   queryLeaderboard,
   queryPlayerDirectory,
@@ -11,6 +12,7 @@ import { createTestDatabase } from "./support/database";
 const alpha = "11111111-1111-4111-8111-111111111111";
 const bravo = "22222222-2222-4222-8222-222222222222";
 const charlie = "33333333-3333-4333-8333-333333333333";
+const delta = "44444444-4444-4444-8444-444444444444";
 
 test("historical leaderboards preserve edition names and exclude drafts", async (t) => {
   const fixture = await createFixture(t);
@@ -187,6 +189,257 @@ test("public profiles include lifetime and per-edition statistics", async (t) =>
   }
 });
 
+test("damage and playtime leaderboards preserve aggregation rules and tie ranks", async (t) => {
+  const fixture = await createFixture(t);
+  try {
+    const damage = await queryLeaderboard(fixture.database, { editionNumber: 1, metric: "damage" });
+    assert.deepEqual(
+      damage.entries.map((entry) => [entry.rank, entry.minecraftName, entry.value, entry.detail]),
+      [
+        [1, "OldAlpha", 40, "Aujourd’hui AlphaPrime"],
+        [2, "Bravo", 10, "Participation enregistrée"],
+      ],
+    );
+
+    const playtime = await queryLeaderboard(fixture.database, { editionNumber: 1, metric: "playtime" });
+    assert.deepEqual(
+      playtime.entries.map((entry) => [entry.rank, entry.minecraftName, entry.value, entry.detail]),
+      [
+        [1, "Bravo", 1800, "2 sélections"],
+        [1, "OldAlpha", 1800, "3 sélections"],
+      ],
+    );
+  } finally {
+    fixture.close();
+  }
+});
+
+test("leaderboard edition selection ignores drafts and falls back to the latest public edition", async (t) => {
+  const fixture = await createFixture(t);
+  try {
+    for (const editionNumber of [undefined, 3, 999] as const) {
+      const leaderboard = await queryLeaderboard(fixture.database, {
+        editionNumber,
+        metric: "kills",
+      });
+      assert.equal(leaderboard.selectedEdition?.number, 2);
+      assert.equal(leaderboard.lifetime, false);
+      assert.deepEqual(
+        leaderboard.entries.map((entry) => [entry.minecraftName, entry.value]),
+        [
+          ["AlphaPrime", 5],
+          ["Bravo", 2],
+        ],
+      );
+      assert.ok(!leaderboard.entries.some((entry) => entry.playerUuid === charlie));
+    }
+  } finally {
+    fixture.close();
+  }
+});
+
+test("Elo leaderboards give ties the same rank, keep zero ratings, and omit missing ratings", async (t) => {
+  const fixture = await createFixture(t);
+  try {
+    await fixture.database
+      .update(schema.playerRatings)
+      .set({ rating: 1200 })
+      .where(
+        and(
+          eq(schema.playerRatings.editionId, fixture.editionId(2)),
+          eq(schema.playerRatings.playerUuid, bravo),
+        ),
+      );
+    await fixture.database.insert(schema.players).values({ uuid: delta, currentMinecraftName: "Delta" });
+    await fixture.database.insert(schema.editionPlayers).values([
+      { editionId: fixture.editionId(2), playerUuid: charlie, sgpId: 8, minecraftNameAtEvent: "Charlie" },
+      { editionId: fixture.editionId(2), playerUuid: delta, sgpId: 9, minecraftNameAtEvent: "Delta" },
+    ]);
+    await fixture.database.insert(schema.playerRatings).values({
+      editionId: fixture.editionId(2),
+      playerUuid: charlie,
+      rating: 0,
+      ratedEncounters: 0,
+    });
+
+    const leaderboard = await queryLeaderboard(fixture.database, { editionNumber: 2, metric: "elo" });
+    assert.equal(leaderboard.participantCount, 4);
+    assert.deepEqual(
+      leaderboard.entries.map((entry) => [entry.rank, entry.minecraftName, entry.value]),
+      [
+        [1, "AlphaPrime", 1200],
+        [1, "Bravo", 1200],
+        [3, "Charlie", 0],
+      ],
+    );
+    assert.ok(!leaderboard.entries.some((entry) => entry.playerUuid === delta));
+    assert.equal(leaderboard.entries.at(-1)?.detail, "0 rencontre cotée");
+  } finally {
+    fixture.close();
+  }
+});
+
+test("lifetime Elo peak ties report the latest edition that reached the maximum", async (t) => {
+  const fixture = await createFixture(t);
+  try {
+    await fixture.database
+      .update(schema.playerRatings)
+      .set({ rating: 1200 })
+      .where(
+        and(
+          eq(schema.playerRatings.editionId, fixture.editionId(1)),
+          eq(schema.playerRatings.playerUuid, alpha),
+        ),
+      );
+
+    const leaderboard = await queryLeaderboard(fixture.database, { editionNumber: null, metric: "elo" });
+    const alphaEntry = leaderboard.entries.find((entry) => entry.playerUuid === alpha);
+    assert.equal(alphaEntry?.value, 1200);
+    assert.equal(alphaEntry?.detail, "Pic atteint à l’édition 2");
+  } finally {
+    fixture.close();
+  }
+});
+
+test("profile ranking preserves competition ties", async (t) => {
+  const fixture = await createFixture(t);
+  try {
+    await fixture.database
+      .update(schema.playerRatings)
+      .set({ rating: 1200 })
+      .where(
+        and(
+          eq(schema.playerRatings.editionId, fixture.editionId(2)),
+          eq(schema.playerRatings.playerUuid, bravo),
+        ),
+      );
+
+    const [alphaProfile, bravoProfile] = await Promise.all([
+      queryPlayerProfile(fixture.database, alpha),
+      queryPlayerProfile(fixture.database, bravo),
+    ]);
+    assert.equal(alphaProfile?.editions[0].rank, 1);
+    assert.equal(bravoProfile?.editions[0].rank, 1);
+  } finally {
+    fixture.close();
+  }
+});
+
+test("a public participant with no metric rows remains visible with explicit zero and null totals", async (t) => {
+  const fixture = await createFixture(t);
+  try {
+    await fixture.database.insert(schema.players).values({ uuid: delta, currentMinecraftName: "Delta" });
+    await fixture.database.insert(schema.editionPlayers).values({
+      editionId: fixture.editionId(2),
+      playerUuid: delta,
+      sgpId: 9,
+      minecraftNameAtEvent: "Delta",
+    });
+
+    const kills = await queryLeaderboard(fixture.database, { editionNumber: 2, metric: "kills" });
+    const deltaKills = kills.entries.find((entry) => entry.playerUuid === delta);
+    assert.deepEqual(deltaKills && [deltaKills.value, deltaKills.rank], [0, 3]);
+
+    const elo = await queryLeaderboard(fixture.database, { editionNumber: 2, metric: "elo" });
+    assert.ok(!elo.entries.some((entry) => entry.playerUuid === delta));
+
+    const directory = await queryPlayerDirectory(fixture.database, "Delta");
+    assert.deepEqual(directory.players[0], {
+      uuid: delta,
+      minecraftName: "Delta",
+      aliases: [],
+      appearances: 1,
+      latestEditionNumber: 2,
+      kills: 0,
+      bestRating: null,
+      favoriteKitKey: null,
+    });
+
+    const profile = await queryPlayerProfile(fixture.database, delta);
+    assert.ok(profile);
+    assert.deepEqual(profile.lifetime, {
+      appearances: 1,
+      kills: 0,
+      deaths: 0,
+      damageDealt: 0,
+      damageReceived: 0,
+      picks: 0,
+      totalTimeTicks: 0,
+      bestRating: null,
+      latestRating: null,
+      favoriteKitKey: null,
+    });
+    assert.deepEqual(
+      {
+        rating: profile.editions[0].rating,
+        rank: profile.editions[0].rank,
+        ratedEncounters: profile.editions[0].ratedEncounters,
+        kills: profile.editions[0].kills,
+        deaths: profile.editions[0].deaths,
+        picks: profile.editions[0].picks,
+        totalTimeTicks: profile.editions[0].totalTimeTicks,
+        favoriteKitKey: profile.editions[0].favoriteKitKey,
+        abilityMetrics: profile.editions[0].abilityMetrics,
+        kitStats: profile.editions[0].kitStats,
+      },
+      {
+        rating: null,
+        rank: null,
+        ratedEncounters: 0,
+        kills: 0,
+        deaths: 0,
+        picks: 0,
+        totalTimeTicks: 0,
+        favoriteKitKey: null,
+        abilityMetrics: [],
+        kitStats: [],
+      },
+    );
+  } finally {
+    fixture.close();
+  }
+});
+
+test("leaderboards return an empty public scope instead of leaking draft-only data", async (t) => {
+  const { database, close } = await createTestDatabase(t);
+  try {
+    const [draft] = await database
+      .insert(schema.editions)
+      .values({
+        number: 7,
+        name: "Secret draft",
+        status: "draft",
+        minecraftVersion: "26.1",
+        statisticsSchemaVersion: 7,
+      })
+      .returning({ id: schema.editions.id });
+    await database.insert(schema.players).values({ uuid: charlie, currentMinecraftName: "Charlie" });
+    await database.insert(schema.editionPlayers).values({
+      editionId: draft.id,
+      playerUuid: charlie,
+      sgpId: 8,
+      minecraftNameAtEvent: "Charlie",
+    });
+    await database.insert(schema.playerRatings).values({
+      editionId: draft.id,
+      playerUuid: charlie,
+      rating: 9999,
+      ratedEncounters: 99,
+    });
+
+    for (const editionNumber of [undefined, null] as const) {
+      const leaderboard = await queryLeaderboard(database, { editionNumber, metric: "elo" });
+      assert.deepEqual(leaderboard.editions, []);
+      assert.equal(leaderboard.selectedEdition, null);
+      assert.equal(leaderboard.participantCount, 0);
+      assert.deepEqual(leaderboard.entries, []);
+      assert.equal(leaderboard.lifetime, editionNumber === null);
+    }
+  } finally {
+    close();
+  }
+});
+
 async function createFixture(t: TestContext) {
   const { database, close } = await createTestDatabase(t);
 
@@ -292,5 +545,5 @@ async function createFixture(t: TestContext) {
     value: 3,
   });
 
-  return { database, close };
+  return { database, close, editionId };
 }

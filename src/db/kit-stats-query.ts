@@ -82,26 +82,27 @@ export async function queryKitStats(database: SgpDatabase): Promise<KitStatsSnap
       .groupBy(kitSnapshots.kitKey),
   ]);
 
+  // These grouped SUMs aggregate NOT NULL columns; when a group row exists, its value is non-null.
   const byKitKey: Record<string, KitAggregateStats> = {};
   const getStats = (kitKey: string) => (byKitKey[kitKey] ??= emptyStats());
 
   for (const row of pickRows) {
     const stats = getStats(row.kitKey);
-    stats.picks = Number(row.picks ?? 0);
-    stats.totalTimeTicks = Number(row.totalTimeTicks ?? 0);
+    stats.picks = Number(row.picks);
+    stats.totalTimeTicks = Number(row.totalTimeTicks);
   }
   for (const row of killRows) {
-    getStats(row.kitKey).kills = Number(row.value ?? 0);
+    getStats(row.kitKey).kills = Number(row.value);
   }
   for (const row of deathRows) {
-    getStats(row.kitKey).deaths = Number(row.value ?? 0);
+    getStats(row.kitKey).deaths = Number(row.value);
   }
   for (const row of damageRows) {
-    getStats(row.kitKey).damageDealt = Number(row.value ?? 0);
+    getStats(row.kitKey).damageDealt = Number(row.value);
   }
 
   return {
-    editionCount: editionRows[0]?.value ?? 0,
+    editionCount: editionRows[0].value,
     totalPicks: Object.values(byKitKey).reduce((total, stats) => total + stats.picks, 0),
     byKitKey,
   };

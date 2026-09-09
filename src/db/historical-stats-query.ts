@@ -211,7 +211,9 @@ export async function queryLeaderboard(
       })
       .from(playerRatings)
       .innerJoin(editions, eq(playerRatings.editionId, editions.id))
-      .where(condition);
+      // Highest rating wins; equal lifetime peaks are attributed to the latest edition.
+      .where(condition)
+      .orderBy(desc(playerRatings.rating), desc(editions.number));
 
     for (const row of rows) {
       const entry = entries.get(row.playerUuid);

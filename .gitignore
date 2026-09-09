@@ -31,3 +31,6 @@ next-env.d.ts
 # Browser test artifacts
 /playwright-report/
 /test-results/
+
+# Test coverage artifacts
+/coverage/

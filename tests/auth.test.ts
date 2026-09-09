@@ -197,6 +197,32 @@ test("opaque sessions resolve the current DiscordSRV Minecraft link", async (t) 
   }
 });
 
+test("storing a session prunes expired authentication sessions", async (t) => {
+  const fixture = await createFixture(t);
+  try {
+    const now = new Date("2026-09-05T12:00:00Z");
+    await fixture.database.insert(schema.authSessions).values({
+      tokenHash: "expired-token",
+      discordId: discordAlpha,
+      discordUsername: "expired",
+      expiresAt: new Date("2026-09-05T11:59:59Z"),
+    });
+    await storeAuthSession(
+      fixture.database,
+      "fresh-token",
+      { id: discordBravo, username: "fresh", displayName: null, avatarUrl: null },
+      new Date("2026-10-05T12:00:00Z"),
+      now,
+    );
+    const rows = await fixture.database
+      .select({ tokenHash: schema.authSessions.tokenHash })
+      .from(schema.authSessions);
+    assert.deepEqual(rows, [{ tokenHash: "fresh-token" }]);
+  } finally {
+    fixture.close();
+  }
+});
+
 async function createFixture(t: TestContext) {
   return createTestDatabase(t);
 }

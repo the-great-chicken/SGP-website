@@ -120,21 +120,22 @@ test.describe("high-value browser smoke journeys", () => {
     await page.goto("/me#cosmetiques");
 
     await expect(page.getByText("Équipement vérifié dans Minecraft", { exact: true })).toBeVisible();
-    const equipSpark = page.getByRole("button", { name: "Équiper Étincelle — Particules" });
+    const particleTrails = page.getByRole("region", { name: "Traînées de particules" });
+    const equipSpark = particleTrails.getByRole("button", { name: /^Équiper Étincelle/ });
     await expect(equipSpark).toBeEnabled();
     await equipSpark.click();
     await expect(page.getByRole("status").filter({ hasText: "Équipement confirmé dans Minecraft." })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Étincelle équipé" })).toBeDisabled();
+    await expect(particleTrails.getByRole("button", { name: "Étincelle équipé" })).toBeDisabled();
 
     const failNext = await request.post(`${e2eMockServerUrl}/__test/fail-next`, {
       headers: { Authorization: `Bearer ${e2eBridgeSecret}` },
     });
     expect(failNext.ok()).toBeTruthy();
 
-    const equipCloud = page.getByRole("button", { name: "Équiper Nuage — Particules" });
+    const equipCloud = particleTrails.getByRole("button", { name: /^Équiper Nuage/ });
     await equipCloud.click();
-    await expect(page.getByRole("alert")).toContainText("La modification n’a pas pu être confirmée");
-    await expect(page.getByRole("button", { name: "Étincelle équipé" })).toBeDisabled();
+    await expect(page.locator("#cosmetiques").getByRole("alert")).toContainText("La modification n’a pas pu être confirmée");
+    await expect(particleTrails.getByRole("button", { name: "Étincelle équipé" })).toBeDisabled();
     await expect(equipCloud).toBeEnabled();
   });
 });
