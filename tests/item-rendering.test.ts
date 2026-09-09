@@ -130,6 +130,44 @@ test("render indexes are tied to the kit and resource-pack releases", () => {
     }) ?? "",
     /datapack release/,
   );
+  assert.match(
+    getItemRenderMismatch(index, {
+      datapackRelease: "dp-release-1",
+      resourcePackRelease: "rp-release-2",
+      minecraftVersion: "26.1",
+    }) ?? "",
+    /resource-pack release/,
+  );
+  assert.match(
+    getItemRenderMismatch(index, {
+      datapackRelease: "dp-release-1",
+      resourcePackRelease: "rp-release-1",
+      minecraftVersion: "26.2",
+    }) ?? "",
+    /Minecraft version/,
+  );
+});
+
+test("unknown or malformed custom potion effects do not invent a tint", () => {
+  const input = getItemRenderInput(
+    makeItem({
+      "minecraft:potion_contents": {
+        custom_effects: [
+          { id: "minecraft:not_a_real_effect", amplifier: 3 },
+          { id: 42 },
+          "invalid",
+        ],
+      },
+    }),
+  );
+
+  assert.deepEqual(input.components["minecraft:potion_contents"], {
+    custom_effects: [
+      { id: "minecraft:not_a_real_effect", amplifier: 3 },
+      { id: 42 },
+      "invalid",
+    ],
+  });
 });
 
 function makeItem(components: KitItem["components"]): KitItem {

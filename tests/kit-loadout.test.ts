@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { KitItem, KitOperation } from "../src/lib/kit-manifest";
-import { resolveKitLoadout } from "../src/lib/kit-loadout";
+import { getMaxStackSize, resolveKitLoadout } from "../src/lib/kit-loadout";
 
 test("/give distributes non-stackable items through the hotbar before the inventory", () => {
   const main = give("minecraft:trident", 1, 1, { "minecraft:custom_name": "Main" });
@@ -62,6 +62,40 @@ test("stackable /give items split according to their stack size", () => {
   assert.equal(loadout.bySlot.get("hotbar.1")?.operation.item.count, 6);
   assert.equal(loadout.inventory.length, 0);
 });
+
+test("/give tops up compatible stacks before taking a free slot", () => {
+  const loadout = resolveKitLoadout([
+    replace("hotbar.0", "minecraft:stone", 60, 1),
+    give("minecraft:stone", 10, 2),
+  ]);
+
+  assert.equal(loadout.bySlot.get("hotbar.0")?.operation.item.count, 64);
+  assert.equal(loadout.bySlot.get("hotbar.1")?.operation.item.count, 6);
+});
+
+test("items that cannot fit are represented as overflow stacks", () => {
+  const occupied = [
+    ...Array.from({ length: 9 }, (_, index) => replace(`hotbar.${index}`, "minecraft:dirt", 64, index + 1)),
+    ...Array.from({ length: 27 }, (_, index) => replace(`inventory.${index}`, "minecraft:dirt", 64, index + 10)),
+  ];
+  const loadout = resolveKitLoadout([...occupied, give("minecraft:stone", 70, 40)]);
+
+  assert.deepEqual(loadout.overflow.map((entry) => entry.operation.item.count), [64, 6]);
+  assert.ok(loadout.overflow.every((entry) => entry.slot === "overflow"));
+});
+
+test("stack-size inference covers component overrides and Minecraft item classes", () => {
+  assert.equal(getMaxStackSize(item("minecraft:stone", { "minecraft:max_stack_size": 120 })), 99);
+  assert.equal(getMaxStackSize(item("minecraft:stone", { "minecraft:max_stack_size": 0 })), 1);
+  assert.equal(getMaxStackSize(item("minecraft:diamond_sword", {})), 1);
+  assert.equal(getMaxStackSize(item("minecraft:stone", { "minecraft:max_damage": 100 })), 1);
+  assert.equal(getMaxStackSize(item("minecraft:oak_sign", {})), 16);
+  assert.equal(getMaxStackSize(item("minecraft:stone", {})), 64);
+});
+
+function item(id: string, components: KitItem["components"]): KitItem {
+  return { id, count: 1, components, removedComponents: [] };
+}
 
 function give(
   id: string,

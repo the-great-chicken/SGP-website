@@ -33,6 +33,7 @@ function runTests(files, extraNodeArguments = []) {
 
 const root = path.resolve("tests");
 const appRoot = path.join(root, "app") + path.sep;
+const integrationRoot = path.join(root, "integration") + path.sep;
 const testFiles = (await collectTestFiles(root)).sort();
 
 if (testFiles.length === 0) {
@@ -40,10 +41,11 @@ if (testFiles.length === 0) {
   process.exit(1);
 }
 
+const integrationTests = testFiles.filter((file) => file.startsWith(integrationRoot));
 const appBoundaryTests = testFiles.filter((file) => file.startsWith(appRoot));
-const standardTests = testFiles.filter((file) => !file.startsWith(appRoot));
+const standardTests = testFiles.filter((file) => !file.startsWith(appRoot) && !file.startsWith(integrationRoot));
 
-console.log(`Running ${testFiles.length} TypeScript/JavaScript test files.`);
+console.log(`Running ${testFiles.length - integrationTests.length} TypeScript/JavaScript test files (integration tests run separately).`);
 runTests(standardTests);
 // App-boundary tests import modules guarded by the server-only package. The
 // react-server condition selects server-only's intentionally empty server export.

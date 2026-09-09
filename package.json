@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.8.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -17,11 +17,11 @@
     "content:refresh": "tsx scripts/publish.mts refresh",
     "edition:publish": "tsx scripts/publish.mts edition",
     "test:publishing": "tsx --test tests/publishing.test.ts",
-    "test:database": "tsx --test tests/auth.test.ts tests/edition-import.test.ts tests/historical-stats.test.ts tests/leaderboard-table.test.ts",
+    "test:database": "tsx --test tests/auth.test.ts tests/edition-import.test.ts tests/historical-stats.test.ts tests/leaderboard-table.test.ts tests/migrations.test.ts",
     "test:cosmetics": "tsx --test tests/cosmetics.test.ts tests/cosmetic-rendering.test.ts",
     "test:kits": "tsx --test tests/item-rendering.test.ts tests/block-model-renderer-patch.test.mjs tests/kit-presentation.test.ts tests/kit-stats.test.ts tests/kit-preview.test.ts tests/kit-metric-scale.test.ts tests/kit-loadout.test.ts tests/player-kit-stat-scale.test.ts",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run test:ts && npm run test:coverage && npm run test:python && npm run build && npm run test:e2e",
+    "check": "npm run lint && npm run typecheck && npm run test:ts && npm run test:coverage && npm run test:python && npm run test:integration && npm run build && npm run test:e2e",
     "test": "npm run check",
     "test:ts": "node scripts/run-ts-tests.mjs",
     "test:coverage": "node scripts/run-coverage.mjs",
@@ -33,7 +33,8 @@
     "db:studio": "drizzle-kit studio",
     "test:map-shell": "tsx --test tests/map-shell.test.ts",
     "test:app": "node --conditions=react-server --import tsx --test tests/app/routes.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:integration": "node scripts/run-integration-tests.mjs"
   },
   "dependencies": {
     "@libsql/client": "0.18.0",
