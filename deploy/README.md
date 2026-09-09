@@ -10,7 +10,7 @@ Use a dedicated host. The installer replaces Caddy's configuration, retaining a 
 
 ```bash
 sudo apt update
-sudo apt install caddy restic openjdk-25-jre-headless python3 curl xz-utils openssl
+sudo apt install caddy restic openjdk-25-jre-headless python3 python3-venv curl xz-utils openssl
 ```
 
 Install the exact Node version from `.node-version` on both the build machine and host. From this repository, on Linux:
@@ -59,14 +59,14 @@ The provided service handles graceful shutdown. Backup consistency depends on ru
 
 ## Build and activate a release
 
-Build on Linux with the same CPU architecture as production, from a clean committed checkout with no `.env` files. Copy the [generated current-content files](../docs/publishing.md#refresh-current-content) into this checkout before building. Production statistics and player data come from SQLite.
+Build on Linux with the same CPU architecture as production, from a clean committed checkout with no `.env` files. The build machine needs Python 3.11+ with `venv` support and `restic` because the release gate runs all Python tests, including encrypted backup/restore. Copy the [generated current-content files](../docs/publishing.md#refresh-current-content) into this checkout before building. Production statistics and player data come from SQLite.
 
 ```bash
 export PATH="/opt/node/bin:$PATH"
 bash deploy/build-release.sh /tmp/sgp-release
 ```
 
-This installs locked dependencies without the offline renderer's graphics setup scripts, runs lint and hosting tests, builds standalone Next.js, and packages its runtime, static assets and migrations. No development database or secret files are shipped. Transfer that release directory to the host under a unique name, for example `/srv/sgp/releases/2026-09-06`, preserving file modes. Make it root-owned and keep completed releases unchanged.
+This installs locked dependencies without the offline renderer's graphics setup scripts, creates an isolated Python test environment from `.[test]`, runs the same full `npm run check` gate as CI, builds standalone Next.js, and packages its runtime, static assets and migrations. No development database or secret files are shipped. Transfer that release directory to the host under a unique name, for example `/srv/sgp/releases/2026-09-06`, preserving file modes. Make it root-owned and keep completed releases unchanged.
 
 ```bash
 sudo python3 /srv/sgp/ops/host.py --config /etc/sgp/host.json activate /srv/sgp/releases/2026-09-06

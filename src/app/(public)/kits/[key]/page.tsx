@@ -99,14 +99,9 @@ export default async function KitPage({ params }: KitPageProps) {
               const candidateName = getKitDisplayName(candidate);
               const candidateIconSrc = getKitIconSrc(candidate);
               const active = candidate.key === kit.key;
-              return (
-                <Link
-                  href={`/kits/${candidate.key}`}
-                  className={active ? "is-active" : undefined}
-                  aria-current={active ? "page" : undefined}
-                  style={{ "--kit-link-accent": getKitAccent(candidate) } as CSSProperties}
-                  key={candidate.key}
-                >
+              const linkStyle = { "--kit-link-accent": getKitAccent(candidate) } as CSSProperties;
+              const content = (
+                <>
                   <span className="kit-detail-list-icon" aria-hidden="true">
                     {candidateIconSrc ? (
                       <Image src={candidateIconSrc} width={22} height={22} alt="" unoptimized />
@@ -115,6 +110,30 @@ export default async function KitPage({ params }: KitPageProps) {
                     )}
                   </span>
                   <span>{candidateName}</span>
+                </>
+              );
+
+              if (active) {
+                return (
+                  <span
+                    className="kit-detail-kit-link is-active"
+                    aria-current="page"
+                    style={linkStyle}
+                    key={candidate.key}
+                  >
+                    {content}
+                  </span>
+                );
+              }
+
+              return (
+                <Link
+                  href={`/kits/${candidate.key}`}
+                  className="kit-detail-kit-link"
+                  style={linkStyle}
+                  key={candidate.key}
+                >
+                  {content}
                 </Link>
               );
             })}

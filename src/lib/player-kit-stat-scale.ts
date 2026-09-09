@@ -61,9 +61,15 @@ export function getPlayerKitMetricDomains(
     "picks" | "kills" | "deaths" | "damageDealt" | "damageReceived" | "totalTimeTicks"
   >>,
 ): PlayerKitMetricDomains {
-  const valuesByMetric = Object.fromEntries(
-    Object.keys(metricDirections).map((key) => [key, []]),
-  ) as Record<PlayerKitComparisonMetric, number[]>;
+  const valuesByMetric: Record<PlayerKitComparisonMetric, number[]> = {
+    picks: [],
+    kills: [],
+    deaths: [],
+    ratio: [],
+    damageDealt: [],
+    damageReceived: [],
+    damagePerMinute: [],
+  };
 
   for (const kit of kits) {
     const values = getPlayerKitMetricValues(kit);
@@ -73,12 +79,15 @@ export function getPlayerKitMetricDomains(
     }
   }
 
-  return Object.fromEntries(
-    (Object.keys(valuesByMetric) as PlayerKitComparisonMetric[]).map((metric) => [
-      metric,
-      buildDomain(valuesByMetric[metric]),
-    ]),
-  ) as PlayerKitMetricDomains;
+  return {
+    picks: buildDomain(valuesByMetric.picks),
+    kills: buildDomain(valuesByMetric.kills),
+    deaths: buildDomain(valuesByMetric.deaths),
+    ratio: buildDomain(valuesByMetric.ratio),
+    damageDealt: buildDomain(valuesByMetric.damageDealt),
+    damageReceived: buildDomain(valuesByMetric.damageReceived),
+    damagePerMinute: buildDomain(valuesByMetric.damagePerMinute),
+  };
 }
 
 export function getPlayerKitMetricColor(

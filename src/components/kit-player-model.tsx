@@ -11,6 +11,7 @@ export function KitPlayerModel({ preview, name, skin }: {
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState(false);
+  const { src: skinSrc, model: skinModel } = skin;
   useEffect(() => {
     const surface = canvas.current!;
     let disposed = false;
@@ -56,7 +57,7 @@ export function KitPlayerModel({ preview, name, skin }: {
         disposePlayer(scene);
         renderer.dispose();
       };
-      const player = await createKitPlayer(preview, skin);
+      const player = await createKitPlayer(preview, { src: skinSrc, model: skinModel });
       if (disposed) { disposePlayer(player.root); return; }
       rig.add(player.root);
       draw();
@@ -91,7 +92,7 @@ export function KitPlayerModel({ preview, name, skin }: {
     }
     mount().catch(() => { cleanup(); if (!disposed) setError(true); });
     return () => { disposed = true; cleanup(); };
-  }, [preview, skin.model, skin.src]);
+  }, [preview, skinModel, skinSrc]);
 
   return (
     <div className="kit-player-stage">

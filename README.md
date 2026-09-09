@@ -14,6 +14,8 @@ Copy-Item .env.example .env
 npm run db:migrate
 ```
 
+On Ubuntu/Debian, if `npm ci` needs to compile the transitive `gl` dependency, install its native build prerequisites first: `build-essential libx11-dev libxext-dev libxi-dev libglu1-mesa-dev libglew-dev pkg-config`. CI installs these automatically.
+
 Keep your existing `.env` on subsequent runs. The default database is `.data/sgp.sqlite`; `.env`, `publish.json`, databases and generated content are ignored by Git.
 
 ### Start the website
@@ -60,17 +62,15 @@ Players must be online to change equipped cosmetics; offline views show their la
 
 ## Checks
 
+CI runs the complete gate on every pull request targeting `main` and again on every push to `main`. Configure the `Full test gate` check as required in the repository branch rules to block merges when it fails. For the same check locally, first install the Python exporter/test environment with `npm run content:setup` if `.venv` is not already set up, then run:
+
 ```powershell
-npm run lint
-npm run typecheck
-npm run test:kits
-npm run test:database
-npm run test:publishing
-npm run test:cosmetics
-npm run build
+npm run check
 ```
 
-After installing the exporters through `npm run content:setup`, run Python tests with `.venv/Scripts/python.exe -m unittest discover -s tests -v` (`.venv/bin/python` on Linux/macOS). `scripts/check-cosmetic-hooks.py` validates the datapack cosmetic hooks without starting Minecraft.
+The gate runs lint, TypeScript typechecking, every TypeScript/JavaScript test under `tests/`, every Python `test_*.py` test, and the production Next.js build. The narrower `test:*` scripts remain available for faster iteration on one area. `scripts/check-cosmetic-hooks.py` validates the datapack cosmetic hooks without starting Minecraft.
+
+Dependency install scripts are allowlisted by exact package version in `package.json`, and `.npmrc` makes unreviewed install scripts a hard failure. When an install fails after a dependency update, review the package first, then use `npm install-scripts ls` / `npm install-scripts approve <package>` rather than disabling the policy.
 
 For schema changes, run `npm run db:generate` and commit the migration, then apply it with `npm run db:migrate`. `npm run db:studio` opens the local database editor.
 

@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "postinstall": "node scripts/patch-block-model-renderer.mjs",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "assets:render-items": "tsx scripts/render-kit-items.mts",
     "assets:render-cosmetics": "tsx scripts/render-cosmetics.mts",
     "content:setup": "node scripts/setup-publishing.mjs",
@@ -19,8 +19,12 @@
     "test:publishing": "tsx --test tests/publishing.test.ts",
     "test:database": "tsx --test tests/auth.test.ts tests/edition-import.test.ts tests/historical-stats.test.ts tests/leaderboard-table.test.ts",
     "test:cosmetics": "tsx --test tests/cosmetics.test.ts tests/cosmetic-rendering.test.ts",
-    "test:kits": "tsx --test tests/item-rendering.test.ts tests/block-model-renderer-patch.test.mjs tests/kit-presentation.test.ts tests/kit-stats.test.ts tests/kit-preview.test.ts tests/kit-metric-scale.test.ts",
+    "test:kits": "tsx --test tests/item-rendering.test.ts tests/block-model-renderer-patch.test.mjs tests/kit-presentation.test.ts tests/kit-stats.test.ts tests/kit-preview.test.ts tests/kit-metric-scale.test.ts tests/kit-loadout.test.ts tests/player-kit-stat-scale.test.ts",
     "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm run test:ts && npm run test:python && npm run build",
+    "test": "npm run check",
+    "test:ts": "node scripts/run-ts-tests.mjs",
+    "test:python": "node scripts/run-python-tests.mjs",
     "db:generate": "drizzle-kit generate",
     "db:import-edition": "tsx src/db/import-edition.ts",
     "db:sync-discordsrv": "tsx src/db/sync-discordsrv.ts",
@@ -56,5 +60,13 @@
   "overrides": {
     "sharp": "0.35.4",
     "tar": "7.5.22"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true,
+    "gl@8.1.6": true,
+    "skia-canvas@3.0.8": true,
+    "unrs-resolver@1.12.2": true
   }
 }
