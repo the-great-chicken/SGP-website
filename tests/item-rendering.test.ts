@@ -73,6 +73,22 @@ test("mixed custom effects use amplifier-weighted potion colors", () => {
   });
 });
 
+test("base potions with custom effects are left for the renderer to combine", () => {
+  const input = getItemRenderInput(
+    makeItem({
+      "minecraft:potion_contents": {
+        potion: "minecraft:swiftness",
+        custom_effects: [{ id: "minecraft:resistance", amplifier: 1 }],
+      },
+    }),
+  );
+
+  assert.deepEqual(input.components["minecraft:potion_contents"], {
+    potion: "minecraft:swiftness",
+    custom_effects: [{ id: "minecraft:resistance", amplifier: 1 }],
+  });
+});
+
 test("an explicit custom potion color is preserved", () => {
   const input = getItemRenderInput(
     makeItem({

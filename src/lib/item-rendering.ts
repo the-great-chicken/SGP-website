@@ -92,7 +92,11 @@ export function getItemRenderInput(item: KitItem): {
 
   if (typeof potionContents === "string") {
     components["minecraft:potion_contents"] = { potion: potionContents };
-  } else if (isJsonObject(potionContents) && typeof potionContents.custom_color !== "number") {
+  } else if (
+    isJsonObject(potionContents) &&
+    typeof potionContents.custom_color !== "number" &&
+    typeof potionContents.potion !== "string"
+  ) {
     const customColor = computeCustomPotionColor(potionContents.custom_effects);
     if (customColor !== null) {
       components["minecraft:potion_contents"] = {

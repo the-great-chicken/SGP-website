@@ -46,3 +46,16 @@ export function sortLeaderboard(rows: LeaderboardRow[], metric: LeaderboardMetri
     return left - right || a.minecraftName.localeCompare(b.minecraftName, "fr");
   }) : result;
 }
+
+export function sortLeaderboardByPlayerName(
+  rows: LeaderboardRow[],
+  metric: LeaderboardMetric,
+  ascending: boolean,
+) {
+  const ranked = sortLeaderboard(rows, metric, false);
+  return ranked.toSorted((a, b) => {
+    const comparison = a.minecraftName.localeCompare(b.minecraftName, "fr", { sensitivity: "base" });
+    if (comparison) return ascending ? comparison : -comparison;
+    return a.playerUuid.localeCompare(b.playerUuid);
+  });
+}

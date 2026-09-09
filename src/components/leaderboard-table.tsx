@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { LeaderboardMetric } from "@/db/historical-stats-query";
-import { formatLeaderboardValue, leaderboardMetricLabels } from "@/lib/historical-stats";
-import { sortLeaderboard, type LeaderboardRow } from "@/lib/leaderboard-table";
+import { formatCount, formatLeaderboardValue, leaderboardMetricLabels } from "@/lib/historical-stats";
+import { sortLeaderboard, sortLeaderboardByPlayerName, type LeaderboardRow } from "@/lib/leaderboard-table";
 
 export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetime }: {
   rows: LeaderboardRow[];
@@ -17,10 +17,14 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
 }) {
   const router = useRouter();
   const [metric, setMetric] = useState(initialMetric);
+  const [sortColumn, setSortColumn] = useState<LeaderboardMetric | "player">(initialMetric);
   const [ascending, setAscending] = useState(false);
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase("fr");
-  const entries = sortLeaderboard(rows, metric, ascending).filter((entry) => {
+  const sortedRows = sortColumn === "player"
+    ? sortLeaderboardByPlayerName(rows, metric, ascending)
+    : sortLeaderboard(rows, sortColumn, ascending);
+  const entries = sortedRows.filter((entry) => {
     if (!normalizedQuery) return true;
     return entry.minecraftName.toLocaleLowerCase("fr").includes(normalizedQuery)
       || entry.currentMinecraftName.toLocaleLowerCase("fr").includes(normalizedQuery);
@@ -56,15 +60,24 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
           <thead>
             <tr>
               <th scope="col">Rang</th>
-              <th scope="col">Joueur</th>
+              <th className="is-sortable" scope="col" aria-sort={sortColumn === "player" ? ascending ? "ascending" : "descending" : "none"}>
+                <button type="button" onClick={() => {
+                  setAscending(sortColumn === "player" ? !ascending : true);
+                  setSortColumn("player");
+                }}>
+                  Joueur
+                  {sortColumn !== "player" ? <ArrowUpDown size={14} /> : ascending ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+                </button>
+              </th>
               {metrics.map((candidate) => (
-                <th className={`is-sortable metric-${candidate}`} key={candidate} scope="col" aria-sort={metric === candidate ? ascending ? "ascending" : "descending" : "none"}>
+                <th className={`is-sortable metric-${candidate}`} key={candidate} scope="col" aria-sort={sortColumn === candidate ? ascending ? "ascending" : "descending" : "none"}>
                   <button type="button" onClick={() => {
-                    setAscending(candidate === metric ? !ascending : false);
+                    setAscending(sortColumn === candidate ? !ascending : false);
                     setMetric(candidate);
+                    setSortColumn(candidate);
                   }}>
                     {candidate === "elo" && lifetime ? "Meilleur Elo" : leaderboardMetricLabels[candidate]}
-                    {candidate !== metric ? <ArrowUpDown size={14} /> : ascending ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+                    {sortColumn !== candidate ? <ArrowUpDown size={14} /> : ascending ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
                   </button>
                 </th>
               ))}
@@ -80,7 +93,7 @@ export function LeaderboardTable({ rows, initialMetric, scope, editions, lifetim
                     <span><strong>{entry.minecraftName}</strong>{entry.minecraftName !== entry.currentMinecraftName ? <small>{entry.currentMinecraftName}</small> : null}</span>
                   </Link>
                 </th>
-                {metrics.map((candidate) => <td className={`metric-${candidate}${candidate === metric ? " is-sorted" : ""}`} key={candidate}>{entry.values[candidate] === null ? "—" : formatLeaderboardValue(candidate, entry.values[candidate])}</td>)}
+                {metrics.map((candidate) => <td className={`metric-${candidate}${candidate === sortColumn ? " is-sorted" : ""}`} key={candidate}>{entry.values[candidate] === null ? "—" : candidate === "elo" ? formatCount(entry.values[candidate]) : formatLeaderboardValue(candidate, entry.values[candidate])}</td>)}
               </tr>
             )) : (
               <tr>

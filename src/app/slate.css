@@ -1331,6 +1331,10 @@ select:focus-visible,
   font-size: inherit;
 }
 
+.stats-table th:nth-child(2).is-sortable button {
+  justify-content: flex-start;
+}
+
 .stats-table th[aria-sort="ascending"],
 .stats-table th[aria-sort="descending"] {
   background: color-mix(in srgb, var(--gold) 7%, var(--ink-soft));

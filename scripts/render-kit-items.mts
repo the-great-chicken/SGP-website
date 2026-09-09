@@ -2,20 +2,27 @@ import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { renderKitVisuals, renderResolvedHead } from "./render-kit-visuals.mts";
-import { prepareAssets, readFile as readAssetFile, renderItem } from "block-model-renderer";
 import type { KitItem, KitManifest } from "../src/lib/kit-manifest";
 import {
   getItemRenderInput,
   getItemRenderSignature,
   type ItemRenderIndex,
 } from "../src/lib/item-rendering";
+import { ensureBlockModelRendererPotionTintPatch } from "./patch-block-model-renderer.mjs";
+
+await ensureBlockModelRendererPotionTintPatch();
+const [kitVisuals, renderer] = await Promise.all([
+  import("./render-kit-visuals.mts"),
+  import("block-model-renderer"),
+]);
+const { renderKitVisuals, renderResolvedHead } = kitVisuals;
+const { prepareAssets, readFile: readAssetFile, renderItem } = renderer;
 
 const projectRoot = process.cwd();
 const manifestPath = path.join(projectRoot, "data", "kit-manifest.json");
 const outputDirectory = path.join(projectRoot, "public", "generated", "item-icons");
 const indexPath = path.join(projectRoot, "data", "item-renders.json");
-const ITEM_RENDER_PIPELINE_VERSION = "3-custom-potion-colors";
+const ITEM_RENDER_PIPELINE_VERSION = "4-renderer-custom-potion-tints";
 
 async function main() {
   const options = parseOptions(process.argv.slice(2));

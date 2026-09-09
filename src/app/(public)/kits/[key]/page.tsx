@@ -271,7 +271,7 @@ export default async function KitPage({ params }: KitPageProps) {
                         style={metricStyle}
                         key={metric.label}
                       >
-                        <span>{metric.label}</span>
+                        <span>{metric.key === "ratio" ? "K/D" : metric.label}</span>
                         <strong>{metric.value}</strong>
                         <small>{metric.detail}</small>
                       </article>

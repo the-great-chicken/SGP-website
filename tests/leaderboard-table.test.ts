@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mergeLeaderboards, sortLeaderboard, type LeaderboardRow } from "../src/lib/leaderboard-table";
+import { mergeLeaderboards, sortLeaderboard, sortLeaderboardByPlayerName, type LeaderboardRow } from "../src/lib/leaderboard-table";
 import type { LeaderboardSnapshot } from "../src/db/historical-stats-query";
 
 const rows: LeaderboardRow[] = [
@@ -16,6 +16,15 @@ test("leaderboard sorting compares numeric values and keeps missing ratings last
   assert.deepEqual(sortLeaderboard(rows, "elo", true).map((row) => row.minecraftName), ["Dan", "Alice", "Charlie", "Bob"]);
   assert.deepEqual(sortLeaderboard(rows, "elo", false).map((row) => row.rank), [1, 1, 3, null]);
   assert.deepEqual(sortLeaderboard(rows, "elo", true).map((row) => row.rank), [3, 1, 1, null]);
+});
+
+test("leaderboard player sorting orders names alphabetically while preserving metric ranks", () => {
+  const ascending = sortLeaderboardByPlayerName(rows, "elo", true);
+  assert.deepEqual(ascending.map((row) => row.minecraftName), ["Alice", "Bob", "Charlie", "Dan"]);
+  assert.deepEqual(ascending.map((row) => row.rank), [1, null, 1, 3]);
+
+  const descending = sortLeaderboardByPlayerName(rows, "elo", false);
+  assert.deepEqual(descending.map((row) => row.minecraftName), ["Dan", "Charlie", "Bob", "Alice"]);
 });
 
 test("merging metrics retains unrated players and distinguishes missing ratings from zero scores", () => {

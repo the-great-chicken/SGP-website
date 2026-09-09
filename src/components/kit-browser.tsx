@@ -11,11 +11,11 @@ type KitBrowserProps = {
   stats: KitStatsSnapshot;
 };
 
-type SortOrder = "sgp" | "name" | "popularity";
+type SortOrder = "name" | "popularity";
 
 export function KitBrowser({ kits, stats }: KitBrowserProps) {
   const [query, setQuery] = useState("");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("sgp");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("name");
   const metricDomains = useMemo(() => getKitMetricDomains(kits, stats), [kits, stats]);
   const visibleKits = useMemo(() => {
     const normalizedQuery = normalizeSearch(query);
@@ -41,7 +41,6 @@ export function KitBrowser({ kits, stats }: KitBrowserProps) {
           <SlidersHorizontal size={16} />
           <span>Trier par</span>
           <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as SortOrder)}>
-            <option value="sgp">Ordre SGP</option>
             <option value="name">Nom</option>
             <option value="popularity" disabled={stats.editionCount === 0}>
               Popularité
