@@ -21,7 +21,7 @@
     "test:cosmetics": "tsx --test tests/cosmetics.test.ts tests/cosmetic-rendering.test.ts",
     "test:kits": "tsx --test tests/item-rendering.test.ts tests/block-model-renderer-patch.test.mjs tests/kit-presentation.test.ts tests/kit-stats.test.ts tests/kit-preview.test.ts tests/kit-metric-scale.test.ts tests/kit-loadout.test.ts tests/player-kit-stat-scale.test.ts",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run test:ts && npm run test:python && npm run build",
+    "check": "npm run lint && npm run typecheck && npm run test:ts && npm run test:python && npm run build && npm run test:e2e",
     "test": "npm run check",
     "test:ts": "node scripts/run-ts-tests.mjs",
     "test:python": "node scripts/run-python-tests.mjs",
@@ -31,7 +31,8 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "test:map-shell": "tsx --test tests/map-shell.test.ts",
-    "test:app": "node --conditions=react-server --import tsx --test tests/app/routes.test.ts"
+    "test:app": "node --conditions=react-server --import tsx --test tests/app/routes.test.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@libsql/client": "0.18.0",
@@ -45,6 +46,7 @@
     "zod": "4.5.4"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/node": "^20.19.0",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",

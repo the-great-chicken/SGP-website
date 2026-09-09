@@ -9,6 +9,7 @@ export const fallbackKitPlayerSkin = {
 };
 
 const profileCacheSeconds = 10 * 60;
+const minecraftSessionServerUrl = process.env.MINECRAFT_SESSION_SERVER_URL?.trim() || "https://sessionserver.mojang.com";
 
 export async function resolveMinecraftSkin(uuid: string) {
   const normalizedUuid = normalizeMinecraftUuid(uuid);
@@ -16,7 +17,7 @@ export async function resolveMinecraftSkin(uuid: string) {
 
   try {
     const response = await fetch(
-      `https://sessionserver.mojang.com/session/minecraft/profile/${normalizedUuid}`,
+      new URL(`/session/minecraft/profile/${normalizedUuid}`, minecraftSessionServerUrl),
       {
         next: { revalidate: profileCacheSeconds },
         signal: AbortSignal.timeout(4_000),

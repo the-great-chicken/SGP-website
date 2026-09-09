@@ -59,7 +59,7 @@ The provided service handles graceful shutdown. Backup consistency depends on ru
 
 ## Build and activate a release
 
-Build on Linux with the same CPU architecture as production, from a clean committed checkout with no `.env` files. The build machine needs Python 3.11+ with `venv` support and `restic` because the release gate runs all Python tests, including encrypted backup/restore. Copy the [generated current-content files](../docs/publishing.md#refresh-current-content) into this checkout before building. Production statistics and player data come from SQLite.
+Build on Linux with the same CPU architecture as production, from a clean committed checkout with no `.env` files. The build machine needs Python 3.11+ with `venv` support and `restic` because the release gate runs all Python tests, including encrypted backup/restore. The same gate also runs Chromium smoke tests; after installing the repository dependencies on a build machine for the first time, run `sudo npx playwright install-deps chromium` once to install Chromium's Linux system libraries. `build-release.sh` downloads the browser binary pinned by `package-lock.json`. Copy the [generated current-content files](../docs/publishing.md#refresh-current-content) into this checkout before building. Production statistics and player data come from SQLite.
 
 ```bash
 export PATH="/opt/node/bin:$PATH"

@@ -37,6 +37,11 @@ function requestBody(init?: RequestInit) {
   return typeof init?.body === "string" ? JSON.parse(init.body) as Record<string, unknown> : null;
 }
 
+function setEnvironmentVariable(name: string, value: string | undefined) {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
+}
+
 test("high-value Next route boundaries preserve auth, proxy, health and cosmetics semantics", async (t) => {
   const temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "sgp-app-boundaries-"));
   const databasePath = path.join(temporaryDirectory, "app.sqlite");
@@ -52,7 +57,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
     "NODE_ENV",
   ]) previousEnvironment.set(name, process.env[name]);
 
-  process.env.NODE_ENV = "production";
+  setEnvironmentVariable("NODE_ENV", "production");
   const databaseUrl = `file:${databasePath}`;
   process.env.DATABASE_URL = databaseUrl;
   process.env.DISCORD_CLIENT_ID = "client-id";
@@ -379,8 +384,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
     applicationDatabaseClient?.close();
     migrationClient.close();
     for (const [name, value] of previousEnvironment) {
-      if (value === undefined) delete process.env[name];
-      else process.env[name] = value;
+      setEnvironmentVariable(name, value);
     }
     await rm(temporaryDirectory, { recursive: true, force: true });
   }

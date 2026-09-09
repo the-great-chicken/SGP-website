@@ -13,6 +13,10 @@ python3 -c 'from pathlib import Path; assert not [p for p in Path(".").glob(".en
 # Item icons are generated separately; don't compile the offline renderer's graphics stack.
 npm ci --ignore-scripts
 npm rebuild esbuild unrs-resolver
+# The full release gate includes the Chromium smoke suite. Browser system
+# dependencies are a one-time build-machine prerequisite; keep the browser
+# binary itself pinned to the Playwright version in package-lock.json.
+npx playwright install chromium
 
 # Release packaging uses the same mandatory gate as CI. Keep its Python environment
 # isolated from the checkout so a release cannot accidentally depend on a developer venv.

@@ -4,7 +4,9 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { JsonValue, KitManifest } from "./kit-manifest";
 
-const manifestPath = path.join(process.cwd(), "data", "kit-manifest.json");
+const manifestPath = process.env.KIT_MANIFEST_PATH
+  ? path.resolve(process.env.KIT_MANIFEST_PATH)
+  : path.join(process.cwd(), "data", "kit-manifest.json");
 
 export async function loadKitManifest(): Promise<KitManifest | null> {
   let source: string;
