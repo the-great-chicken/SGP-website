@@ -4,6 +4,7 @@ import { Vector3 } from "three";
 import { getKitPreview, getKitWeapon } from "../src/lib/kit-preview";
 import { elytraWingPose, rightHandAttachment } from "../src/lib/kit-player-scene";
 import { minecraftRgb, tintKitIcon } from "../src/lib/kit-icon-color";
+import { normalizeMinecraftUuid, parseMinecraftSkinProfile } from "../src/lib/minecraft-skin-profile";
 import type { KitDefinition, KitOperation } from "../src/lib/kit-manifest";
 
 function kit(key: string, items: [string, string?][]): KitDefinition {
@@ -72,4 +73,37 @@ test("armor renderer uses Minecraft mirrored left-limb atlas positions", async (
   const source = await import("node:fs/promises").then(({ readFile }) => readFile(new URL("../src/lib/kit-player-scene.ts", import.meta.url), "utf8"));
   assert.match(source, /leftArm, armor\.chest\.src[\s\S]*?\[32, 48\]/);
   assert.match(source, /side === -1 \? \[0, 16\] : \[16, 48\]/);
+});
+
+test("Minecraft skin profiles accept Mojang textures and preserve the slim model", () => {
+  const hash = "0123456789abcdef".repeat(4);
+  const profile = {
+    properties: [{
+      name: "textures",
+      value: btoa(JSON.stringify({
+        textures: {
+          SKIN: {
+            url: `http://textures.minecraft.net/texture/${hash}`,
+            metadata: { model: "slim" },
+          },
+        },
+      })),
+    }],
+  };
+
+  assert.equal(normalizeMinecraftUuid("ef4b23cf-86c6-4e23-b48d-16f527ae8602"), "ef4b23cf86c64e23b48d16f527ae8602");
+  assert.equal(normalizeMinecraftUuid("not-a-uuid"), null);
+  assert.deepEqual(parseMinecraftSkinProfile(profile), { textureHash: hash, model: "slim" });
+});
+
+test("Minecraft skin profiles reject non-Mojang texture hosts", () => {
+  const hash = "abcdef0123456789".repeat(4);
+  const profile = {
+    properties: [{
+      name: "textures",
+      value: btoa(JSON.stringify({ textures: { SKIN: { url: `https://example.com/texture/${hash}` } } })),
+    }],
+  };
+
+  assert.equal(parseMinecraftSkinProfile(profile), null);
 });

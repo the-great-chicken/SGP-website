@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
+import { getCurrentSession } from "@/auth/session";
 import { ItemSlot } from "@/components/item-slot";
 import { KitPlayerModel } from "@/components/kit-player-model";
 import { loadKitStats } from "@/db/kit-stats";
@@ -19,6 +20,7 @@ import { loadItemImageResolver } from "@/lib/item-renders";
 import { getKitIconSrc, getKitPreview } from "@/lib/kit-preview";
 import { getKitMetricColor, getKitMetricDomains, getKitMetrics } from "@/lib/kit-stats";
 import { loadKitManifest } from "@/lib/kits";
+import { defaultKitPlayerUuid, resolveMinecraftSkin } from "@/lib/minecraft-skin";
 
 type KitPageProps = {
   params: Promise<{ key: string }>;
@@ -52,21 +54,25 @@ export async function generateMetadata({ params }: KitPageProps): Promise<Metada
 }
 
 export default async function KitPage({ params }: KitPageProps) {
-  const [{ key }, manifest, statsSnapshot] = await Promise.all([
+  const [{ key }, manifest, statsSnapshot, session] = await Promise.all([
     params,
     loadKitManifest(),
     loadKitStats(),
+    getCurrentSession(),
   ]);
 
   if (!manifest) {
     notFound();
   }
-  const resolveItemImage = await loadItemImageResolver(manifest);
 
   const kit = manifest.kits.find((candidate) => candidate.key === key);
   if (!kit) {
     notFound();
   }
+  const [resolveItemImage, playerSkin] = await Promise.all([
+    loadItemImageResolver(manifest),
+    resolveMinecraftSkin(session?.player?.uuid ?? defaultKitPlayerUuid),
+  ]);
 
   const allKits = manifest.kits.toSorted(compareKits);
   const metricDomains = getKitMetricDomains(allKits, statsSnapshot);
@@ -161,7 +167,7 @@ export default async function KitPage({ params }: KitPageProps) {
                   })}
                 </div>
                 <div className="kit-model-surface">
-                  <KitPlayerModel preview={getKitPreview(kit)} name={name} />
+                  <KitPlayerModel preview={getKitPreview(kit)} name={name} skin={playerSkin} />
                 </div>
               </div>
               {offhandEntry ? (

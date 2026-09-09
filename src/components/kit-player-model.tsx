@@ -2,8 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { KitPreview } from "@/lib/kit-preview";
+import type { MinecraftSkinModel } from "@/lib/minecraft-skin-profile";
 
-export function KitPlayerModel({ preview, name }: { preview: KitPreview; name: string }) {
+export function KitPlayerModel({ preview, name, skin }: {
+  preview: KitPreview;
+  name: string;
+  skin: { src: string; model: MinecraftSkinModel };
+}) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState(false);
   useEffect(() => {
@@ -51,7 +56,7 @@ export function KitPlayerModel({ preview, name }: { preview: KitPreview; name: s
         disposePlayer(scene);
         renderer.dispose();
       };
-      const player = await createKitPlayer(preview);
+      const player = await createKitPlayer(preview, skin);
       if (disposed) { disposePlayer(player.root); return; }
       rig.add(player.root);
       draw();
@@ -86,7 +91,7 @@ export function KitPlayerModel({ preview, name }: { preview: KitPreview; name: s
     }
     mount().catch(() => { cleanup(); if (!disposed) setError(true); });
     return () => { disposed = true; cleanup(); };
-  }, [preview]);
+  }, [preview, skin.model, skin.src]);
 
   return (
     <div className="kit-player-stage">

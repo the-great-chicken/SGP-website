@@ -1,5 +1,6 @@
 import { BoxGeometry, BufferGeometry, DoubleSide, Float32BufferAttribute, Group, Matrix4, Mesh, MeshLambertMaterial, NearestFilter, ShaderMaterial, SRGBColorSpace, Texture, TextureLoader, type Object3D } from "three";
 import type { KitPreview } from "./kit-preview";
+import type { MinecraftSkinModel } from "./minecraft-skin-profile";
 
 // Minecraft 26.1 ItemInHandLayer: after the arm bone, rotate X -90°, Y 180°,
 // then translate (1/16, 2/16, -10/16) blocks. Our model units are pixels (1/16 block).
@@ -71,7 +72,10 @@ function minecraftCuboidGeometry(
   return geometry;
 }
 
-export async function createKitPlayer(preview: KitPreview) {
+export async function createKitPlayer(
+  preview: KitPreview,
+  skin: { src: string; model: MinecraftSkinModel },
+) {
   const textures = new Map<string, Promise<Texture>>();
   const materials = new Map<string, MeshLambertMaterial>();
   const loader = new TextureLoader();
@@ -96,6 +100,25 @@ export async function createKitPlayer(preview: KitPreview) {
   // HumanoidModel's stationary ITEM pose.
   if (preview.weapon) rightArm.rotation.x = -Math.PI / 10;
   root.add(head, rightArm, leftArm);
+
+  const fallbackSkin = "/generated/kit-models/steve.png";
+  let skinSrc = skin.src;
+  let skinModel = skin.model;
+  let skinMap: Texture;
+  try {
+    skinMap = await texture(skinSrc);
+  } catch {
+    skinSrc = fallbackSkin;
+    skinModel = "wide";
+    skinMap = await texture(skinSrc);
+  }
+  // Legacy pre-1.8 skins are 64x32. They have no independent left-limb or
+  // body/sleeve/trouser overlay regions, and slim arms did not exist yet.
+  const modernSkin = skinMap.image.height >= 64;
+  if (!modernSkin) skinModel = "wide";
+  const armWidth = skinModel === "slim" ? 3 : 4;
+  const rightArmCenter = skinModel === "slim" ? -0.5 : -1;
+  const leftArmCenter = skinModel === "slim" ? 0.5 : 1;
 
   async function cube(
     parent: Object3D,
@@ -147,16 +170,20 @@ export async function createKitPlayer(preview: KitPreview) {
     parent.add(mesh);
   }
 
-  const skin = "/generated/kit-models/steve.png";
   const { armor } = preview;
-  const headSkin = armor.head?.head ? armor.head.src : skin;
+  const headSkin = armor.head?.head ? armor.head.src : skinSrc;
   const jobs = [
     cube(head, headSkin, [8, 8, 8], [0, 0], [0, -4, 0]),
-    cube(head, headSkin, [8, 8, 8], [32, 0], [0, -4, 0], 0.25),
-    cube(root, skin, [8, 12, 4], [16, 16], [0, 6, 0]),
-    cube(rightArm, skin, [4, 12, 4], [40, 16], [-1, 4, 0]),
-    cube(leftArm, skin, [4, 12, 4], [32, 48], [1, 4, 0]),
+    cube(head, headSkin, [8, 8, 8], [32, 0], [0, -4, 0], 0.5),
+    cube(root, skinSrc, [8, 12, 4], [16, 16], [0, 6, 0]),
+    cube(rightArm, skinSrc, [armWidth, 12, 4], [40, 16], [rightArmCenter, 4, 0]),
+    cube(leftArm, skinSrc, [armWidth, 12, 4], modernSkin ? [32, 48] : [40, 16], [leftArmCenter, 4, 0]),
   ];
+  if (modernSkin) jobs.push(
+    cube(root, skinSrc, [8, 12, 4], [16, 32], [0, 6, 0], 0.25),
+    cube(rightArm, skinSrc, [armWidth, 12, 4], [40, 32], [rightArmCenter, 4, 0], 0.25),
+    cube(leftArm, skinSrc, [armWidth, 12, 4], [48, 48], [leftArmCenter, 4, 0], 0.25),
+  );
   if (armor.head && !armor.head.head) jobs.push(cube(head, armor.head.src, [8, 8, 8], [0, 0], [0, -4, 0], 0.5, false, 1));
   if (armor.legs) jobs.push(cube(root, armor.legs.src, [8, 12, 4], [16, 16], [0, 6, 0], 0.25, false, 2));
   if (armor.chest && !armor.chest.wings) jobs.push(
@@ -173,7 +200,12 @@ export async function createKitPlayer(preview: KitPreview) {
     // cuboids overlap by 0.2 units before armor deformation was even applied.
     leg.position.set(side * 2, 12, 0);
     root.add(leg);
-    jobs.push(cube(leg, skin, [4, 12, 4], side === -1 ? [0, 16] : [16, 48], [0, 6, 0]));
+    const skinLegUv: [number, number] = side === -1 || !modernSkin ? [0, 16] : [16, 48];
+    jobs.push(cube(leg, skinSrc, [4, 12, 4], skinLegUv, [0, 6, 0]));
+    if (modernSkin) {
+      const skinOverlayUv: [number, number] = side === -1 ? [0, 32] : [0, 48];
+      jobs.push(cube(leg, skinSrc, [4, 12, 4], skinOverlayUv, [0, 6, 0], 0.25));
+    }
     const armorLegUv: [number, number] = side === -1 ? [0, 16] : [16, 48];
     if (armor.legs) jobs.push(cube(leg, armor.legs.src, [4, 12, 4], armorLegUv, [0, 6, 0], 0.25, false, side === -1 ? 6 : 7));
     if (armor.feet) jobs.push(cube(leg, armor.feet.src, [4, 12, 4], armorLegUv, [0, 6, 0], 0.5, false, side === -1 ? 8 : 9));
