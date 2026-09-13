@@ -15,7 +15,11 @@ export default function HistoryCharactersPage() {
   return (
     <div className="shell page-stack wiki-page history-index-page history-characters-index-page">
       <PageIntro
-        eyebrow="Histoire · Personnages"
+        eyebrow={<>
+          <Link className="history-breadcrumb-link" href="/wiki">Histoire</Link>
+          <span aria-hidden="true"> · </span>
+          Personnages
+        </>}
         title="Personnages"
         description="Les figures récurrentes de la SGP, séparées des profils de joueurs. Les fiches rassemblent ce qui est déjà établi et laissent volontairement de la place au scénariste pour écrire le reste."
         aside={

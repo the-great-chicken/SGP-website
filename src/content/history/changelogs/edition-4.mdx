@@ -1,0 +1,194 @@
+import { ChangelogSection } from "@/components/history/changelog-section";
+import { ChangelogKitHeading } from "@/components/history/changelog-kit-heading";
+import { ChangelogKitInline } from "@/components/history/changelog-kit-inline";
+import { ChangelogSourceHeading } from "@/components/history/changelog-source-heading";
+
+<ChangelogSection id="kits" title="Kits">
+
+La progression des kits a été réinitialisée : vous devrez de nouveau débloquer chaque kit, dont les panneaux sont cachés à d’autres endroits.
+
+### Équilibrage
+
+<ChangelogKitHeading kitKey="eclaireur" color="#00ffff">Éclaireur</ChangelogKitHeading>
+
+- Augmentation de la step height (hauteur qu’on peut monter sans sauter) de 0.5 → 1 bloc
+- Ajout d’une longue-vue
+- Épines III → II sur toutes les pièces d’armure
+
+<ChangelogKitHeading kitKey="archer" color="#55ff55">Archer</ChangelogKitHeading>
+
+- Les flèches spéciales (poison et lenteur) font un effet de splash potion là où elles apparaissent (Cela permet d’appliquer l’effet de poison même si on rate un peu la flèche, mais il sera plus court)
+
+<ChangelogKitHeading kitKey="poseidon" color="#00aaaa">Poséidon</ChangelogKitHeading>
+
+- Ajout d’un trident Impulsion (Riptide pour les anglophones)
+- Ajout d’un effet permanent de Force de Conduit (Respiration Aquatique + Vision améliorée sous l’eau)
+
+### Agilité Aquatique
+
+Suite à l’ajout des souterrains, nous donnons un niveau d'effet d’Agilité Aquatique Boostée (enchantement custom, spécifié dans le lore des bottes du kit) différent pour chaque Kit.
+
+<ChangelogSourceHeading level={4} color="#00ffff">Kit le plus rapide dans l’eau</ChangelogSourceHeading>
+
+- <ChangelogKitInline kitKey="poseidon">Poséidon</ChangelogKitInline>
+
+<ChangelogSourceHeading level={4} color="#00ff00">Kits plus rapides dans l’eau</ChangelogSourceHeading>
+
+- <ChangelogKitInline kitKey="combattant">Combattant</ChangelogKitInline>
+- <ChangelogKitInline kitKey="archer">Archer</ChangelogKitInline>
+
+<ChangelogSourceHeading level={4} color="#ffff00">Kits non ralentis dans l’eau</ChangelogSourceHeading>
+
+- <ChangelogKitInline kitKey="vindicateur">Vindicateur</ChangelogKitInline>
+- <ChangelogKitInline kitKey="roi">Roi</ChangelogKitInline>
+- <ChangelogKitInline kitKey="tank">Tank</ChangelogKitInline>
+- <ChangelogKitInline kitKey="alchimiste">Alchimiste</ChangelogKitInline>
+- <ChangelogKitInline kitKey="eclaireur">Éclaireur</ChangelogKitInline>
+- <ChangelogKitInline kitKey="pigeon">Pigeon</ChangelogKitInline>
+- <ChangelogKitInline kitKey="cancer">Cancer</ChangelogKitInline>
+
+<ChangelogSourceHeading level={4} color="#ff9900">Kit plus lent dans l’eau</ChangelogSourceHeading>
+
+- <ChangelogKitInline kitKey="pyromane">Pyromane</ChangelogKitInline>
+
+<ChangelogSourceHeading level={4} color="#ff0000">Kit prenant des dégâts dans l’eau</ChangelogSourceHeading>
+
+- <ChangelogKitInline kitKey="enderman">Enderman</ChangelogKitInline>
+
+</ChangelogSection>
+
+<ChangelogSection id="qol" title="QOL">
+
+<ChangelogKitHeading kitKey="cancer" color="#aa0000">Cancer</ChangelogKitHeading>
+
+- Les potions se stackent
+
+#### Tous les Kits
+
+- On monte 2 fois plus vite aux échelles/lianes
+
+</ChangelogSection>
+
+<ChangelogSection id="mode-paisible" title="Mode Paisible">
+
+Ajout d’un Kit “<ChangelogKitInline kitKey="peaceful">Mode Paisible</ChangelogKitInline>” qui permet d’être invincible tout en ne pouvant pas mettre de dégâts.
+
+Des particules de cœur apparaissent au-dessus de la tête des joueurs ayant ce kit.
+
+Le kit n’est pas disponible pendant les événements majeurs.
+
+</ChangelogSection>
+
+<ChangelogSection id="quetes" title="Quêtes">
+
+Les quêtes ont été changées, vous verrez !
+
+Les textes sont plus courts, clairs, et concis.
+
+</ChangelogSection>
+
+<ChangelogSection id="cosmetiques" title="Cosmétiques">
+
+Les traînées de particules sont deux fois plus fluides qu’avant.
+
+</ChangelogSection>
+
+<ChangelogSection id="evenements-majeurs" title="Événements majeurs">
+
+Le lancement des événements majeurs est désormais automatisé, avec plusieurs rounds à chaque fois.
+
+<ChangelogSourceHeading color="#674ea7">Poule-Canard-Oie</ChangelogSourceHeading>
+
+- Les cabanes ont un sol vert, et les cages un sol rouge, pour les voir plus facilement
+- Ajout d’une version dans les souterrains
+
+<ChangelogSourceHeading color="#ffbd59">Protéger le Roi</ChangelogSourceHeading>
+
+- Un effet de Bonus de Vie est appliqué aux alliés autour du roi, dont le rayon est signalé par des particules
+- L’annonce du choix d’un Roi ainsi que de la mort d’un Roi sont plus visibles
+
+<ChangelogSourceHeading color="#ff914d">Cache-Cache</ChangelogSourceHeading>
+
+Ajout de l’événement majeur Cache-Cache
+
+</ChangelogSection>
+
+<ChangelogSection id="evenements-mineurs" title="Événements mineurs">
+
+Il ne peut plus y avoir le même événement mineur 2 fois d’affilée.
+
+<ChangelogSourceHeading color="#0000aa">Blackout</ChangelogSourceHeading>
+
+Suppression de l’événement mineur BLACKOUT
+
+<ChangelogSourceHeading color="#ffffff">Confinement</ChangelogSourceHeading>
+
+Ajout de spawns dans les souterrains, et réduction de la durée de 3 min à 2 min 30 s.
+
+<ChangelogSourceHeading color="#1155cc">Smol</ChangelogSourceHeading>
+
+Ajout de l’événement mineur SMOL : la taille de tous les joueurs est divisée par 2 pendant 2 min 30 s.
+
+<ChangelogSourceHeading color="#ffec4e">Bounty</ChangelogSourceHeading>
+
+Ajout de l’événement mineur BOUNTY : certaines personnes ont une prime sur leur tête.
+
+S'ils survivent 2 min 30 s ils gagnent une récompense, sinon c’est leur tueur qui la gagne.
+
+</ChangelogSection>
+
+<ChangelogSection id="map" title="Map">
+
+- Suppression de la Boîte Noire (ancienne zone contenant command blocks et salles de lobby)
+- Ajout d’une structure au niveau de cette ancienne Boîte Noire
+- Ajout de passages secrets supplémentaires
+- Ajout de Souterrains qui couvrent presque l’entièreté de la surface de l’Arène
+- Ajout d’un spawn dans le Sanctuaire (nouvelle zone dans les Souterrains)
+- Remplacement du spawn Jump par le spawn Salle de Lave
+- Rework de la Salle de Lave pour qu’elle soit moins difficile à naviguer
+- Rework du Dédale (près de l’ancien spawn Jump)
+- Ajout de décoration au sol (coraux, plantes, blocs différents,...)
+- Ajout de 7 nouveaux Lieux Nommés
+- Amélioration de l’éclairage dans la map
+
+### Décor
+
+Ajout d’un Décor autour de l’arène (merci Punking). Cette dernière ne semble donc plus flotter dans le vide !
+
+</ChangelogSection>
+
+<ChangelogSection id="interface-utilisateur" title="Interface utilisateur">
+
+<ChangelogSourceHeading color="#38761d">Minecraft</ChangelogSourceHeading>
+
+- Version du serveur passée de 1.20.2 à 1.21.1 (Vous pouvez vous connecter en 1.21)
+- Les salles de choix du kit / spawn / cosmétiques ont été refaites, et flottent désormais au-dessus de l’arène.
+- Ajout d’un emplacement affichant les contributeurs, dans le lobby
+- Les icônes de kit à côté des pseudos se mettent désormais à jour dans le tab
+- Amélioration de la visibilité des messages dans le chat vous étant adressés
+- Le nombre de Lieux restants à découvrir est désormais affiché lorsque vous en découvrez un nouveau
+
+</ChangelogSection>
+
+<ChangelogSection id="resource-pack" title="Resource pack">
+
+- L’opacité de l’eau est abaissée
+- Amélioration du logo
+- Ajout d’une texture de piliers de dark prismarine
+- Amélioration des icônes des kits
+- Légère amélioration du GUI (coeurs, nourriture,...)
+
+</ChangelogSection>
+
+<ChangelogSection id="correction-de-bugs" title="Correction de bugs">
+
+- On pouvait casser les tableaux
+- Certains événement majeurs ne désactivaient pas les événement mineurs
+
+</ChangelogSection>
+
+<ChangelogSection id="en-arriere-plan" title="En Arrière-Plan">
+
+Le code du serveur a été entièrement réécrit, en Datapack (fichiers de code), au lieu de Command Blocks. Il est également Open-Source et entièrement indépendant du monde, ce qui fait que vous pouvez le mettre en place sur votre propre serveur si vous le désirez.
+
+</ChangelogSection>

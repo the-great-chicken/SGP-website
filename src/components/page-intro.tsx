@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 type PageIntroProps = {
-  eyebrow: string;
+  eyebrow: ReactNode;
   title: string;
   description: string;
   aside?: ReactNode;
@@ -19,4 +19,3 @@ export function PageIntro({ eyebrow, title, description, aside }: PageIntroProps
     </section>
   );
 }
-

@@ -1,11 +1,29 @@
-import { Bug, Feather, Sparkles, Swords, type LucideIcon } from "lucide-react";
+import {
+  Bug,
+  Crown,
+  Feather,
+  MessageCircle,
+  Search,
+  ServerCrash,
+  Sparkles,
+  Swords,
+  Utensils,
+  WifiOff,
+  type LucideIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 const icons = {
   bug: Bug,
+  crown: Crown,
   feather: Feather,
+  message: MessageCircle,
+  search: Search,
+  server: ServerCrash,
   sparkles: Sparkles,
   swords: Swords,
+  utensils: Utensils,
+  wifi: WifiOff,
 } satisfies Record<string, LucideIcon>;
 
 type HistoryHighlightProps = {

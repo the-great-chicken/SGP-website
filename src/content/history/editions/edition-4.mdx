@@ -2,6 +2,8 @@ import { ArchiveGallery } from "@/components/history/archive-gallery";
 import { HistoryClosingNote } from "@/components/history/history-closing-note";
 import { HistoryCharacterLink } from "@/components/history/history-character-link";
 import { HistoryEventGrid } from "@/components/history/history-event-grid";
+import { HistoryHighlight } from "@/components/history/history-highlight";
+import { HistoryPlayerLink } from "@/components/history/history-player-link";
 import { HistorySection, HistoryLead } from "@/components/history/history-section";
 
 <article className="history-article">
@@ -99,6 +101,28 @@ Plutôt que de laisser un trou dans le programme, **Protéger le Roi** est lanc�
 
 </HistorySection>
 
+<HistorySection eyebrow="Quelques moments" title="Trois souvenirs de la soirée">
+
+<div className="history-highlight-grid">
+  <HistoryHighlight icon="bug" title="Mindroide contre le vide">
+
+  En début de soirée, un bug de respawn renvoie <HistoryPlayerLink name="Mindroide" /> dans le vide ou le lobby à chacune de ses morts, jusqu’à ce que le problème soit corrigé en direct.
+
+  </HistoryHighlight>
+  <HistoryHighlight icon="search" title="Sauvez pslunallena">
+
+  Pendant Cache-cache, pslunallena est déconnecté au milieu de l’événement. Les autres joueurs essaient alors de le « sauver » pendant que la partie continue.
+
+  </HistoryHighlight>
+  <HistoryHighlight icon="crown" title="Le roi dans la lave">
+
+  Lors du second passage de Protéger le Roi, l’un des joueurs désignés comme roi — celui que son équipe doit protéger — se retrouve dans la lave. À **23 h 36**, SoulsDecaying réagit simplement : « LE ROI DANS LA LAVE ».
+
+  </HistoryHighlight>
+</div>
+
+</HistorySection>
+
 <HistorySection eyebrow="Fin de soirée" title="Une course qui continue après le programme">
 
 Vers **23 h 43**, les manches prévues sont terminées. Il reste pourtant encore quelque chose à décider : les deux camps n’ont pas fini leurs quêtes. Les organisateurs poussent alors les joueurs à retourner voir leurs PNJ, récupérer leurs dernières graines et faire gagner leur côté.
@@ -112,59 +136,5 @@ Vers **23 h 43**, les manches prévues sont terminées. Il reste pourtant encore
 Peu après minuit, la jauge du Grand Poulet atteint enfin 100 %. Ses alliés remportent la compétition et débloquent la récompense prévue pour le camp vainqueur. Le Canarchimage reconnaît que les partisans de son rival ont été les meilleurs ; leur duel se termine, pour une fois, **à la régulière**.
 
 </HistoryClosingNote>
-
-<HistorySection eyebrow="Archives" title="L’invitation originale">
-
-<ArchiveGallery
-  label="Invitation de la quatrième Soirée du Grand Poulet"
-  items={[
-    {
-      src: "/history/editions/4/archive/invitation-1.png",
-      alt: "Première page de l’invitation à la quatrième Soirée du Grand Poulet",
-      caption: "Page 1",
-      width: 1920,
-      height: 1080,
-    },
-    {
-      src: "/history/editions/4/archive/invitation-2.png",
-      alt: "Deuxième page de l’invitation à la quatrième Soirée du Grand Poulet",
-      caption: "Page 2",
-      width: 1920,
-      height: 1080,
-    },
-    {
-      src: "/history/editions/4/archive/invitation-3.png",
-      alt: "Troisième page de l’invitation à la quatrième Soirée du Grand Poulet",
-      caption: "Page 3",
-      width: 1920,
-      height: 740,
-    },
-    {
-      src: "/history/editions/4/archive/invitation-4.png",
-      alt: "Quatrième page de l’invitation à la quatrième Soirée du Grand Poulet",
-      caption: "Page 4",
-      width: 1920,
-      height: 1080,
-    },
-  ]}
-/>
-
-</HistorySection>
-
-<HistorySection eyebrow="Archives" title="Le planning initialement annoncé">
-
-<ArchiveGallery
-  label="Planning annoncé pour la quatrième édition"
-  items={[
-    {
-      src: "/history/editions/4/archive/planning.png",
-      alt: "Planning original annoncé pour la quatrième édition de la Soirée du Grand Poulet",
-      width: 1080,
-      height: 1080,
-    },
-  ]}
-/>
-
-</HistorySection>
 
 </article>

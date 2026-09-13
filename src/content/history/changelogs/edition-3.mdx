@@ -1,0 +1,176 @@
+import { ChangelogSection } from "@/components/history/changelog-section";
+import { ChangelogKitHeading } from "@/components/history/changelog-kit-heading";
+import { ChangelogSourceHeading } from "@/components/history/changelog-source-heading";
+
+<ChangelogSection id="kits" title="Kits">
+
+### Équilibrage
+
+<ChangelogKitHeading kitKey="pigeon" color="#999999">Pigeon</ChangelogKitHeading>
+
+- Jump Boost IV → III
+- 3 → 2 Boosts par kill
+
+<ChangelogKitHeading kitKey="poseidon" color="#00aaaa">Poséidon</ChangelogKitHeading>
+
+- Première Pomme d’or enchantée après 1 → 2 kills
+- Pomme d’or enchantée donne 8 → 6 coeurs d’absorption
+- Pomme d’or enchantée régénère pendant 20 → 10 secondes
+- Lenteur III → IV
+
+<ChangelogKitHeading kitKey="tank" color="#0000ff">Tank</ChangelogKitHeading>
+
+- 5 → 3 Pommes d’or de base
+
+<ChangelogKitHeading kitKey="roi" color="#ffff55">Roi</ChangelogKitHeading>
+
+- 5 → 4 Pommes d’or de base
+- 1.5 coeurs de régénération lors d’un kill
+
+<ChangelogKitHeading kitKey="alchimiste" color="#d13dd1">Alchimiste</ChangelogKitHeading>
+
+- 12 → 8 potions de soin de base
+- 16 → 10 potions de dégâts de base
+- 4 → 2 potions de soin par kill
+- 6 → 3 potions de dégâts par kill
+- Ajout d’une potion de blindness de 5 secondes de base
+- 1 potion de blindness tous les 2 kills
+
+<ChangelogKitHeading kitKey="eclaireur" color="#00ffff">Éclaireur</ChangelogKitHeading>
+
+- Ajout d’une arbalète de base, avec 3 flèches
+- 2 flèches par kill
+
+<ChangelogKitHeading kitKey="archer" color="#55ff55">Archer</ChangelogKitHeading>
+
+- Ajout d’un effet de Speed I permanent
+- 2 → 3 Pommes d’or de base
+
+</ChangelogSection>
+
+<ChangelogSection id="cosmetiques" title="Cosmétiques">
+
+Ajout d’une salle de Cosmétiques, accessible depuis l’Accueil (salle avant le choix des kits)
+
+Dans cette salle, vous pouvez choisir quels cosmétiques activer.
+
+Vous avez accès à des :
+
+- Traînées de Particules
+- Force des Traînées de Particules (à quel point la Traînée est intense)
+- Kill Effects
+
+</ChangelogSection>
+
+<ChangelogSection id="quetes" title="Quêtes">
+
+Le Corbeautaniste est là !
+
+Il vous distribuera des quêtes à faire qui vous permettront de débloquer des cosmétiques (entre autres).
+
+Mais attention : tous les cosmétiques ne sont pas déblocables via le Corbeautaniste ! Certains sont exclusifs à d’autres activités.
+
+</ChangelogSection>
+
+<ChangelogSection id="evenements-majeurs" title="Événements majeurs">
+
+<ChangelogSourceHeading color="#0b5394">Invasion</ChangelogSourceHeading>
+
+- Changement de la répartition des équipes : ⅔ de Défenseurs et ⅓ d’Attaquants au lieu de ½ et ½
+- Modification du passage le plus emprunté pour qu’il soit plus difficile à utiliser pour les Attaquants
+- Blocage des vignes qui permettaient d’arriver facilement au milieu du toit
+- Suppression de la Résistance aux Projectiles des Défenseurs
+- Les Défenseurs doivent maintenant survivre 25 → 16 secondes × &lt;nombre de joueurs total&gt; pour gagner
+
+<ChangelogSourceHeading color="#674ea7">Poule-Canard-Oie</ChangelogSourceHeading>
+
+- Réparation du bug qui empêchait les gens de réapparaitre et les laissaient coincés dans le spawn.
+- Changement du système de détection pour que l’effet de force soit appliqué dès qu’un joueur regarde un ennemi de l’équipe qu’il est censé chasser, et non après plusieurs secondes.
+
+<ChangelogSourceHeading color="#666666">Chasse au Pigeon</ChangelogSourceHeading>
+
+Réparation de plusieurs bugs mineurs.
+
+</ChangelogSection>
+
+<ChangelogSection id="evenements-mineurs" title="Événements mineurs">
+
+<ChangelogSourceHeading color="#ffffff">Confinement</ChangelogSourceHeading>
+
+Ajout d’un message nous prévenant lorsqu’on est en extérieur.
+
+<ChangelogSourceHeading color="#f1c232">Lootdrop</ChangelogSourceHeading>
+
+Réparation d’un bug qui faisait que les lootdrops n’apparaissaient pas (oups, my bad)
+
+Ajout d’un effet de Balise en particules, qui indique là où le Lootdrop est apparu, afin de le repérer plus facilement.
+
+</ChangelogSection>
+
+<ChangelogSection id="map" title="Map">
+
+- Ajout d’un grand nombre de panneaux en Intérieur, qui donne les directions des Points d’Intérêt les plus proches
+- Ajout d’un téléporteur au temple, qui téléporte dans les vallons après quelques secondes
+- Suppression du spawn Temple, et ajout du spawn Maison (1er étage)
+- Déplacement léger du spawn Labyrinthe
+- Redesign de la Maison, avec l’ajout de combles
+- Ajout d’une grande “Salle de Lave” sous terre, située entre le Labyrinthe et la Maison
+- Ajout de passages secrets
+- Remplacement des Soul Lanterns en Lanterns en Intérieur, pour une apparence plus chaleureuse
+- Extension du chemin principal en gravier, et transformation en blackstone.
+- Ajout de plus de moyens de monter rapidement
+- Pleins d’autres petites modifications
+
+</ChangelogSection>
+
+<ChangelogSection id="interface-utilisateur" title="Interface utilisateur">
+
+<ChangelogSourceHeading color="#38761d">Minecraft</ChangelogSourceHeading>
+
+- Version du serveur passée de 1.20.1 à 1.20.2
+- Affichage de l’icône du kit possédé à côté du pseudo du joueur, et sur les panneaux des kits
+- Ajout d’un pattern custom au bouclier du Tank
+- Changement des panneaux des kits pour qu’ils soient plus distinctifs des autres panneaux dans la map
+
+<ChangelogSourceHeading color="#2a62c5">Discord</ChangelogSourceHeading>
+
+- Ajout de rôles discord correspondant aux titres distribués lors des dernières éditions, afin de pouvoir les accumuler
+- Séparation en plusieurs catégories : la catégorie “Discussion”, permanente, et la catégorie “SGP 3e édition” par exemple, affichée uniquement pendant la soirée, aux participants
+- Ajout d’un effet de résistance in-game pendant les messages d’annonces, pour contrer le spawn bow
+- Le serveur discord est maintenant “Communautaire” (donne accès au Guide du Serveur, au choix des salons,...)
+- Suppression du salon vocal Général EN (la Soirée du Grand Poulet ne va pas viser de public International pour le moment)
+- Renommage de la “Soirée PvP Suprême (de Poulet)” en “Soirée du Grand Poulet”, ainsi que suppression du terme “Haute-Cour” pour privilégier “Arène”. Les termes pouvaient prêter à confusion, et les jeux de mots n’étaient pas forcément clairs
+
+</ChangelogSection>
+
+<ChangelogSection id="resource-pack" title="Resource pack">
+
+- Baissé la hauteur de la texture du feu et du bouclier
+- Changement de la couleur et texture des Weeping Vines pour aller avec le thème
+- Passage de la police d’écriture en 16\*16 au lieu de 8\*8
+- Changement de la texture de la boussole “Où sont les Poulets” permettant de mettre tous les joueurs en surbrillance pendant un instant
+- Ajout d’une texture custom pour :
+    - la Hotbar
+    - le Sélecteur
+    - la OffHand
+    - l’Inventaire
+    - les effets de potion dans l'inventaire et dans le hud (en haut à droite)
+    - la Barre d’XP
+    - la Barre d’Armure
+    - la Barre de Nourriture
+    - les Boutons des Menus (Échap)
+- Ajout de 12 icônes correspondant aux 12 kits
+- Ajout d’un logo dans le Menu du Jeu (Échap)
+
+</ChangelogSection>
+
+<ChangelogSection id="correction-de-bugs" title="Correction de bugs">
+
+- Les projectiles (flèches, perles, potions,...) pouvaient être déviées si on les lançait à un moment précis lors d’un saut
+- La boss bar ne s’affichait pas pour les nouveaux joueurs
+- La trapdoor du bunker se faisait supprimer à cause d'un événement
+- Les boosts du Pigeon ne se stackaient pas
+- La grande quantité de Têtes dans la Salle du Chercheur Devant l’Éternel causaient de grosses chutes de FPS (surtout avec l’option "3d Skull Blocks" du mod 3d Skins de Lunar)
+- Les pièges avec de la lave qui coule ne fonctionnaient pas
+
+</ChangelogSection>

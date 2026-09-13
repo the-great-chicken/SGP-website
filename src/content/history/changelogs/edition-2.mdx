@@ -1,0 +1,196 @@
+import { ChangelogSection } from "@/components/history/changelog-section";
+import { ChangelogKitHeading } from "@/components/history/changelog-kit-heading";
+import { ChangelogSourceHeading } from "@/components/history/changelog-source-heading";
+
+<ChangelogSection id="kits" title="Kits">
+
+### Apparence
+
+Ajout d’ornements (vanilla) à toutes les pièces d’armure de tous les kits.
+
+Utilisation de couleurs custom (exemple : #FFFFFF c’est blanc) dans les noms des items (feature ajoutée dans Minecraft 1.16).
+
+### Équilibrage
+
+<ChangelogKitHeading kitKey="vindicateur" color="#00aa00">Vindicateur</ChangelogKitHeading>
+
+- Le totem est obtenu après 1 kill et non de base
+- Plastron : Protection II → Aucun
+- Hache : 7,5 dégâts → 7 dégâts
+- Ajout d’une Potion de Faiblesse I de 5 secondes, de base et obtenable 1 fois tous les 3 kills
+
+<ChangelogKitHeading kitKey="poseidon" color="#00aaaa">Poséidon</ChangelogKitHeading>
+
+- La Pomme d’or enchantée est obtenu après 1 kill et non de base
+- Slowness II → III
+- 24 → 15 tridents de base
+- 2 → 3 tridents par kill
+
+<ChangelogKitHeading kitKey="roi" color="#ffff55">Roi</ChangelogKitHeading>
+
+- Bottes : Protection I → Aucun et Projectile Protection I → Aucun
+- Casque : Projectile Protection I → II
+
+<ChangelogKitHeading kitKey="pyromane" color="#ffaa00">Pyromane</ChangelogKitHeading>
+
+- La durée de brûlure à l’extérieur du feu a été divisée par 2
+- 6 → 5 feu d’artifices de base
+- Le feu fait brûler instantanément lorsqu’un joueur en touche
+- 5 → 8 dégâts des feu d’artifices
+
+<ChangelogKitHeading kitKey="enderman" color="#aa00aa">Enderman</ChangelogKitHeading>
+
+- 3 → 2 perles par kill
+- 32 steaks → 64 chorus fruit
+
+<ChangelogKitHeading kitKey="genji" color="#00ff00">Genji</ChangelogKitHeading>
+
+- 30 → 18 shuriken
+- 27 → 22 dégâts des shuriken
+- 110 → 80 dégâts de la Dragonblade
+- Coût de l’ultimate augmenté de 15 %
+- 9 → 14 dispersion du tir secondaire
+
+</ChangelogSection>
+
+<ChangelogSection id="evenements-majeurs" title="Événements majeurs">
+
+<ChangelogSourceHeading color="#0b5394">Invasion</ChangelogSourceHeading>
+
+Création de l’événement majeur Invasion.
+
+<ChangelogSourceHeading color="#674ea7">Poule-Canard-Oie</ChangelogSourceHeading>
+
+Création de l’événement majeur Poule-Canard-Oie.
+
+<ChangelogSourceHeading color="#e69138">Protéger le Roi</ChangelogSourceHeading>
+
+- Déplacement des spawns afin qu’ils soient plus équitables (ils sont maintenant à la même hauteur)
+- Les rois sont maintenant également visibles par l’équipe ennemie
+- Les rois sont en glowing d’une couleur plus foncée
+- Passage en mode spectateur lors de la mort, plutôt que d’être envoyé dans le Panorama.
+
+</ChangelogSection>
+
+<ChangelogSection id="evenements-mineurs" title="Événements mineurs">
+
+<ChangelogSourceHeading color="#000000">Blackout</ChangelogSourceHeading>
+
+Ajout de l’événement mineur Blackout : pendant 2 minutes tous les blocs blancs deviennent noirs et la nuit tombe.
+
+<ChangelogSourceHeading color="#ffffff">Confinement</ChangelogSourceHeading>
+
+Le Confinement a été grandement retravaillé, suite à vos retours :
+
+- Réduction de la probabilité de cet évènement mineur comparé aux autres
+- Réduction de la durée (4min 30s → 3min)
+- Ajout d’un timer dans la barre d’xp
+- Amélioration de la détection : beaucoup moins de chances de mourir en intérieur (comme anciennement dans le rdc de la grange par exemple)
+- Lors de l’event la salle des spawns est désactivée, les joueurs sont à la place téléportés au hasard en intérieur après avoir choisi leur kit (58 points de spawn possibles)
+
+<ChangelogSourceHeading color="#f1c232">Lootdrop</ChangelogSourceHeading>
+
+Rework complet du fonctionnement de Lootdrop :
+
+- Les lootdrops sont désormais séparés des events mineurs, donc il y en aura beaucoup plus souvent.
+- Remplacement des ~20 coffres prédéfinis par une loot table : chaque coffre est en moyenne beaucoup moins OP que ceux de la 1ère édition, mais il est possible d’obtenir des items très puissants avec beaucoup de chance
+
+Cela permet à plus de joueurs de profiter de ces coffres, sans rendre invincibles ces derniers.
+
+<ChangelogSourceHeading color="#d13dd1">Magic</ChangelogSourceHeading>
+
+Changement de certains effets :
+
+- Ajouté l’effet d’obscurité
+- Enlevé l’effet de night vision
+- Nerf les effets de Force, Speed et Regen du niveau II au niveau I
+
+<ChangelogSourceHeading color="#990000">Réflexes</ChangelogSourceHeading>
+
+Rework de Réflexes : au lieu que les x derniers joueurs à appuyer sur le bouton meurent, chacun a 4 secondes pour appuyer dessus.
+
+Désormais les gens explosent au lieu de simplement se faire /kill.
+
+<ChangelogSourceHeading color="#4a86e8">Shuffle</ChangelogSourceHeading>
+
+Suppression de l’événement mineur Shuffle
+
+</ChangelogSection>
+
+<ChangelogSection id="lieux-nommes" title="Lieux nommés">
+
+Ajout d’un système de lieux nommés :
+
+- 30 lieux caractéristiques ont été nommés
+- Un titre est affiché en gros lorsqu’on entre dans un de ces lieux pour la première fois
+- Les fois suivantes le nom est simplement affiché dans l’actionbar (au-dessus de la hotbar)
+
+</ChangelogSection>
+
+<ChangelogSection id="map" title="Map">
+
+- Redesign complet de l’intérieur
+- Ajout de plusieurs salles et couloirs
+- Redesign de la Grange
+- Redesign de la Maison + Abri
+- Redesign léger du labyrinthe et interdiction des enderpearls à l’intérieur
+- Ajout du Pavillon et du Taijitu
+- Overhaul de la Salle de Repos
+- Relocalisation du KOTL à côté de la maison
+- Extension, et, en soi, création des mâchicoulis
+- Ajout de 3 jumps principaux, + une multitude de petits jumps à travers la map
+- Redesign de la Zone Fun
+- Ajout de plus de moyens de remonter depuis tout en bas (escaliers rapides, lianes, colonnes d'eau...)
+- Ajout de plusieurs plateformes de slime blocks
+- Agrandissement des entrées vers l’intérieur, ainsi qu’ajout de quelques unes
+- Les rails sont désormais sur des escaliers pour les rendre plus agréables à monter sans minecart + ajout d'un chemin de minecart
+- Fix trous impossibles à sortir (mort lente à la place, ou possible de sortir si on nous tape)
+- Modification de l’éclairage grâce aux light blocks
+- Panneau de l’alchimiste relocalisé, d’autres panneaux légèrement déplacés
+- Pleins d’autres petites modifications
+
+</ChangelogSection>
+
+<ChangelogSection id="interface-utilisateur" title="Interface utilisateur">
+
+- Version du serveur passée de 1.15.2 à 1.20.1.
+- Lors des freezes annonçant les messages sur discord, ajout d’un effet de faiblesse pour empêcher les kills des gens proches les uns des autres à ce moment. Augmentation de la durée de 10 à 20 secondes.
+- Les 2 panneaux pour changer de salle depuis celle des kits ont été rendus plus facilement distinguables, afin de moins souvent se tromper. (couleurs différentes et symétrie brisée)
+- Spawns déplacés :
+    - Chemin de Garde → Gallerie
+    - KOTL → Vallons
+    - Snek → Pavillon
+- Ajout d’indices sur la position des kits que l’on n’a pas encore trouvé (nom du lieu nommé le plus proche)
+- Remplacement de panneaux non-interactifs par des Text Display
+- Ajout du système de Préfixes/Titles (ceux qui en ont obtenu à la dernière édition doivent les voir devant leur pseudo dans le chat)
+- Changé la nuance du violet des panneaux “ALÉATOIRE”
+
+</ChangelogSection>
+
+<ChangelogSection id="resource-pack" title="Resource pack">
+
+Le serveur requiert désormais d’utiliser le resource pack pour pouvoir se connecter.
+
+### Textures
+
+- Supprimé la texture custom de slime
+- Supprimé la texture custom de bedrock
+- Supprimé la texture custom de verre
+- Ajouté une texture custom pour les redstone lamps afin qu’elles ressemblent à des “soul redstone lamps”
+
+</ChangelogSection>
+
+<ChangelogSection id="correction-de-bugs" title="Correction de bugs">
+
+- Certains items donnés lors de kills ne se stackaient pas
+- Les projectiles (flèches, perles, potions,...) étaient affectés par la vélocité du joueur (feature de base de Minecraft 1.9+)
+- Les flèches avaient un aspect aléatoire, c’est-à-dire qu’elles ne partent pas exactement dans la même direction même si le joueur ne bouge pas entre les deux (feature de base de Minecraft 1.9+)
+- Le bouclier avait un délai de 250ms avant de pouvoir bloquer les dégâts
+- Les collisions entre les joueurs étaient activées
+- Des joueurs avaient un K/D inférieur à 50 % (on leur donne regen en plus, maintenant)
+- Les panneaux interactif (kits, spawns,...) arrêtaient de fonctionner après un certain temps
+- Les perles pouvaient se faire supprimer par le clearlag
+- Lors de la connection de tous les joueurs au début de la soirée, ils recevaient le message d’erreur “Connection Throttled” et ne pouvaient pas se connecter
+- Le bot discord qui déplaçait les gens entre les salons vocaux mettait beaucoup de temps à agir, jusqu’à ne plus fonctionner vers la fin de la 1ère édition
+
+</ChangelogSection>

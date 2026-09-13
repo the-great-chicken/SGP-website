@@ -122,15 +122,15 @@ export default function WikiPage() {
             <span className="history-card-action">Lire le récit <ArrowRight size={16} /></span>
           </Link>
 
-          <article className="history-next-card">
+          <Link className="history-next-card is-link" href="/wiki/changelogs/4">
             <span className="round-icon"><ScrollText size={19} aria-hidden="true" /></span>
-            <p className="eyebrow">Archives</p>
-            <h2>Les documents d’origine</h2>
+            <p className="eyebrow">Changelogs</p>
+            <h2>Les notes de mise à jour</h2>
             <p>
-              Invitations, teasers, présentations, sneak peeks et changelogs pourront être regroupés ici si un vrai mode de consultation se justifie.
+              Les changelogs des éditions 2, 3 et 4, pour retrouver les changements apportés aux kits, aux événements, à l’Arène et au serveur.
             </p>
-            <span className="history-status-chip">À évaluer</span>
-          </article>
+            <span className="history-card-action">Parcourir les changelogs <ArrowRight size={16} /></span>
+          </Link>
         </div>
       </section>
 

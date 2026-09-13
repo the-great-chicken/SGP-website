@@ -1,4 +1,5 @@
 import { CalendarDays, Gamepad2, MapPinned } from "lucide-react";
+import Link from "next/link";
 import type { HistoryEdition } from "@/content/history/editions";
 
 type EditionHeroProps = {
@@ -9,7 +10,11 @@ export function EditionHero({ edition }: EditionHeroProps) {
   return (
     <header className="history-edition-hero">
       <div className="history-edition-hero-copy">
-        <p className="eyebrow">Histoire · Édition {edition.number}</p>
+        <p className="eyebrow">
+          <Link className="history-breadcrumb-link" href="/wiki">Histoire</Link>
+          <span aria-hidden="true"> · </span>
+          Édition {edition.number}
+        </p>
         <p className="history-edition-kicker">{edition.shortTitle}</p>
         <h1>Édition {edition.number}</h1>
         {edition.subtitle ? <p className="history-edition-subtitle">{edition.subtitle}</p> : null}

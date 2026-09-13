@@ -1,6 +1,7 @@
 import { ArchiveGallery } from "@/components/history/archive-gallery";
 import { HistoryClosingNote } from "@/components/history/history-closing-note";
 import { HistoryEventGrid } from "@/components/history/history-event-grid";
+import { HistoryHighlight } from "@/components/history/history-highlight";
 import { HistoryPlayerLink } from "@/components/history/history-player-link";
 import { HistoryCharacterLink } from "@/components/history/history-character-link";
 import { HistoryLead, HistorySection } from "@/components/history/history-section";
@@ -104,7 +105,29 @@ Le Grand Poulet n’apprécie pas du tout d’avoir servi d’invitation ambulan
 
 La réponse est immédiate : **duel**. Le combat tourne très vite court. À 00 h 14, l’Oielchimiste est battue par le Grand Poulet ; quelques secondes plus tard, après un très sobre « **get rekt** », elle est expulsée du serveur.
 
-Le Grand Poulet ne disparaît pas pour autant. Il rejoint encore le PvP libre pendant quelques minutes, combat avec les joueurs puis quitte vers 00 h 21. Lors de l’annonce finale, <HistoryPlayerLink name="Wayzir" /> reçoit le titre **[Sauveur de LGP]** pour sa découverte accidentelle, et le Grand Poulet ajoute une dernière punition : il promet de **nerf le kit Alchimiste**.
+Lors de l’annonce finale, <HistoryPlayerLink name="Wayzir" /> reçoit le titre **[Sauveur de LGP]** pour sa découverte accidentelle, et le Grand Poulet ajoute une dernière punition : il promet de **nerf le kit Alchimiste**.
+
+</HistorySection>
+
+<HistorySection eyebrow="Quelques moments" title="Trois souvenirs de la soirée">
+
+<div className="history-highlight-grid">
+  <HistoryHighlight icon="message" title="« BAH ALORS BAFY »">
+
+  Après une première manche d’Invasion très courte, Bafy demande aux Défenseurs de mieux s’organiser et de bloquer les escaliers. Quelques minutes plus tard, ils lui renvoient collectivement « BAH ALORS BAFY » et « ON S’EST PAS ORGANISE????? ».
+
+  </HistoryHighlight>
+  <HistoryHighlight icon="bug" title="« Les rouges ont gagné en vrai »">
+
+  Pendant Protéger le Roi, des joueurs censés être morts réapparaissent en pleine manche. L’arbitrage finit par tomber malgré le bug : « les rouges ont gagné en vrai ».
+
+  </HistoryHighlight>
+  <HistoryHighlight icon="swords" title="Le Grand Poulet retourne en FFA">
+
+  Après avoir battu puis expulsé l’Oielchimiste, le Grand Poulet reste encore quelques minutes dans la Haute-Cour pour combattre avec les joueurs avant de quitter vers 00 h 21.
+
+  </HistoryHighlight>
+</div>
 
 </HistorySection>
 
@@ -113,59 +136,5 @@ Le Grand Poulet ne disparaît pas pour autant. Il rejoint encore le PvP libre pe
 Les titres sont publiés vers **00 h 40**, mais le serveur reste ouvert. Les derniers joueurs continuent de se battre et de traîner dans la Haute-Cour pendant plus d’une heure ; le serveur ne ferme finalement qu’à **02 h 01**.
 
 </HistoryClosingNote>
-
-<HistorySection eyebrow="Archives" title="L’invitation originale">
-
-<ArchiveGallery
-  label="Invitation de la deuxième Soirée PvP Suprême (de Poulet)"
-  items={[
-    {
-      src: "/history/editions/2/archive/invitation-1.png",
-      alt: "Première page de l’invitation à la deuxième Soirée PvP Suprême de Poulet",
-      caption: "Page 1",
-      width: 1920,
-      height: 1080,
-    },
-    {
-      src: "/history/editions/2/archive/invitation-2.png",
-      alt: "Deuxième page de l’invitation présentant la Haute-Cour et le Grand Poulet",
-      caption: "Page 2",
-      width: 1920,
-      height: 1080,
-    },
-    {
-      src: "/history/editions/2/archive/invitation-3.png",
-      alt: "Troisième page de l’invitation présentant le PvP, les kits et les grands événements",
-      caption: "Page 3",
-      width: 1920,
-      height: 740,
-    },
-    {
-      src: "/history/editions/2/archive/invitation-4.png",
-      alt: "Quatrième page de l’invitation présentant l’esprit communautaire et l’horaire de la soirée",
-      caption: "Page 4",
-      width: 1920,
-      height: 1080,
-    },
-  ]}
-/>
-
-</HistorySection>
-
-<HistorySection eyebrow="Archives" title="Le planning initialement annoncé">
-
-<ArchiveGallery
-  label="Planning annoncé pour la deuxième édition"
-  items={[
-    {
-      src: "/history/editions/2/archive/planning.png",
-      alt: "Planning original de la deuxième édition avec Poule-Canard-Oie, Invasion, Protéger le Roi et la cérémonie finale",
-      width: 1080,
-      height: 1080,
-    },
-  ]}
-/>
-
-</HistorySection>
 
 </article>

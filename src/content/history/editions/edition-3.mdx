@@ -1,6 +1,7 @@
 import { ArchiveGallery } from "@/components/history/archive-gallery";
 import { HistoryClosingNote } from "@/components/history/history-closing-note";
 import { HistoryEventGrid } from "@/components/history/history-event-grid";
+import { HistoryHighlight } from "@/components/history/history-highlight";
 import { HistoryPlayerLink } from "@/components/history/history-player-link";
 import { HistoryCharacterLink } from "@/components/history/history-character-link";
 import { HistoryLead, HistorySection } from "@/components/history/history-section";
@@ -85,12 +86,34 @@ Ses dialogues glissent aussi des indices sur de vieilles notes, un rituel et plu
     },
     {
       title: "Invasion",
-      description: "Le mode est rééquilibré autour d’une majorité de Défenseurs. Le premier lancement casse presque immédiatement, puis l’événement repart — « pour de vrai cette fois » — et plusieurs manches sont jouées.",
+      description: "Le mode est rééquilibré autour d’une majorité de Défenseurs. Après son lancement, plusieurs manches sont jouées dans une configuration revue depuis l’édition précédente.",
     },
   ]}
 />
 
 Les quêtes ne remplacent donc pas le PvP libre ni les grands événements : elles se déroulent **en parallèle**. Un joueur peut poursuivre une mission, changer complètement sa manière de combattre pour remplir un objectif, déposer ses graines, puis repartir pour le rendez-vous suivant.
+
+</HistorySection>
+
+<HistorySection eyebrow="Quelques moments" title="Trois souvenirs de la soirée">
+
+<div className="history-highlight-grid">
+  <HistoryHighlight icon="utensils" title="Un steak pour la onzième arme">
+
+  Pour la quête demandant douze types d’armes différents, <HistoryPlayerLink name="Wayzir" /> valide notamment son onzième type avec un **Steak**, puis le suivant avec une **Flèche de Lenteur**.
+
+  </HistoryHighlight>
+  <HistoryHighlight icon="server" title="« Pour de vrai cette fois »">
+
+  Le premier lancement d’Invasion déclenche immédiatement les « euh », « MDR » et « léger problème ». Une fausse reprise suit, avant que Bafy relance enfin l’événement « pour de vrai cette fois ».
+
+  </HistoryHighlight>
+  <HistoryHighlight icon="message" title="« oui / je triche »">
+
+  Pendant Invasion, SoulsDecaying plaisante qu’<HistoryPlayerLink name="Arqu1n" /> est « un peu trop op ». Quand pslunallena l’accuse à son tour de tricher sur le ton de la blague, Arqu1n répond simplement : « oui / je triche ».
+
+  </HistoryHighlight>
+</div>
 
 </HistorySection>
 
@@ -109,59 +132,5 @@ L’histoire principale s’arrête là, mais pas les quêtes. Le Corbeautaniste
 Le Canarchimage est déjà vaincu depuis plus d’une heure lorsque <HistoryPlayerLink name="Arqu1n" /> trouve enfin la solution, à **00 h 37**. Il reçoit 300 graines et son succès est annoncé à tout le serveur. Quelques minutes plus tard, à **00 h 44**, la troisième édition ferme définitivement.
 
 </HistoryClosingNote>
-
-<HistorySection eyebrow="Archives" title="L’invitation originale">
-
-<ArchiveGallery
-  label="Invitation de la troisième Soirée du Grand Poulet"
-  items={[
-    {
-      src: "/history/editions/3/archive/invitation-1.png",
-      alt: "Première page de l’invitation à la troisième Soirée du Grand Poulet, Exploration, Quêtes et Botanique",
-      caption: "Page 1",
-      width: 1920,
-      height: 1080,
-    },
-    {
-      src: "/history/editions/3/archive/invitation-2.png",
-      alt: "Deuxième page de l’invitation présentant le Grand Poulet et l’Arène",
-      caption: "Page 2",
-      width: 1920,
-      height: 1080,
-    },
-    {
-      src: "/history/editions/3/archive/invitation-3.png",
-      alt: "Troisième page de l’invitation présentant le PvP et les grands événements",
-      caption: "Page 3",
-      width: 1920,
-      height: 740,
-    },
-    {
-      src: "/history/editions/3/archive/invitation-4.png",
-      alt: "Quatrième page de l’invitation présentant l’esprit communautaire et l’horaire de la soirée",
-      caption: "Page 4",
-      width: 1920,
-      height: 1080,
-    },
-  ]}
-/>
-
-</HistorySection>
-
-<HistorySection eyebrow="Archives" title="Le planning initialement annoncé">
-
-<ArchiveGallery
-  label="Planning annoncé pour la troisième édition"
-  items={[
-    {
-      src: "/history/editions/3/archive/planning.png",
-      alt: "Planning original de la troisième édition avec Poule-Canard-Oie, Chasse au Pigeon, Invasion et la cérémonie finale",
-      width: 1080,
-      height: 1080,
-    },
-  ]}
-/>
-
-</HistorySection>
 
 </article>

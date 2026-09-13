@@ -6,9 +6,10 @@ The public history is deliberately separate from the statistics database.
 - `src/content/history/editions/edition-*.mdx` contains editorial article bodies.
 - `src/content/history/characters.ts` contains reusable character metadata; `src/content/history/characters/*.mdx` contains the character articles. `_template.mdx` is the starting point for future characters and is not routed.
 - `src/content/history/story.mdx` contains the short cross-edition “L’histoire jusqu’ici” narrative.
+- `src/content/history/changelogs.ts` and `src/content/history/changelogs/edition-*.mdx` contain the three public changelogs (editions 2–4).
 - `src/components/history/` contains reusable presentation components that MDX articles can embed.
 - `src/app/(public)/wiki/` owns routing and page composition.
-- `public/history/editions/<number>/archive/` contains original public-facing archive media selected for publication.
+- `public/history/editions/<number>/archive/` contains only historical images selected to illustrate the edition narratives.
 
 ## MDX boundary
 
@@ -27,7 +28,7 @@ The archaeology dossiers remain the exhaustive source material. Public pages sho
 
 Detailed log reconstruction, uncertain inferred statistics, unplayed branches and development-only lore stay out of the public narrative.
 
-Original invitations, teasers, presentations and similar public material may be preserved as archive objects. Development-only captures should not be published merely because they survived in the source archive.
+The public site does not expose a general document archive. Changelogs are the only archival documents published as standalone material; invitations, planning sheets and other surviving documents remain source material unless they are deliberately reused as narrative illustrations. Development-only captures should not be published merely because they survived in the source archive.
 
 ### Writing style
 

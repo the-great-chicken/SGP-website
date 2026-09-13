@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { historyEditions, publishedHistoryEditions } from "../src/content/history/editions";
 import { historyCharacters } from "../src/content/history/characters";
+import { historyChangelogs } from "../src/content/history/changelogs";
 
 test("history edition registry stays chronological and map-addressable", () => {
   assert.deepEqual(historyEditions.map((edition) => edition.number), [1, 2, 3, 4]);
@@ -30,4 +31,10 @@ test("history character registry keeps stable unique slugs and valid edition lin
     assert.ok(character.appearances.some((number) => number === character.firstAppearance));
     assert.ok(character.appearances.every((number) => historyEditions.some((edition) => edition.number === number)));
   }
+});
+
+
+test("only editions with original public changelogs expose changelog pages", () => {
+  assert.deepEqual(historyChangelogs.map((changelog) => changelog.edition), [2, 3, 4]);
+  assert.ok(historyChangelogs.every((changelog) => changelog.sections.length > 0));
 });

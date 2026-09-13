@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { EditionChangelogCard } from "@/components/history/edition-changelog-card";
 import { EditionHero } from "@/components/history/edition-hero";
 import { EditionNavigation } from "@/components/history/edition-navigation";
 import { getEditionArticle } from "@/content/history/edition-articles";
@@ -38,6 +39,7 @@ export default async function EditionPage({ params }: EditionPageProps) {
     <div className="shell page-stack wiki-page history-edition-page">
       <EditionHero edition={edition} />
       <Article />
+      <EditionChangelogCard editionNumber={edition.number} />
       <EditionNavigation editionNumber={edition.number} />
     </div>
   );

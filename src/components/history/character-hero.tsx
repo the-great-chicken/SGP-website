@@ -11,6 +11,8 @@ export function CharacterHero({ character }: CharacterHeroProps) {
   return (
     <header className="history-character-hero">
       <div className="history-character-topline">
+        <Link className="history-breadcrumb-link" href="/wiki">Histoire</Link>
+        <span aria-hidden="true">/</span>
         <Link href="/wiki/personnages">Personnages</Link>
         <span aria-hidden="true">/</span>
         <span>{character.name}</span>
