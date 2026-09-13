@@ -3353,7 +3353,14 @@ h3 {
 .kit-player-stage {
   position: relative;
   height: 290px;
-  background: radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--kit-accent) 9%, transparent), transparent 68%);
+}
+
+.kit-player-stage > sgp-kit-glow {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .kit-player-canvas {

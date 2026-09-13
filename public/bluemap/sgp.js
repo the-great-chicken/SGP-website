@@ -1,12 +1,14 @@
 // Loaded by BlueMap 5.23 through webapp.conf, after its app has initialized.
 (() => {
   const themeUrl = new URL(".", document.currentScript.src);
+  import(new URL("../branding/site-logo.mjs", themeUrl).href);
+  const logoUrl = new URL("/media/sgp-logo.png", window.location.origin).href;
   document.documentElement.classList.add("sgp-map");
   document.title = "Carte — SGP";
   const themeColor = document.querySelector('meta[name="theme-color"]');
   if (themeColor) themeColor.content = "#18252f";
   const favicon = document.querySelector('link[rel="icon"]');
-  if (favicon) favicon.href = new URL("sgp.svg", themeUrl).href;
+  if (favicon) favicon.href = logoUrl;
 
   const bluemap = window.bluemap;
   // BlueMap 5.23 installs its live translation function on the mounted Vue app.
@@ -54,7 +56,7 @@
     header.innerHTML = `
       <div class="sgp-map-header-inner">
         <a class="sgp-map-brand" href="/" aria-label="SGP — Accueil">
-          <span class="sgp-map-brand-mark" aria-hidden="true"><img src="${new URL("sgp.svg", themeUrl).href}" alt="" width="34" height="34"></span>
+          <span class="sgp-map-brand-mark" aria-hidden="true"><sgp-logo><img src="${logoUrl}" alt="" width="34" height="34"></sgp-logo></span>
           <span class="sgp-map-brand-copy"><strong>SGP</strong><small>Soirée du Grand Poulet</small></span>
         </a>
         <nav class="sgp-map-nav" aria-label="Navigation principale">

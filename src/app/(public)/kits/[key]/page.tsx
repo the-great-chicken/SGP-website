@@ -77,6 +77,7 @@ export default async function KitPage({ params }: KitPageProps) {
   const allKits = manifest.kits.toSorted(compareKits);
   const metricDomains = getKitMetricDomains(allKits, statsSnapshot);
   const name = getKitDisplayName(kit);
+  const accent = getKitAccent(kit);
   const metrics = getKitMetrics(kit.id, statsSnapshot.byKitKey[kit.key], statsSnapshot);
   const itemCount = kit.operations.reduce((sum, operation) => sum + operation.item.count, 0);
   const loadout = resolveKitLoadout(kit.operations);
@@ -86,7 +87,7 @@ export default async function KitPage({ params }: KitPageProps) {
   return (
     <div
       className="shell page-stack kit-detail"
-      style={{ "--kit-accent": getKitAccent(kit) } as CSSProperties}
+      style={{ "--kit-accent": accent } as CSSProperties}
     >
       <div className="kit-detail-frame">
         <aside className="kit-detail-sidebar" aria-label="Tous les kits">
@@ -186,7 +187,7 @@ export default async function KitPage({ params }: KitPageProps) {
                   })}
                 </div>
                 <div className="kit-model-surface">
-                  <KitPlayerModel preview={getKitPreview(kit)} name={name} skin={playerSkin} />
+                  <KitPlayerModel preview={getKitPreview(kit)} name={name} skin={playerSkin} accent={accent} />
                 </div>
               </div>
               {offhandEntry ? (

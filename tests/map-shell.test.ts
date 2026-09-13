@@ -30,7 +30,7 @@ test("BlueMap shell preserves the native app and makes the SGP shell first-paint
   assert.match(html, /<html[^>]*lang="fr"[^>]*class="sgp-map"|<html[^>]*class="sgp-map"[^>]*lang="fr"/i);
   assert.match(html, /<title>Carte — SGP<\/title>/);
   assert.match(html, /name="theme-color" content="#18252f"/);
-  assert.match(html, /rel="icon" href="\/bluemap\/sgp\.svg"/);
+  assert.match(html, /rel="icon" href="\/media\/sgp-logo\.png"/);
   assert.match(html, /href="\/bluemap\/sgp\.css"/);
   assert.match(html, /id="sgp-map-critical"/);
   assert.match(html, /data-sgp-map-header="true"/);

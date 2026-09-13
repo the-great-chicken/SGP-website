@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import type { KitPreview } from "@/lib/kit-preview";
 import type { MinecraftSkinModel } from "@/lib/minecraft-skin-profile";
 
-export function KitPlayerModel({ preview, name, skin }: {
+export function KitPlayerModel({ preview, name, skin, accent }: {
   preview: KitPreview;
   name: string;
+  accent: string;
   skin: { src: string; model: MinecraftSkinModel };
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -96,6 +98,8 @@ export function KitPlayerModel({ preview, name, skin }: {
 
   return (
     <div className="kit-player-stage">
+      <Script src="/rendering/kit-glow.mjs" type="module" strategy="afterInteractive" />
+      <sgp-kit-glow color={accent} aria-hidden="true" />
       <div className="kit-player-shadow" />
       <canvas className="kit-player-canvas" ref={canvas} role="img" aria-label={`${name} portant son armure${preview.weapon ? ` et tenant ${preview.weapon.name}` : ""}`} />
       {error ? <p className="kit-player-error">L’aperçu 3D n’a pas pu être chargé.</p> : null}

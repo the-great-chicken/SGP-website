@@ -1,9 +1,10 @@
 "use client";
 
-import { Bird, Menu, UserRound, X } from "lucide-react";
+import { Menu, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { SiteLogo } from "@/components/site-logo";
 import { siteNavigation } from "@/lib/site-navigation";
 
 export function SiteHeader() {
@@ -15,7 +16,7 @@ export function SiteHeader() {
       <div className="shell header-inner">
         <Link className="brand" href="/" aria-label="SGP — Accueil">
           <span className="brand-mark" aria-hidden="true">
-            <Bird size={22} strokeWidth={2.3} />
+            <SiteLogo priority />
           </span>
           <span className="brand-copy">
             <strong>SGP</strong>

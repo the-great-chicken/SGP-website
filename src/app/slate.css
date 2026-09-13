@@ -945,11 +945,6 @@ select:focus-visible,
 
 .kit-model-surface {
   min-width: 0;
-  background: radial-gradient(
-    ellipse at 50% 70%,
-    color-mix(in srgb, var(--kit-accent) 9%, transparent),
-    transparent 65%
-  );
 }
 
 .kit-model-surface .kit-player-stage {

@@ -1,5 +1,5 @@
-import { Bird } from "lucide-react";
 import Link from "next/link";
+import { SiteLogo } from "@/components/site-logo";
 
 export function SiteFooter() {
   return (
@@ -7,11 +7,11 @@ export function SiteFooter() {
       <div className="shell footer-grid">
         <div className="footer-brand">
           <span className="brand-mark small" aria-hidden="true">
-            <Bird size={18} />
+            <SiteLogo />
           </span>
           <div>
             <strong>Soirée du Grand Poulet</strong>
-            <p>Les parties passent. Les histoires restent.</p>
+            <p>« Prr-pot-pot… bwaak-cot ! » 🐔</p>
           </div>
         </div>
         <div className="footer-links">

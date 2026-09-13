@@ -1,7 +1,7 @@
 import { siteNavigation } from "./site-navigation";
+import { SITE_LOGO_PATH, SITE_LOGO_SCRIPT } from "./site-brand";
 
 const MAP_STYLESHEET = "/bluemap/sgp.css";
-const MAP_FAVICON = "/bluemap/sgp.svg";
 const MAP_BASE = "/map/";
 
 const MAP_SHELL_BOOTSTRAP = String.raw`
@@ -151,10 +151,11 @@ export function injectBlueMapShell(source: string): string {
 
   html = replaceOrInsertTitle(html, "Carte — SGP");
   html = replaceMetaContent(html, "theme-color", "#18252f");
-  html = replaceIcon(html, MAP_FAVICON);
+  html = replaceIcon(html, SITE_LOGO_PATH);
 
   const headInjection = [
     source.includes(MAP_STYLESHEET) ? "" : `<link rel="stylesheet" href="${MAP_STYLESHEET}">`,
+    `<script type="module" src="${SITE_LOGO_SCRIPT}"></script>`,
     `<style id="sgp-map-critical">${CRITICAL_STYLE}</style>`,
   ].filter(Boolean).join("\n");
   html = html.replace(/<\/head>/i, `${headInjection}\n</head>`);
@@ -174,8 +175,9 @@ export function renderMapUnavailablePage(): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#18252f">
-<link rel="icon" href="${MAP_FAVICON}">
+<link rel="icon" href="${SITE_LOGO_PATH}">
 <link rel="stylesheet" href="${MAP_STYLESHEET}">
+<script type="module" src="${SITE_LOGO_SCRIPT}"></script>
 <style id="sgp-map-critical">${CRITICAL_STYLE}</style>
 <title>Carte indisponible — SGP</title>
 </head>
@@ -200,7 +202,7 @@ export function renderMapHeader(): string {
   return `<header class="sgp-map-header" data-sgp-map-header="true">
   <div class="sgp-map-header-inner">
     <a class="sgp-map-brand" href="/" aria-label="SGP — Accueil">
-      <span class="sgp-map-brand-mark" aria-hidden="true"><img src="${MAP_FAVICON}" alt="" width="34" height="34"></span>
+      <span class="sgp-map-brand-mark" aria-hidden="true"><sgp-logo><img src="${SITE_LOGO_PATH}" alt="" width="34" height="34"></sgp-logo></span>
       <span class="sgp-map-brand-copy"><strong>SGP</strong><small>Soirée du Grand Poulet</small></span>
     </a>
     <nav class="sgp-map-nav" aria-label="Navigation principale">${desktopLinks}</nav>

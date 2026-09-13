@@ -1,4 +1,6 @@
 /* SGP Slate presentation for BlueMap 5.23. */
+@import url("/branding/site-logo.css");
+
 @view-transition {
   navigation: auto;
 }
@@ -94,12 +96,6 @@ html.sgp-map {
   display: inline-grid;
   flex: 0 0 auto;
   place-items: center;
-}
-
-.sgp-map-brand img {
-  width: 34px;
-  height: 34px;
-  display: block;
 }
 
 .sgp-map-brand-copy {
