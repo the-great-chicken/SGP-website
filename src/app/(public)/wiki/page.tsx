@@ -1,79 +1,137 @@
 import type { Metadata } from "next";
-import { ArrowRight, BookOpenText, Crown, Flag, ScrollText, Swords } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpenText,
+  Map,
+  ScrollText,
+  Sparkles,
+  UsersRound,
+} from "lucide-react";
 import Link from "next/link";
 import { PageIntro } from "@/components/page-intro";
+import { historyEditions } from "@/content/history/editions";
 
 export const metadata: Metadata = {
   title: "Histoire",
-  description: "L’histoire, les éditions et le monde de la Soirée du Grand Poulet.",
+  description: "Les éditions, les personnages et les récits de la Soirée du Grand Poulet.",
 };
-
-const chapters = [
-  {
-    icon: Flag,
-    title: "Les éditions",
-    description: "Les règles, les cartes et les moments marquants de chaque rassemblement.",
-    detail: "Chronologie",
-  },
-  {
-    icon: Crown,
-    title: "Figures de la SGP",
-    description: "Vainqueurs, organisateurs, rivaux et personnages entrés dans le folklore.",
-    detail: "Portraits",
-  },
-  {
-    icon: Swords,
-    title: "Kits et métas",
-    description: "L’évolution des styles de jeu, des capacités et des grands équilibrages.",
-    detail: "Archives de jeu",
-  },
-  {
-    icon: ScrollText,
-    title: "Récits et anecdotes",
-    description: "Tout ce qui ne tient pas dans une feuille de statistiques, mais mérite de rester.",
-    detail: "Mémoire collective",
-  },
-];
 
 export default function WikiPage() {
   return (
-    <div className="shell page-stack wiki-page">
+    <div className="shell page-stack wiki-page history-index-page">
       <PageIntro
-        eyebrow="Histoire & lore"
+        eyebrow="Archives de la SGP"
         title="Histoire"
-        description="Une archive éditoriale des anciennes éditions, écrite en MDX pour mêler récits, profils, cartes et données du site."
+        description="Les parties passent. Les histoires restent. Retrouvez ici ce qui a changé d’une édition à l’autre, ce qui s’est réellement passé et les souvenirs qui ont fini par faire partie de la SGP."
         aside={
           <span className="round-icon large">
             <BookOpenText size={27} />
           </span>
         }
       />
-      <div className="chapter-grid">
-        {chapters.map(({ icon: Icon, title, description, detail }) => (
-          <article className="chapter-card" key={title}>
-            <span className="round-icon">
-              <Icon size={20} />
-            </span>
-            <span className="chapter-detail">{detail}</span>
-            <h2>{title}</h2>
-            <p>{description}</p>
-            <span className="chapter-soon">
-              Contenu à venir <ArrowRight size={14} />
-            </span>
-          </article>
-        ))}
-      </div>
-      <section className="editorial-callout">
-        <div>
-          <p className="eyebrow">Contribution</p>
-          <h2>Une mémoire qui se construit à plusieurs.</h2>
-          <p>Les articles resteront versionnés dans le dépôt. Une proposition de correction pourra donc être relue comme n’importe quel changement du site.</p>
+
+      <section className="history-index-section" id="editions" aria-labelledby="history-editions-title">
+        <div className="history-index-heading">
+          <div>
+            <p className="eyebrow">Chronologie</p>
+            <h2 id="history-editions-title">Les éditions</h2>
+          </div>
+          <p>
+            Chaque page raconte ce qui rendait l’édition différente : le décor, les nouvelles idées,
+            le fil de la soirée et les moments restés dans les mémoires.
+          </p>
         </div>
-        <Link className="button ghost" href="/login">
-          Se connecter plus tard
-        </Link>
+
+        <ol className="history-timeline">
+          {historyEditions.map((edition) => {
+            const content = (
+              <>
+                <span className="history-timeline-marker" aria-hidden="true">
+                  {String(edition.number).padStart(2, "0")}
+                </span>
+                <div className="history-timeline-card-copy">
+                  <div className="history-timeline-meta">
+                    <time dateTime={edition.dateIso}>{edition.dateLabel}</time>
+                    {edition.status === "published" ? (
+                      <span className="history-status-chip is-live">Disponible</span>
+                    ) : (
+                      <span className="history-status-chip">Article à venir</span>
+                    )}
+                  </div>
+                  <p className="history-timeline-kicker">{edition.shortTitle}</p>
+                  <h3>Édition {edition.number}</h3>
+                  {edition.subtitle ? <p className="history-timeline-subtitle">{edition.subtitle}</p> : null}
+                  <p className="history-timeline-summary">{edition.summary}</p>
+                </div>
+                <span className="history-timeline-action" aria-hidden="true">
+                  {edition.status === "published" ? <ArrowRight size={18} /> : String(edition.year)}
+                </span>
+              </>
+            );
+
+            return (
+              <li className={`history-timeline-item is-${edition.status}`} key={edition.number}>
+                {edition.status === "published" ? (
+                  <Link className="history-timeline-card" href={`/wiki/editions/${edition.number}`}>
+                    {content}
+                  </Link>
+                ) : (
+                  <div className="history-timeline-card">{content}</div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+
+      <section className="history-map-plan" aria-labelledby="history-map-title">
+        <div className="history-map-plan-icon" aria-hidden="true">
+          <Map size={23} />
+        </div>
+        <div>
+          <p className="eyebrow">Évolution de la carte</p>
+          <h2 id="history-map-title">Le même monde, édition après édition.</h2>
+          <p>
+            La future visualisation comparera les états successifs de l’Arène avec le même périmètre et
+            le même cadrage. La chronologie en montrera un aperçu ; une page dédiée permettra ensuite de
+            passer d’une édition à l’autre et d’observer précisément ce qui a changé.
+          </p>
+        </div>
+        <span className="history-status-chip">Prévu</span>
+      </section>
+
+      <section className="history-next-grid" aria-label="Autres entrées de l’histoire">
+        <article className="history-next-card">
+          <span className="round-icon"><UsersRound size={19} aria-hidden="true" /></span>
+          <p className="eyebrow">Personnages</p>
+          <h2>Les figures du récit</h2>
+          <p>
+            Grand Poulet, Canarchimage, Oielchimiste, Corbeautaniste… leurs histoires seront racontées
+            à partir de ce qui a réellement été montré aux joueurs.
+          </p>
+          <span className="history-status-chip">À venir</span>
+        </article>
+        <article className="history-next-card">
+          <span className="round-icon"><Sparkles size={19} aria-hidden="true" /></span>
+          <p className="eyebrow">Le récit jusqu’ici</p>
+          <h2>Comprendre la SGP en quelques minutes</h2>
+          <p>
+            Une lecture courte reliera les quatre éditions et les grandes étapes du lore, sans demander
+            de connaître tous les événements ni toutes les statistiques.
+          </p>
+          <span className="history-status-chip">À venir</span>
+        </article>
+        <article className="history-next-card">
+          <span className="round-icon"><ScrollText size={19} aria-hidden="true" /></span>
+          <p className="eyebrow">Archives</p>
+          <h2>Les documents d’origine</h2>
+          <p>
+            Invitations, teasers, présentations, sneak peeks et changelogs resteront accessibles comme
+            des objets d’archive, sans alourdir les récits principaux.
+          </p>
+          <span className="history-status-chip">À venir</span>
+        </article>
       </section>
     </div>
   );
 }
-

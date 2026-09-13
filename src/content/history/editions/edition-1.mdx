@@ -1,0 +1,193 @@
+import { ArchiveGallery } from "@/components/history/archive-gallery";
+import { HistoryClosingNote } from "@/components/history/history-closing-note";
+import { HistoryEventGrid } from "@/components/history/history-event-grid";
+import { HistoryHighlight } from "@/components/history/history-highlight";
+import { HistoryPlayerLink } from "@/components/history/history-player-link";
+import { HistoryLead, HistorySection } from "@/components/history/history-section";
+
+<article className="history-article">
+
+<HistoryLead>
+
+Le **3 juin 2023**, la Haute-Cour ouvre pour la première *Soirée PvP Suprême (de Poulet)*. Le principe est déjà bien chargé : une grande arène à explorer, douze kits dont neuf cachés dans l’arène, du PvP libre, six événements mineurs et trois grands rendez-vous. Le tout est organisé en l’honneur du **Grand Poulet**, champion légendaire des lieux.
+
+</HistoryLead>
+
+<HistorySection eyebrow="Le décor" title="La première Haute-Cour">
+
+La Haute-Cour mélange de grands espaces extérieurs, des intérieurs labyrinthiques et beaucoup de recoins à fouiller. **Combattant, Archer et Vindicateur** sont disponibles dès le départ ; les **neuf autres kits** sont cachés dans l’arène, sur des panneaux à trouver.
+
+La chasse commence vite. **Tank** est trouvé avant 21 h 50, même si son déclencheur doit être réparé par un admin. **Pigeon** est découvert vers 22 h 02. Un indice pour **Poséidon** mène sous le temple et attire bientôt plusieurs joueurs dans le coin.
+
+<ArchiveGallery
+  label="Présentation originale de la Haute-Cour"
+  items={[
+    {
+      src: "/history/editions/1/archive/haute-cour-1.png",
+      alt: "Présentation originale de la Haute-Cour vue du dessus",
+      caption: "Vue générale de la Haute-Cour",
+      width: 1920,
+      height: 1080,
+    },
+    {
+      src: "/history/editions/1/archive/haute-cour-2.png",
+      alt: "Capture de l’extérieur de la Haute-Cour",
+      caption: "Les extérieurs",
+      width: 1920,
+      height: 1080,
+    },
+    {
+      src: "/history/editions/1/archive/haute-cour-3.png",
+      alt: "Capture de l’intérieur de la Haute-Cour",
+      caption: "Les intérieurs",
+      width: 1920,
+      height: 1080,
+    },
+  ]}
+/>
+
+</HistorySection>
+
+<HistorySection eyebrow="Le Canarchimage" title="Une fête, puis un intrus">
+
+Quelques jours avant la soirée, un avertissement annonce qu’un certain **Canarchimage** compte assister à la « mascarade ». Il rejoint finalement le Discord vers **21 h 46**, se moque du Grand Poulet et promet de rendre la fête « encore plus minable ».
+
+À peine arrivé, les événements mineurs commencent à tomber sur les joueurs. **Shuffle** est déclenché à 21 h 47 : les armures sont remplacées par un matériau aléatoire, parfois bien meilleur, parfois franchement pire. Plus tard viennent notamment **Confinement**, qui punit ceux qui restent dehors, et **Réflexes**, où il faut réagir à temps à un message pour survivre.
+
+<ArchiveGallery
+  label="Teaser du Canarchimage"
+  items={[
+    {
+      src: "/history/editions/1/archive/canarchimage-teaser.png",
+      alt: "Teaser ATTENTION annonçant l’arrivée possible du Canarchimage à la soirée",
+      caption: "L’avertissement publié avant la soirée",
+      width: 1080,
+      height: 1080,
+    },
+  ]}
+/>
+
+</HistorySection>
+
+<HistorySection eyebrow="Le programme" title="Trois grands rendez-vous">
+
+<HistoryEventGrid
+  events={[
+    {
+      title: "Chasse au Pigeon",
+      description: "Des pigeons tentent de survivre aux chasseurs ; les joueurs éliminés passent à leur tour dans le camp des chasseurs. Les deux manches se terminent par une victoire des pigeons.",
+    },
+    {
+      title: "Protéger le Roi",
+      description: "Deux équipes défendent chacune leur roi. La première partie devient une « game de chauffe » à cause de problèmes techniques, puis deux vraies manches suivent.",
+    },
+    {
+      title: "Le Grand Poulet",
+      description: "Un joueur surpuissant affronte tout le reste du groupe. FlyDwen y signe la manche la plus spectaculaire de la soirée, enchaînant les éliminations jusqu’à la victoire.",
+    },
+  ]}
+/>
+
+
+</HistorySection>
+
+<HistorySection eyebrow="En direct" title="Les règles bougent pendant la soirée">
+
+Tout n’est pas encore parfaitement réglé. **Vindicateur** est nerfé plusieurs fois en cours de partie. **Poséidon** reçoit des niveaux de faim de plus en plus sévères. Certains kits cachés ou respawns demandent une intervention d’admin, et la première manche de Protéger le Roi finit officiellement reclassée en partie de chauffe.
+
+Les corrections se font immédiatement, souvent sous les commentaires des joueurs. La soirée continue pendant que les organisateurs réparent, ajustent et relancent ce qui doit l’être.
+
+</HistorySection>
+
+<HistorySection eyebrow="Quelques moments" title="Trois souvenirs de la soirée">
+
+<div className="history-highlight-grid">
+  <HistoryHighlight icon="feather" title="Les pigeons deviennent des moustiques">
+
+  Pendant Chasse au Pigeon, Vilinta rebaptise rapidement les pigeons « mosquitos ». Après leur victoire, les demandes de nerf visent surtout <HistoryPlayerLink name="Arqu1n" /> et <HistoryPlayerLink name="FlyDwen" />.
+
+  </HistoryHighlight>
+  <HistoryHighlight icon="bug" title="« Bafy sait pas coder »">
+
+  Le premier Protéger le Roi fonctionne assez mal pour devenir une simple partie de chauffe. SoulsDecaying fournit immédiatement l’explication officieuse.
+
+  </HistoryHighlight>
+  <HistoryHighlight icon="swords" title="FlyDwen, presque intouchable">
+
+  Dans Le Grand Poulet, <HistoryPlayerLink name="FlyDwen" /> élimine une grande partie des chasseurs, remporte la manche et résume la situation par « un peu op imo ».
+
+  </HistoryHighlight>
+</div>
+
+</HistorySection>
+
+<HistorySection eyebrow="Cérémonie finale" title="Le Grand Poulet répond au Canarchimage">
+
+Vers **00 h 36**, le Grand Poulet interpelle directement le Canarchimage sur Discord. Le Canarchimage répond simplement par ☹️.
+
+<ArchiveGallery
+  label="Échange final entre le Grand Poulet et le Canarchimage"
+  items={[
+    {
+      src: "/history/editions/1/archive/final-discord.png",
+      alt: "Échange Discord de fin de soirée entre le Grand Poulet et le Canarchimage",
+      width: 1602,
+      height: 379,
+    },
+  ]}
+/>
+
+</HistorySection>
+
+<HistoryClosingNote title="Et ça continue après la cérémonie">
+
+Le PvP reprend de façon informelle après la cérémonie. Le serveur ne s’éteint finalement qu’à **01 h 53**, avec Bafy78 et FlyDwen encore connectés.
+
+</HistoryClosingNote>
+
+<HistorySection eyebrow="Archives" title="L’invitation originale">
+
+<ArchiveGallery
+  label="Invitation de la première Soirée PvP Suprême (de Poulet)"
+  items={[
+    {
+      src: "/history/editions/1/archive/invitation-1.png",
+      alt: "Première page de l’invitation à la Soirée PvP Suprême de Poulet",
+      caption: "Page 1",
+      width: 1920,
+      height: 1080,
+    },
+    {
+      src: "/history/editions/1/archive/invitation-2.png",
+      alt: "Deuxième page de l’invitation racontant la Haute-Cour et le Grand Poulet",
+      caption: "Page 2",
+      width: 1920,
+      height: 1080,
+    },
+    {
+      src: "/history/editions/1/archive/invitation-3.png",
+      alt: "Troisième page de l’invitation présentant le PvP, les kits et les événements",
+      caption: "Page 3",
+      width: 1920,
+      height: 740,
+    },
+    {
+      src: "/history/editions/1/archive/invitation-4.png",
+      alt: "Quatrième page de l’invitation présentant l’esprit communautaire et l’horaire",
+      caption: "Page 4",
+      width: 1920,
+      height: 1080,
+    },
+    {
+      src: "/history/editions/1/archive/planning.png",
+      alt: "Planning original de la première édition",
+      caption: "Planning",
+      width: 1080,
+      height: 1080,
+    },
+  ]}
+/>
+
+</HistorySection>
+
+</article>

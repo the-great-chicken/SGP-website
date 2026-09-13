@@ -1,9 +1,11 @@
+import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 import { blueMapDevelopmentRewrites } from "./src/lib/bluemap-routing";
 
 const nextConfig: NextConfig = {
   agentRules: false,
   output: "standalone",
+  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   outputFileTracingIncludes: {
     "/me": ["./data/cosmetic-renders.json"],
     "/api/me/cosmetics": ["./data/cosmetic-renders.json"],
@@ -28,4 +30,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX();
+
+export default withMDX(nextConfig);
