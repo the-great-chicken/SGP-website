@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { EditionChangelogCard } from "@/components/history/edition-changelog-card";
 import { EditionHero } from "@/components/history/edition-hero";
 import { EditionNavigation } from "@/components/history/edition-navigation";
-import { getEditionArticle } from "@/content/history/edition-articles";
+import { EditionArticle } from "@/content/history/edition-articles";
 import { getHistoryEdition, publishedHistoryEditions } from "@/content/history/editions";
 
 export const dynamicParams = false;
@@ -31,14 +31,12 @@ export async function generateMetadata({ params }: EditionPageProps): Promise<Me
 export default async function EditionPage({ params }: EditionPageProps) {
   const { edition: rawEdition } = await params;
   const edition = getHistoryEdition(Number(rawEdition));
-  const Article = edition ? getEditionArticle(edition.number) : null;
-
-  if (!edition || edition.status !== "published" || !Article) notFound();
+  if (!edition || edition.status !== "published") notFound();
 
   return (
     <div className="shell page-stack wiki-page history-edition-page">
       <EditionHero edition={edition} />
-      <Article />
+      <EditionArticle number={edition.number} />
       <EditionChangelogCard editionNumber={edition.number} />
       <EditionNavigation editionNumber={edition.number} />
     </div>

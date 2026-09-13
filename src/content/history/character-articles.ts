@@ -1,17 +1,23 @@
-import type { ComponentType } from "react";
+import { createElement } from "react";
 import GrandPouletArticle from "@/content/history/characters/grand-poulet.mdx";
 import CanarchimageArticle from "@/content/history/characters/canarchimage.mdx";
 import OielchimisteArticle from "@/content/history/characters/oielchimiste.mdx";
 import CorbeautanisteArticle from "@/content/history/characters/corbeautaniste.mdx";
 import type { HistoryCharacterSlug } from "@/content/history/characters";
 
-const characterArticles: Record<HistoryCharacterSlug, ComponentType> = {
-  "grand-poulet": GrandPouletArticle,
-  canarchimage: CanarchimageArticle,
-  oielchimiste: OielchimisteArticle,
-  corbeautaniste: CorbeautanisteArticle,
+type CharacterArticleProps = {
+  slug: HistoryCharacterSlug;
 };
 
-export function getCharacterArticle(slug: string) {
-  return characterArticles[slug as HistoryCharacterSlug] ?? null;
+export function CharacterArticle({ slug }: CharacterArticleProps) {
+  switch (slug) {
+    case "grand-poulet":
+      return createElement(GrandPouletArticle);
+    case "canarchimage":
+      return createElement(CanarchimageArticle);
+    case "oielchimiste":
+      return createElement(OielchimisteArticle);
+    case "corbeautaniste":
+      return createElement(CorbeautanisteArticle);
+  }
 }

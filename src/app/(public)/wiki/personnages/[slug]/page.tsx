@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CharacterHero } from "@/components/history/character-hero";
 import { CharacterInfobox } from "@/components/history/character-infobox";
-import { getCharacterArticle } from "@/content/history/character-articles";
+import { CharacterArticle } from "@/content/history/character-articles";
 import { getHistoryCharacter, historyCharacters } from "@/content/history/characters";
 
 export const dynamicParams = false;
@@ -30,16 +30,14 @@ export async function generateMetadata({ params }: CharacterPageProps): Promise<
 export default async function CharacterPage({ params }: CharacterPageProps) {
   const { slug } = await params;
   const character = getHistoryCharacter(slug);
-  const Article = character ? getCharacterArticle(character.slug) : null;
-
-  if (!character || !Article) notFound();
+  if (!character) notFound();
 
   return (
     <div className="shell page-stack wiki-page history-character-page">
       <CharacterHero character={character} />
       <div className="history-character-layout">
         <article className="history-character-article">
-          <Article />
+          <CharacterArticle slug={character.slug} />
         </article>
         <CharacterInfobox character={character} />
       </div>
