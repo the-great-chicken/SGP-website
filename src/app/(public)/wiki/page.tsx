@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import {
   ArrowRight,
   BookOpenText,
@@ -45,6 +46,18 @@ export default function WikiPage() {
                 <span className="history-timeline-marker" aria-hidden="true">
                   {String(edition.number).padStart(2, "0")}
                 </span>
+                <div className={`history-timeline-visual${edition.timelineImageSrc ? " has-image" : ""}`}>
+                  {edition.timelineImageSrc ? (
+                    <Image
+                      src={edition.timelineImageSrc}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 84px, 132px"
+                    />
+                  ) : (
+                    <div className="history-timeline-visual-placeholder" aria-hidden="true" />
+                  )}
+                </div>
                 <div className="history-timeline-card-copy">
                   <div className="history-timeline-meta">
                     <time dateTime={edition.dateIso}>{edition.dateLabel}</time>
@@ -80,53 +93,59 @@ export default function WikiPage() {
         </ol>
       </section>
 
+      <section className="history-reading-section" aria-labelledby="history-reading-title">
+        <div className="history-index-heading">
+          <div>
+            <p className="eyebrow">Pour continuer</p>
+            <h2 id="history-reading-title">Autres entrées dans l’histoire</h2>
+          </div>
+        </div>
+
+        <div className="history-next-grid">
+          <Link className="history-next-card is-link" href="/wiki/personnages">
+            <span className="round-icon"><UsersRound size={19} aria-hidden="true" /></span>
+            <p className="eyebrow">Personnages</p>
+            <h2>Les figures du récit</h2>
+            <p>
+              Grand Poulet, Canarchimage, Oielchimiste, Corbeautaniste… des fiches séparées des profils joueurs, avec ce qui est déjà établi et de la place pour la suite.
+            </p>
+            <span className="history-card-action">Voir les personnages <ArrowRight size={16} /></span>
+          </Link>
+
+          <Link className="history-next-card is-link" href="/wiki/histoire-jusquici">
+            <span className="round-icon"><Sparkles size={19} aria-hidden="true" /></span>
+            <p className="eyebrow">Le récit jusqu’ici</p>
+            <h2>Quatre éditions en quelques minutes</h2>
+            <p>
+              Le fil rouge du Grand Poulet et du Canarchimage, de la première intrusion à la compétition entre deux camps.
+            </p>
+            <span className="history-card-action">Lire le récit <ArrowRight size={16} /></span>
+          </Link>
+
+          <article className="history-next-card">
+            <span className="round-icon"><ScrollText size={19} aria-hidden="true" /></span>
+            <p className="eyebrow">Archives</p>
+            <h2>Les documents d’origine</h2>
+            <p>
+              Invitations, teasers, présentations, sneak peeks et changelogs pourront être regroupés ici si un vrai mode de consultation se justifie.
+            </p>
+            <span className="history-status-chip">À évaluer</span>
+          </article>
+        </div>
+      </section>
+
       <section className="history-map-plan" aria-labelledby="history-map-title">
         <div className="history-map-plan-icon" aria-hidden="true">
           <Map size={23} />
         </div>
         <div>
           <p className="eyebrow">Évolution de la carte</p>
-          <h2 id="history-map-title">La carte au fil des éditions.</h2>
+          <h2 id="history-map-title">Comparer l’Arène au fil des éditions.</h2>
           <p>
-            La future visualisation permettra de comparer les états successifs de l’Arène. La chronologie
-            en montrera un aperçu ; une page dédiée permettra ensuite de passer d’une édition à l’autre
-            et d’observer précisément ce qui a changé.
+            Une comparaison dédiée permettra plus tard de passer d’une édition à l’autre, de retrouver les mêmes lieux et de voir comment l’Arène a changé au fil du temps.
           </p>
         </div>
         <span className="history-status-chip">Prévu</span>
-      </section>
-
-      <section className="history-next-grid" aria-label="Autres entrées de l’histoire">
-        <article className="history-next-card">
-          <span className="round-icon"><UsersRound size={19} aria-hidden="true" /></span>
-          <p className="eyebrow">Personnages</p>
-          <h2>Les figures du récit</h2>
-          <p>
-            Grand Poulet, Canarchimage, Oielchimiste, Corbeautaniste… leurs histoires seront racontées
-            à partir de ce qui a réellement été montré aux joueurs.
-          </p>
-          <span className="history-status-chip">À venir</span>
-        </article>
-        <article className="history-next-card">
-          <span className="round-icon"><Sparkles size={19} aria-hidden="true" /></span>
-          <p className="eyebrow">Le récit jusqu’ici</p>
-          <h2>Comprendre la SGP en quelques minutes</h2>
-          <p>
-            Une lecture courte reliera les quatre éditions et les grandes étapes du lore, sans demander
-            de connaître tous les événements ni toutes les statistiques.
-          </p>
-          <span className="history-status-chip">À venir</span>
-        </article>
-        <article className="history-next-card">
-          <span className="round-icon"><ScrollText size={19} aria-hidden="true" /></span>
-          <p className="eyebrow">Archives</p>
-          <h2>Les documents d’origine</h2>
-          <p>
-            Invitations, teasers, présentations, sneak peeks et changelogs resteront accessibles comme
-            des objets d’archive, sans alourdir les récits principaux.
-          </p>
-          <span className="history-status-chip">À venir</span>
-        </article>
       </section>
     </div>
   );

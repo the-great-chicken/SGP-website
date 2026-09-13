@@ -119,7 +119,7 @@ test.describe("high-value browser smoke journeys", () => {
     await page.goto("/wiki");
 
     await expect(page.getByRole("heading", { level: 1, name: "Histoire" })).toBeVisible();
-    await expect(page.locator(".chapter-card")).toHaveCount(4);
+    await expect(page.locator(".history-timeline-item")).toHaveCount(4);
 
     const menuButton = page.getByRole("button", { name: "Ouvrir le menu" });
     await menuButton.click();

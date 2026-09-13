@@ -1,0 +1,30 @@
+import { CharacterEditorialPlaceholder } from "@/components/history/character-editorial-placeholder";
+import { HistorySection } from "@/components/history/history-section";
+
+{/*
+  TEMPLATE PERSONNAGE
+  -------------------
+  1. Ajouter les métadonnées structurées dans src/content/history/characters.ts.
+  2. Créer le fichier MDX avec le même slug.
+  3. N’écrire dans "Ce que l’on sait" que ce qui est déjà canon/publié.
+  4. Garder les zones À écrire pour ce qui relève encore du scénariste.
+  5. Le portrait 16:9 est défini via portrait.src dans characters.ts ; laisser null tant que le visuel final n’existe pas.
+*/}
+
+<HistorySection eyebrow="Ce que l’on sait" title="Titre de la synthèse canonique">
+
+Résumé court des faits déjà montrés aux joueurs. Éviter la biographie extrapolée, les notes de conception non jouées et les explications techniques.
+
+</HistorySection>
+
+<CharacterEditorialPlaceholder title="Portrait et personnalité">
+
+Pistes pour le scénariste : voix, tempérament, habitudes, rapport aux joueurs, manière de réagir sous pression.
+
+</CharacterEditorialPlaceholder>
+
+<CharacterEditorialPlaceholder title="Origines, relations et zones encore ouvertes">
+
+Pistes pour le scénariste : passé, motivations, relations avec les autres personnages, éléments à canoniser plus tard.
+
+</CharacterEditorialPlaceholder>

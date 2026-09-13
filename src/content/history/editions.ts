@@ -12,6 +12,7 @@ export type HistoryEdition = {
   minecraftVersion: string;
   summary: string;
   status: HistoryEditionStatus;
+  timelineImageSrc: string | null;
   map: {
     snapshotKey: string;
     previewSrc: string | null;
@@ -32,6 +33,7 @@ export const historyEditions: readonly HistoryEdition[] = [
     summary:
       "La première Haute-Cour, douze kits, trois grands événements et l’arrivée du Canarchimage : la grammaire de la SGP se met en place en une soirée.",
     status: "published",
+    timelineImageSrc: null,
     map: {
       snapshotKey: "edition-1",
       previewSrc: null,
@@ -50,6 +52,7 @@ export const historyEditions: readonly HistoryEdition[] = [
     summary:
       "Plusieurs zones de la Haute-Cour sont retravaillées, de nouveaux jeux apparaissent et l’Oielchimiste entre dans l’histoire.",
     status: "published",
+    timelineImageSrc: null,
     map: {
       snapshotKey: "edition-2",
       previewSrc: null,
@@ -68,6 +71,7 @@ export const historyEditions: readonly HistoryEdition[] = [
     summary:
       "Quêtes, cosmétiques, Corbeautaniste, Grosse Énigme et retour du Canarchimage font de l’exploration un fil rouge de la soirée.",
     status: "published",
+    timelineImageSrc: null,
     map: {
       snapshotKey: "edition-3",
       previewSrc: null,
@@ -86,6 +90,7 @@ export const historyEditions: readonly HistoryEdition[] = [
     summary:
       "Deux camps, deux séries de quêtes et une course à l’énergie : le Grand Poulet et le Canarchimage font enfin de leur rivalité la compétition centrale de la soirée.",
     status: "published",
+    timelineImageSrc: null,
     map: {
       snapshotKey: "edition-4",
       previewSrc: null,

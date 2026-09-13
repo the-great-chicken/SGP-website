@@ -2,8 +2,10 @@
 
 The public history is deliberately separate from the statistics database.
 
-- `src/content/history/editions.ts` is the structured registry shared by the history landing page, edition routes and the future map comparison.
+- `src/content/history/editions.ts` is the structured registry shared by the history landing page, edition routes and the future map comparison. `timelineImageSrc` reserves the square-ish visual used by each edition on the landing timeline.
 - `src/content/history/editions/edition-*.mdx` contains editorial article bodies.
+- `src/content/history/characters.ts` contains reusable character metadata; `src/content/history/characters/*.mdx` contains the character articles. `_template.mdx` is the starting point for future characters and is not routed.
+- `src/content/history/story.mdx` contains the short cross-edition “L’histoire jusqu’ici” narrative.
 - `src/components/history/` contains reusable presentation components that MDX articles can embed.
 - `src/app/(public)/wiki/` owns routing and page composition.
 - `public/history/editions/<number>/archive/` contains original public-facing archive media selected for publication.
@@ -34,6 +36,13 @@ Write the public article as the story itself, not as commentary about the archae
 History pages are reading pages rather than dense UI: body copy and narrative cards should remain comfortably larger than labels/metadata. Archive images get at most one visible caption each; gallery labels are accessibility metadata rather than a second caption layer.
 
 Avoid recap paragraphs that merely repeat material already explained in the preceding section. A mechanic or event should normally be introduced once, where it matters to the story; repeat it later only when the later passage adds a genuinely new consequence or perspective.
+
+
+## Character pages
+
+Character pages deliberately separate confirmed material from future scriptwriting. The shared page template provides a full-width 16:9 portrait slot, a compact infobox, a canon section and explicit editorial placeholders. Set `portrait.src` in `characters.ts` once a final banner exists; the same asset can then appear in the character index automatically.
+
+Only facts already shown to players should be prefilled. Notes, unused branches and backstory drafts belong in the scenarist placeholders until they are deliberately canonized.
 
 ## Historical map contract
 
