@@ -1,4 +1,5 @@
 import { ChangelogSection } from "@/components/history/changelog-section";
+import { BalanceChange } from "@/components/history/balance-change";
 import { ChangelogKitHeading } from "@/components/history/changelog-kit-heading";
 import { ChangelogSourceHeading } from "@/components/history/changelog-source-heading";
 
@@ -8,43 +9,43 @@ import { ChangelogSourceHeading } from "@/components/history/changelog-source-he
 
 <ChangelogKitHeading kitKey="pigeon" color="#999999">Pigeon</ChangelogKitHeading>
 
-- Jump Boost IV → III
-- 3 → 2 Boosts par kill
+- <BalanceChange kind="nerf">Jump Boost IV → III</BalanceChange>
+- <BalanceChange kind="nerf">3 → 2 Boosts par kill</BalanceChange>
 
 <ChangelogKitHeading kitKey="poseidon" color="#00aaaa">Poséidon</ChangelogKitHeading>
 
-- Première Pomme d’or enchantée après 1 → 2 kills
-- Pomme d’or enchantée donne 8 → 6 coeurs d’absorption
-- Pomme d’or enchantée régénère pendant 20 → 10 secondes
-- Lenteur III → IV
+- <BalanceChange kind="nerf">Première Pomme d’or enchantée après 1 → 2 kills</BalanceChange>
+- <BalanceChange kind="nerf">Pomme d’or enchantée donne 8 → 6 coeurs d’absorption</BalanceChange>
+- <BalanceChange kind="nerf">Pomme d’or enchantée régénère pendant 20 → 10 secondes</BalanceChange>
+- <BalanceChange kind="nerf">Lenteur III → IV</BalanceChange>
 
 <ChangelogKitHeading kitKey="tank" color="#0000ff">Tank</ChangelogKitHeading>
 
-- 5 → 3 Pommes d’or de base
+- <BalanceChange kind="nerf">5 → 3 Pommes d’or de base</BalanceChange>
 
 <ChangelogKitHeading kitKey="roi" color="#ffff55">Roi</ChangelogKitHeading>
 
-- 5 → 4 Pommes d’or de base
-- 1.5 coeurs de régénération lors d’un kill
+- <BalanceChange kind="nerf">5 → 4 Pommes d’or de base</BalanceChange>
+- <BalanceChange kind="buff">1.5 coeurs de régénération lors d’un kill</BalanceChange>
 
 <ChangelogKitHeading kitKey="alchimiste" color="#d13dd1">Alchimiste</ChangelogKitHeading>
 
-- 12 → 8 potions de soin de base
-- 16 → 10 potions de dégâts de base
-- 4 → 2 potions de soin par kill
-- 6 → 3 potions de dégâts par kill
-- Ajout d’une potion de blindness de 5 secondes de base
-- 1 potion de blindness tous les 2 kills
+- <BalanceChange kind="nerf">12 → 8 potions de soin de base</BalanceChange>
+- <BalanceChange kind="nerf">16 → 10 potions de dégâts de base</BalanceChange>
+- <BalanceChange kind="nerf">4 → 2 potions de soin par kill</BalanceChange>
+- <BalanceChange kind="nerf">6 → 3 potions de dégâts par kill</BalanceChange>
+- <BalanceChange kind="buff">Ajout d’une potion de blindness de 5 secondes de base</BalanceChange>
+- <BalanceChange kind="buff">1 potion de blindness tous les 2 kills</BalanceChange>
 
 <ChangelogKitHeading kitKey="eclaireur" color="#00ffff">Éclaireur</ChangelogKitHeading>
 
-- Ajout d’une arbalète de base, avec 3 flèches
-- 2 flèches par kill
+- <BalanceChange kind="buff">Ajout d’une arbalète de base, avec 3 flèches</BalanceChange>
+- <BalanceChange kind="buff">2 flèches par kill</BalanceChange>
 
 <ChangelogKitHeading kitKey="archer" color="#55ff55">Archer</ChangelogKitHeading>
 
-- Ajout d’un effet de Speed I permanent
-- 2 → 3 Pommes d’or de base
+- <BalanceChange kind="buff">Ajout d’un effet de Speed I permanent</BalanceChange>
+- <BalanceChange kind="buff">2 → 3 Pommes d’or de base</BalanceChange>
 
 </ChangelogSection>
 

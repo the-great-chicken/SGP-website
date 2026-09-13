@@ -1,4 +1,5 @@
 import { ChangelogSection } from "@/components/history/changelog-section";
+import { BalanceChange } from "@/components/history/balance-change";
 import { ChangelogKitHeading } from "@/components/history/changelog-kit-heading";
 import { ChangelogSourceHeading } from "@/components/history/changelog-source-heading";
 
@@ -14,41 +15,41 @@ Utilisation de couleurs custom (exemple : #FFFFFF c’est blanc) dans les noms d
 
 <ChangelogKitHeading kitKey="vindicateur" color="#00aa00">Vindicateur</ChangelogKitHeading>
 
-- Le totem est obtenu après 1 kill et non de base
-- Plastron : Protection II → Aucun
-- Hache : 7,5 dégâts → 7 dégâts
-- Ajout d’une Potion de Faiblesse I de 5 secondes, de base et obtenable 1 fois tous les 3 kills
+- <BalanceChange kind="nerf">Le totem est obtenu après 1 kill et non de base</BalanceChange>
+- <BalanceChange kind="nerf">Plastron : Protection II → Aucun</BalanceChange>
+- <BalanceChange kind="nerf">Hache : 7,5 dégâts → 7 dégâts</BalanceChange>
+- <BalanceChange kind="buff">Ajout d’une Potion de Faiblesse I de 5 secondes, de base et obtenable 1 fois tous les 3 kills</BalanceChange>
 
 <ChangelogKitHeading kitKey="poseidon" color="#00aaaa">Poséidon</ChangelogKitHeading>
 
-- La Pomme d’or enchantée est obtenu après 1 kill et non de base
-- Slowness II → III
-- 24 → 15 tridents de base
-- 2 → 3 tridents par kill
+- <BalanceChange kind="nerf">La Pomme d’or enchantée est obtenu après 1 kill et non de base</BalanceChange>
+- <BalanceChange kind="nerf">Slowness II → III</BalanceChange>
+- <BalanceChange kind="nerf">24 → 15 tridents de base</BalanceChange>
+- <BalanceChange kind="buff">2 → 3 tridents par kill</BalanceChange>
 
 <ChangelogKitHeading kitKey="roi" color="#ffff55">Roi</ChangelogKitHeading>
 
-- Bottes : Protection I → Aucun et Projectile Protection I → Aucun
-- Casque : Projectile Protection I → II
+- <BalanceChange kind="nerf">Bottes : Protection I → Aucun et Projectile Protection I → Aucun</BalanceChange>
+- <BalanceChange kind="buff">Casque : Projectile Protection I → II</BalanceChange>
 
 <ChangelogKitHeading kitKey="pyromane" color="#ffaa00">Pyromane</ChangelogKitHeading>
 
-- La durée de brûlure à l’extérieur du feu a été divisée par 2
-- 6 → 5 feu d’artifices de base
-- Le feu fait brûler instantanément lorsqu’un joueur en touche
-- 5 → 8 dégâts des feu d’artifices
+- <BalanceChange kind="nerf">La durée de brûlure à l’extérieur du feu a été divisée par 2</BalanceChange>
+- <BalanceChange kind="nerf">6 → 5 feu d’artifices de base</BalanceChange>
+- <BalanceChange kind="buff">Le feu fait brûler instantanément lorsqu’un joueur en touche</BalanceChange>
+- <BalanceChange kind="buff">5 → 8 dégâts des feu d’artifices</BalanceChange>
 
 <ChangelogKitHeading kitKey="enderman" color="#aa00aa">Enderman</ChangelogKitHeading>
 
-- 3 → 2 perles par kill
+- <BalanceChange kind="nerf">3 → 2 perles par kill</BalanceChange>
 - 32 steaks → 64 chorus fruit
 
 <ChangelogKitHeading kitKey="genji" color="#00ff00">Genji</ChangelogKitHeading>
 
-- 30 → 18 shuriken
-- 27 → 22 dégâts des shuriken
-- 110 → 80 dégâts de la Dragonblade
-- Coût de l’ultimate augmenté de 15 %
+- <BalanceChange kind="nerf">30 → 18 shuriken</BalanceChange>
+- <BalanceChange kind="nerf">27 → 22 dégâts des shuriken</BalanceChange>
+- <BalanceChange kind="nerf">110 → 80 dégâts de la Dragonblade</BalanceChange>
+- <BalanceChange kind="nerf">Coût de l’ultimate augmenté de 15 %</BalanceChange>
 - 9 → 14 dispersion du tir secondaire
 
 </ChangelogSection>

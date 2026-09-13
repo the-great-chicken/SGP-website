@@ -1,4 +1,5 @@
 import { ChangelogSection } from "@/components/history/changelog-section";
+import { BalanceChange } from "@/components/history/balance-change";
 import { ChangelogKitHeading } from "@/components/history/changelog-kit-heading";
 import { ChangelogKitInline } from "@/components/history/changelog-kit-inline";
 import { ChangelogSourceHeading } from "@/components/history/changelog-source-heading";
@@ -11,18 +12,18 @@ La progression des kits a été réinitialisée : vous devrez de nouveau débloq
 
 <ChangelogKitHeading kitKey="eclaireur" color="#00ffff">Éclaireur</ChangelogKitHeading>
 
-- Augmentation de la step height (hauteur qu’on peut monter sans sauter) de 0.5 → 1 bloc
-- Ajout d’une longue-vue
-- Épines III → II sur toutes les pièces d’armure
+- <BalanceChange kind="buff">Augmentation de la step height (hauteur qu’on peut monter sans sauter) de 0.5 → 1 bloc</BalanceChange>
+- <BalanceChange kind="buff">Ajout d’une longue-vue</BalanceChange>
+- <BalanceChange kind="nerf">Épines III → II sur toutes les pièces d’armure</BalanceChange>
 
 <ChangelogKitHeading kitKey="archer" color="#55ff55">Archer</ChangelogKitHeading>
 
-- Les flèches spéciales (poison et lenteur) font un effet de splash potion là où elles apparaissent (Cela permet d’appliquer l’effet de poison même si on rate un peu la flèche, mais il sera plus court)
+- <BalanceChange kind="buff">Les flèches spéciales (poison et lenteur) font un effet de splash potion là où elles apparaissent (Cela permet d’appliquer l’effet de poison même si on rate un peu la flèche, mais il sera plus court)</BalanceChange>
 
 <ChangelogKitHeading kitKey="poseidon" color="#00aaaa">Poséidon</ChangelogKitHeading>
 
-- Ajout d’un trident Impulsion (Riptide pour les anglophones)
-- Ajout d’un effet permanent de Force de Conduit (Respiration Aquatique + Vision améliorée sous l’eau)
+- <BalanceChange kind="buff">Ajout d’un trident Impulsion (Riptide pour les anglophones)</BalanceChange>
+- <BalanceChange kind="buff">Ajout d’un effet permanent de Force de Conduit (Respiration Aquatique + Vision améliorée sous l’eau)</BalanceChange>
 
 ### Agilité Aquatique
 

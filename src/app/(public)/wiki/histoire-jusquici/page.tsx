@@ -13,10 +13,11 @@ export default function HistoryStoryPage() {
   return (
     <div className="shell page-stack wiki-page history-story-page history-index-page">
       <PageIntro
+        eyebrowClassName="history-breadcrumb"
         eyebrow={<>
           <Link className="history-breadcrumb-link" href="/wiki">Histoire</Link>
-          <span aria-hidden="true"> · </span>
-          Le récit
+          <span aria-hidden="true">/</span>
+          <span>Le récit</span>
         </>}
         title="L’histoire jusqu’ici"
         description="Le fil rouge des quatre premières éditions : Grand Poulet, Canarchimage, Oielchimiste et Corbeautaniste, sans repasser par tous les événements de chaque soirée."

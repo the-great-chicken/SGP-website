@@ -10,11 +10,11 @@ export function EditionHero({ edition }: EditionHeroProps) {
   return (
     <header className="history-edition-hero">
       <div className="history-edition-hero-copy">
-        <p className="eyebrow">
+        <div className="history-breadcrumb">
           <Link className="history-breadcrumb-link" href="/wiki">Histoire</Link>
-          <span aria-hidden="true"> · </span>
-          Édition {edition.number}
-        </p>
+          <span aria-hidden="true">/</span>
+          <span>Édition {edition.number}</span>
+        </div>
         <p className="history-edition-kicker">{edition.shortTitle}</p>
         <h1>Édition {edition.number}</h1>
         {edition.subtitle ? <p className="history-edition-subtitle">{edition.subtitle}</p> : null}

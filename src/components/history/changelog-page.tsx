@@ -22,11 +22,13 @@ export function ChangelogPage({ changelog, Article }: ChangelogPageProps) {
           </Link>
         </div>
         <div className="history-changelog-hero-grid">
-          <p className="eyebrow">
+          <div className="history-breadcrumb">
             <Link className="history-breadcrumb-link" href="/wiki">Histoire</Link>
-            <span aria-hidden="true"> · </span>
-            Changelog · Édition {changelog.edition}
-          </p>
+            <span aria-hidden="true">/</span>
+            <Link href="/wiki/changelogs">Changelog</Link>
+            <span aria-hidden="true">/</span>
+            <span>Édition {changelog.edition}</span>
+          </div>
           <h1>{changelog.title}</h1>
           <p className="history-changelog-subtitle">{changelog.subtitle}</p>
         </div>
