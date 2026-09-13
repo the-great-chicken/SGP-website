@@ -66,8 +66,8 @@ export const historyEditions: readonly HistoryEdition[] = [
     locationLabel: "L’Arène",
     minecraftVersion: "1.20.2",
     summary:
-      "La soirée devient aussi une aventure : quêtes, cosmétiques, Corbeautaniste, Grosse Énigme et retour du Canarchimage transforment l’expérience.",
-    status: "planned",
+      "Quêtes, cosmétiques, Corbeautaniste, Grosse Énigme et retour du Canarchimage font de l’exploration un fil rouge de la soirée.",
+    status: "published",
     map: {
       snapshotKey: "edition-3",
       previewSrc: null,
@@ -84,8 +84,8 @@ export const historyEditions: readonly HistoryEdition[] = [
     locationLabel: "L’Arène",
     minecraftVersion: "1.21.1",
     summary:
-      "Le Grand Poulet et le Canarchimage règlent leur rivalité à travers deux factions, pendant que l’Arène gagne de nouveaux espaces souterrains et de nouvelles façons de jouer.",
-    status: "planned",
+      "Deux camps, deux séries de quêtes et une course à l’énergie : le Grand Poulet et le Canarchimage font enfin de leur rivalité la compétition centrale de la soirée.",
+    status: "published",
     map: {
       snapshotKey: "edition-4",
       previewSrc: null,
