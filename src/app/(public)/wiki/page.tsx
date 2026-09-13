@@ -36,10 +36,6 @@ export default function WikiPage() {
             <p className="eyebrow">Chronologie</p>
             <h2 id="history-editions-title">Les éditions</h2>
           </div>
-          <p>
-            Chaque page raconte ce qui rendait l’édition différente : le décor, les nouvelles idées,
-            le fil de la soirée et les moments restés dans les mémoires.
-          </p>
         </div>
 
         <ol className="history-timeline">
@@ -90,11 +86,11 @@ export default function WikiPage() {
         </div>
         <div>
           <p className="eyebrow">Évolution de la carte</p>
-          <h2 id="history-map-title">Le même monde, édition après édition.</h2>
+          <h2 id="history-map-title">La carte au fil des éditions.</h2>
           <p>
-            La future visualisation comparera les états successifs de l’Arène avec le même périmètre et
-            le même cadrage. La chronologie en montrera un aperçu ; une page dédiée permettra ensuite de
-            passer d’une édition à l’autre et d’observer précisément ce qui a changé.
+            La future visualisation permettra de comparer les états successifs de l’Arène. La chronologie
+            en montrera un aperçu ; une page dédiée permettra ensuite de passer d’une édition à l’autre
+            et d’observer précisément ce qui a changé.
           </p>
         </div>
         <span className="history-status-chip">Prévu</span>

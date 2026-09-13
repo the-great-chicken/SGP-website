@@ -17,5 +17,5 @@ test("history edition registry stays chronological and map-addressable", () => {
 });
 
 test("only editions with public articles are exposed as published", () => {
-  assert.deepEqual(publishedHistoryEditions().map((edition) => edition.number), [1]);
+  assert.deepEqual(publishedHistoryEditions().map((edition) => edition.number), [1, 2]);
 });

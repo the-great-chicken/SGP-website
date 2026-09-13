@@ -1,0 +1,170 @@
+import { ArchiveGallery } from "@/components/history/archive-gallery";
+import { HistoryClosingNote } from "@/components/history/history-closing-note";
+import { HistoryEventGrid } from "@/components/history/history-event-grid";
+import { HistoryPlayerLink } from "@/components/history/history-player-link";
+import { HistoryLead, HistorySection } from "@/components/history/history-section";
+
+<article className="history-article">
+
+<HistoryLead>
+
+Le **27 août 2023**, la SGP revient dans une Haute-Cour familière, mais bien retouchée depuis juin. Plusieurs intérieurs, bâtiments et passages ont été retravaillés, avec de nouvelles structures, des parkours et **30 lieux nommés** à découvrir. Deux nouveaux grands jeux arrivent aussi au programme. Le Grand Poulet a même invité **l’Oielchimiste**, disciple du Canarchimage.
+
+</HistoryLead>
+
+<HistorySection eyebrow="Le décor" title="Une Haute-Cour familière, mais retravaillée">
+
+L’organisation générale de la Haute-Cour reste celle de la première édition, mais plusieurs zones évoluent nettement. Les intérieurs gagnent en hauteur et en largeur pour être plus agréables à parcourir et à combattre ; la **Maison** et la **Grange** sont redessinées, de nouvelles structures apparaissent et des parkours sont ajoutés.
+
+Le repérage change aussi avec **30 lieux nommés** : **Pavillon, Grande Salle, Temple, Labyrinthe, Grange, Jump…** Lorsqu’un joueur entre dans l’un de ces lieux pour la première fois, son nom s’affiche en grand ; ensuite, il reste indiqué dans l’interface. Les déblocages de kits de la première édition, eux, sont conservés.
+
+<ArchiveGallery
+  label="La Haute-Cour et deux comparaisons avant/après publiées avant l’édition 2"
+  items={[
+    {
+      src: "/history/editions/2/archive/haute-cour-exterieur.png",
+      alt: "Présentation originale d’une vue extérieure de la Haute-Cour pour l’édition 2",
+      width: 1920,
+      height: 1080,
+    },
+    {
+      src: "/history/editions/2/archive/sneak-peek-interieur-1.png",
+      alt: "Sneak peek original comparant avant et après un couloir intérieur de la Haute-Cour",
+      width: 1920,
+      height: 1080,
+    },
+    {
+      src: "/history/editions/2/archive/sneak-peek-interieur-2.png",
+      alt: "Sneak peek original comparant avant et après une autre zone intérieure de la Haute-Cour",
+      width: 1920,
+      height: 1080,
+    },
+  ]}
+/>
+
+</HistorySection>
+
+<HistorySection eyebrow="Le programme" title="Deux nouveaux jeux entrent dans la rotation">
+
+<HistoryEventGrid
+  events={[
+    {
+      title: "Poule-Canard-Oie",
+      description: "Trois équipes se poursuivent selon le principe de Poule-Renard-Vipère. Les joueurs capturés finissent dans des cages et leurs alliés peuvent venir les libérer. Plusieurs manches sont lancées avant que les prisons et les spawns ne finissent par casser le jeu.",
+    },
+    {
+      title: "Invasion",
+      description: "Des attaquants doivent éliminer tous les défenseurs avant la fin du temps imparti. Les défenseurs ne réapparaissent pas : très vite, les équipes apprennent à tenir les escaliers et à organiser leur défense en direct.",
+    },
+    {
+      title: "Protéger le Roi",
+      description: "Le seul grand jeu conservé de la première édition revient avec des spawns et des règles retravaillés. Les manches restent mouvementées, notamment lorsque des joueurs censés être morts réapparaissent en plein round.",
+    },
+  ]}
+/>
+
+Entre ces rendez-vous, le PvP libre continue d’être interrompu par les événements mineurs. Cette édition en ajoute un nouveau : **Blackout**, qui plonge la Haute-Cour dans une nuit noire pendant quelques minutes.
+
+Poule-Canard-Oie tient plusieurs manches : les joueurs commencent à comprendre les cages et les libérations, puis les problèmes s’accumulent jusqu’au message « **tout est cassé** » et à l’arrêt de l’événement. La soirée repart pourtant aussitôt en FFA avant Invasion.
+
+</HistorySection>
+
+<HistorySection eyebrow="L’Oielchimiste" title="Une invitée annoncée d’avance">
+
+La veille, le Grand Poulet revient sur l’intervention du Canarchimage lors de la première édition. Avec du recul, explique-t-il, ses perturbations avaient finalement « ajouté du piment » à la soirée. Il décide donc d’inviter **l’Oielchimiste**, sa disciple.
+
+Un avertissement publié avant l’événement confirme sa venue. Tout est présenté comme une invitation parfaitement volontaire ; pendant plusieurs heures, rien ne vient vraiment contredire cette version.
+
+<ArchiveGallery
+  label="Avertissement original annonçant l’Oielchimiste"
+  items={[
+    {
+      src: "/history/editions/2/archive/oielchimiste-teaser.png",
+      alt: "Avertissement ATTENTION annonçant l’arrivée de l’Oielchimiste, disciple du Canarchimage, à la deuxième édition",
+      width: 1080,
+      height: 1080,
+    },
+  ]}
+/>
+
+</HistorySection>
+
+<HistorySection eyebrow="00 h 13" title="Wayzir tombe sur la mauvaise pièce">
+
+Peu après minuit, <HistoryPlayerLink name="Wayzir" /> et <HistoryPlayerLink name="LawzZ" /> se poursuivent dans la Haute-Cour. Ils arrivent par hasard près d’une pièce cachée, signalée seulement par des bruits magiques et des particules. **Wayzir découvre l’Oielchimiste** ; leur arrivée interrompt ce qu’elle était en train de faire, et les deux joueurs explosent au même instant.
+
+L’Oielchimiste proteste : ils viennent de lui faire rater son sort. Le Grand Poulet comprend alors pourquoi il l’a invitée. Elle l’a **ensorcelé pendant plusieurs jours** pour le pousser à l’accueillir à la SGP, puis s’est cachée dans la Haute-Cour pour maintenir son enchantement.
+
+Le Grand Poulet n’apprécie pas du tout d’avoir servi d’invitation ambulante.
+
+</HistorySection>
+
+<HistorySection eyebrow="Finale" title="Le Grand Poulet règle ça en duel">
+
+La réponse est immédiate : **duel**. Le combat tourne très vite court. À 00 h 14, l’Oielchimiste est battue par le Grand Poulet ; quelques secondes plus tard, après un très sobre « **get rekt** », elle est expulsée du serveur.
+
+Le Grand Poulet ne disparaît pas pour autant. Il rejoint encore le PvP libre pendant quelques minutes, combat avec les joueurs puis quitte vers 00 h 21. Lors de l’annonce finale, <HistoryPlayerLink name="Wayzir" /> reçoit le titre **[Sauveur de LGP]** pour sa découverte accidentelle, et le Grand Poulet ajoute une dernière punition : il promet de **nerf le kit Alchimiste**.
+
+</HistorySection>
+
+<HistoryClosingNote title="Et la soirée continue encore longtemps">
+
+Les titres sont publiés vers **00 h 40**, mais le serveur reste ouvert. Les derniers joueurs continuent de se battre et de traîner dans la Haute-Cour pendant plus d’une heure ; le serveur ne ferme finalement qu’à **02 h 01**.
+
+</HistoryClosingNote>
+
+<HistorySection eyebrow="Archives" title="L’invitation originale">
+
+<ArchiveGallery
+  label="Invitation de la deuxième Soirée PvP Suprême (de Poulet)"
+  items={[
+    {
+      src: "/history/editions/2/archive/invitation-1.png",
+      alt: "Première page de l’invitation à la deuxième Soirée PvP Suprême de Poulet",
+      caption: "Page 1",
+      width: 1920,
+      height: 1080,
+    },
+    {
+      src: "/history/editions/2/archive/invitation-2.png",
+      alt: "Deuxième page de l’invitation présentant la Haute-Cour et le Grand Poulet",
+      caption: "Page 2",
+      width: 1920,
+      height: 1080,
+    },
+    {
+      src: "/history/editions/2/archive/invitation-3.png",
+      alt: "Troisième page de l’invitation présentant le PvP, les kits et les grands événements",
+      caption: "Page 3",
+      width: 1920,
+      height: 740,
+    },
+    {
+      src: "/history/editions/2/archive/invitation-4.png",
+      alt: "Quatrième page de l’invitation présentant l’esprit communautaire et l’horaire de la soirée",
+      caption: "Page 4",
+      width: 1920,
+      height: 1080,
+    },
+  ]}
+/>
+
+</HistorySection>
+
+<HistorySection eyebrow="Archives" title="Le planning initialement annoncé">
+
+<ArchiveGallery
+  label="Planning annoncé pour la deuxième édition"
+  items={[
+    {
+      src: "/history/editions/2/archive/planning.png",
+      alt: "Planning original de la deuxième édition avec Poule-Canard-Oie, Invasion, Protéger le Roi et la cérémonie finale",
+      width: 1080,
+      height: 1080,
+    },
+  ]}
+/>
+
+</HistorySection>
+
+</article>

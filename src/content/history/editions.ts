@@ -43,13 +43,13 @@ export const historyEditions: readonly HistoryEdition[] = [
     dateIso: "2023-08-27",
     dateLabel: "27 août 2023",
     name: "2e édition de la Soirée PvP Suprême (de Poulet)",
-    shortTitle: "La Haute-Cour se transforme",
+    shortTitle: "La Haute-Cour évolue",
     subtitle: "Découvertes, Défis et Transmutations",
     locationLabel: "La Haute-Cour",
     minecraftVersion: "1.20.1",
     summary:
-      "La Haute-Cour est profondément remaniée sans changer de périmètre, de nouveaux jeux apparaissent et l’Oielchimiste entre dans l’histoire.",
-    status: "planned",
+      "Plusieurs zones de la Haute-Cour sont retravaillées, de nouveaux jeux apparaissent et l’Oielchimiste entre dans l’histoire.",
+    status: "published",
     map: {
       snapshotKey: "edition-2",
       previewSrc: null,
