@@ -12,6 +12,7 @@ Environment=HOSTNAME=127.0.0.1
 Environment=PORT=@website_port@
 Environment=DATABASE_URL=file:@state_dir@/sgp.sqlite
 Environment=BLUEMAP_INTERNAL_URL=http://127.0.0.1:@bluemap_port@
+Environment=MAP_ARCHIVE_DIR=@map_archive_dir@
 EnvironmentFile=@config_dir@/website.env
 ExecStart=@node@ server.js
 Restart=on-failure

@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { cp, mkdir, mkdtemp, open, readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, open, readFile, rename, rm, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
@@ -10,6 +10,7 @@ import { assembleEditionBundle, editionDetailsSchema, readKitManifest, readStati
 import { replaceEdition, validateBundleRelations } from "../db/importer";
 import * as schema from "../db/schema";
 import { getItemRenderMismatch, getItemRenderSignature, type ItemRenderIndex } from "../lib/item-rendering";
+import { loadMapArchiveConfig, prepareMapArchive, resolveMapArchivePaths, type MapArchiveConfig, type PreparedMapArchive } from "../map-archive/archive";
 
 const release = z.string().trim().min(1).refine((value) => !value.startsWith("REPLACE_"), "Fill in the release identifier");
 const sourceSchema = z.object({
@@ -23,12 +24,18 @@ const sourceSchema = z.object({
 
 export const publishingConfigSchema = z.object({
   databaseUrl: z.string().startsWith("file:").optional(),
+  mapArchiveConfig: z.string().min(1).optional(),
+  editionSnapshotCommand: z.array(z.string().min(1)).min(1).optional(),
   current: sourceSchema.optional(),
   editions: z.record(z.string().regex(/^[1-9][0-9]*$/), z.object({
     name: z.string().min(1), startsAt: z.iso.datetime({ offset: true }), endsAt: z.iso.datetime({ offset: true }),
     publishedAt: z.iso.datetime({ offset: true }), source: sourceSchema,
   }).strict()).default({}),
-}).strict();
+}).strict().superRefine((value, context) => {
+  if (value.editionSnapshotCommand && !value.mapArchiveConfig) {
+    context.addIssue({ code: "custom", path: ["editionSnapshotCommand"], message: "editionSnapshotCommand requires mapArchiveConfig so snapshots have a protected temporary directory" });
+  }
+});
 
 type Config = z.infer<typeof publishingConfigSchema>;
 type Mode = { kind: "refresh" } | { kind: "edition"; number: number };
@@ -111,11 +118,35 @@ export async function runPublishing(options: {
   const edition = mode.kind === "edition" ? config.editions[String(mode.number)] : undefined;
   const configuredSource = mode.kind === "refresh" ? config.current : edition?.source;
   if (!configuredSource) throw new Error(mode.kind === "refresh" ? "Configure current sources first" : `Configure edition ${mode.number} first`);
+
   const source = { ...configuredSource };
-  for (const key of ["world", "datapack", "resourcePack", "minecraftClient"] as const) {
-    source[key] = path.resolve(configDirectory, source[key]);
+  for (const key of ["world", "datapack", "resourcePack", "minecraftClient"] as const) source[key] = path.resolve(configDirectory, source[key]);
+
+  let archiveConfig: MapArchiveConfig | undefined;
+  let archiveConfigDirectory: string | undefined;
+  if (mode.kind === "edition" && config.mapArchiveConfig) {
+    const archiveConfigPath = path.resolve(configDirectory, config.mapArchiveConfig);
+    archiveConfig = await loadMapArchiveConfig(archiveConfigPath);
+    archiveConfigDirectory = path.dirname(archiveConfigPath);
+    const archiveEdition = archiveConfig.editions[String(mode.number)];
+    if (!archiveEdition) throw new Error(`Configure edition ${mode.number} in ${archiveConfigPath} before publishing it`);
+    if (archiveEdition.minecraftVersion !== source.minecraftVersion) {
+      throw new Error(`Map archive Minecraft version ${archiveEdition.minecraftVersion} does not match publication source ${source.minecraftVersion}`);
+    }
+  }
+
+  // A production edition snapshot can come from a Minecraft directory that is not
+  // readable by the website account. In that case the privileged helper validates
+  // and copies it; only the other inputs need to be readable up front.
+  for (const key of ["resourcePack", "minecraftClient"] as const) {
     if (!await exists(source[key])) throw new Error(`Missing ${key}: ${source[key]}`);
   }
+  if (!(mode.kind === "edition" && config.editionSnapshotCommand)) {
+    for (const key of ["world", "datapack"] as const) {
+      if (!await exists(source[key])) throw new Error(`Missing ${key}: ${source[key]}`);
+    }
+  }
+
   let databaseUrl: string | undefined;
   if (mode.kind === "edition") {
     if (!config.databaseUrl) throw new Error("Set databaseUrl in publish.json before publishing an edition");
@@ -145,8 +176,30 @@ export async function runPublishing(options: {
     throw error;
   });
   let stage: string | undefined;
+  let snapshot: string | undefined;
+  let preparedMap: PreparedMapArchive | undefined;
   try {
     await lock.writeFile(String(process.pid));
+
+    if (mode.kind === "edition" && config.editionSnapshotCommand) {
+      if (!archiveConfig || !archiveConfigDirectory) throw new Error("editionSnapshotCommand requires mapArchiveConfig");
+      const originalWorld = source.world;
+      const datapackRelative = path.relative(originalWorld, source.datapack);
+      if (!datapackRelative || datapackRelative === "." || datapackRelative.startsWith(`..${path.sep}`) || path.isAbsolute(datapackRelative)) {
+        throw new Error("When editionSnapshotCommand is used, the datapack must be inside the configured world so both are captured atomically");
+      }
+      const snapshotsRoot = path.join(resolveMapArchivePaths(archiveConfigDirectory, archiveConfig).privateRoot, "snapshots");
+      await mkdir(snapshotsRoot, { recursive: true });
+      snapshot = path.join(snapshotsRoot, `edition-${mode.number}-${Date.now()}-${process.pid}`);
+      const [executable, ...args] = config.editionSnapshotCommand;
+      await command(executable, [...args, snapshot], root);
+      if (!await exists(path.join(snapshot, "level.dat"))) throw new Error(`Snapshot helper did not create a Minecraft world at ${snapshot}`);
+      source.world = snapshot;
+      source.datapack = path.join(snapshot, datapackRelative);
+      if (!await exists(source.datapack)) throw new Error(`Snapshot is missing configured datapack path: ${datapackRelative}`);
+      console.log(`Frozen edition ${mode.number} world snapshot: ${snapshot}`);
+    }
+
     stage = await mkdtemp(path.join(work, mode.kind === "refresh" ? "current-" : `edition-${mode.number}-`));
     const data = path.join(stage, "data");
     await mkdir(data);
@@ -207,9 +260,31 @@ export async function runPublishing(options: {
     if (overlays.schemaVersion !== 1 || !source.maps.every((map) => Object.hasOwn(overlays.maps, map.id))) {
       throw new Error("Map overlays do not match the configured maps");
     }
-    await writeFile(path.join(stage, "publication.json"), JSON.stringify({ mode, source, edition: edition && { ...edition, source: undefined }, preparedAt: new Date().toISOString() }, null, 2) + "\n");
+
+    // Rendering is deliberately last: no expensive BlueMap work starts until all
+    // statistics/content validation has succeeded. It prepares an immutable revision
+    // but does not expose it until after the edition database transaction succeeds.
+    if (mode.kind === "edition" && archiveConfig && archiveConfigDirectory) {
+      preparedMap = await prepareMapArchive({
+        root,
+        configDirectory: archiveConfigDirectory,
+        config: archiveConfig,
+        editionNumber: mode.number,
+        worldOverride: source.world,
+        resourcePackOverride: source.resourcePack,
+        command,
+      });
+    }
+
+    await writeFile(path.join(stage, "publication.json"), JSON.stringify({
+      mode,
+      source: { ...source, world: snapshot ? "<frozen-edition-snapshot>" : source.world, datapack: snapshot ? "<inside-frozen-edition-snapshot>" : source.datapack },
+      edition: edition && { ...edition, source: undefined },
+      preparedMap: preparedMap?.entry ?? null,
+      preparedAt: new Date().toISOString(),
+    }, null, 2) + "\n");
     if (options.prepareOnly) {
-      console.log(`Validated exports ready: ${stage}. Website and database unchanged.`);
+      console.log(`Validated exports ready: ${stage}. Website, database and map archive unchanged.`);
       return stage;
     }
     if (mode.kind === "refresh") {
@@ -217,13 +292,25 @@ export async function runPublishing(options: {
       console.log("Current kits, cosmetic images and map overlays refreshed. Include generated files in the next website deployment.");
     } else {
       const summary = await publishEdition(root, stage, databaseUrl!, bundle!);
-      console.log(`Published edition ${summary.editionNumber}: ${summary.players} players. Current kits and map overlays unchanged.`);
+      if (preparedMap) await preparedMap.promote();
+      console.log(`Published edition ${summary.editionNumber}: ${summary.players} players.${preparedMap ? " Historical map archived." : ""} Current kits and live map overlays unchanged.`);
     }
     return stage;
   } catch (error) {
     if (stage) console.error(`Run stopped. Prepared files and any database recovery copy are in ${stage}`);
     throw error;
   } finally {
+    await preparedMap?.cleanup();
+    if (snapshot) {
+      const archivePaths = archiveConfig && archiveConfigDirectory ? resolveMapArchivePaths(archiveConfigDirectory, archiveConfig) : null;
+      const snapshotsRoot = archivePaths ? path.resolve(archivePaths.privateRoot, "snapshots") : null;
+      const resolved = path.resolve(snapshot);
+      if (!snapshotsRoot || path.dirname(resolved) !== snapshotsRoot || !path.basename(resolved).startsWith(`edition-${mode.kind === "edition" ? mode.number : ""}-`)) {
+        console.error(`Refusing to remove unexpected snapshot path: ${snapshot}`);
+      } else {
+        await rm(resolved, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+      }
+    }
     await lock.close();
     await unlink(lockPath);
   }

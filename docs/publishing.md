@@ -13,7 +13,9 @@ Copy-Item publish.example.json publish.json
 
 Edit the ignored `publish.json` using [the example](../publish.example.json). Paths are relative to the configuration file. Set `databaseUrl` to the same SQLite file as the website's `DATABASE_URL`; the publishing command reads this setting from `publish.json`, not `.env`.
 
-`current` defines the sources for today's kit catalogue, cosmetic images and map. Each `editions["5"].source` defines that edition's own world, datapack, resource pack and matching Minecraft client JAR. Fill in its name and dates too. Use a stopped-world copy or backup, and keep finished-edition inputs immutable. Exporters only read these sources.
+`current` defines the sources for today's kit catalogue, cosmetic images and map. Each `editions["5"].source` defines that edition's own world, datapack, resource pack and matching Minecraft client JAR. Fill in its name and dates too. Exporters only read these sources.
+
+Historical 3D maps have their own independent configuration; see [Historical 3D map archive](map-archive.md). Old editions can be rendered without publishing statistics. On the production host, `editionSnapshotCommand` can cold-copy the current Minecraft world once so statistics, overlays and the archived 3D map all use the same frozen state.
 
 `content:refresh` reads exactly these paths; it does not update snapshots. After editing the datapack, refresh its snapshot or point `current.datapack` at the edited copy. The world can remain a snapshot while the current catalogue uses the working datapack.
 
@@ -45,7 +47,9 @@ The dev server serves these files locally. Include them in the next production w
 npm run edition:publish -- 5
 ```
 
-This prepares the edition's kits, images, map overlays and statistics, validates them, saves a recovery copy of an existing database, and imports the statistics as published. The current kit catalogue and map overlays stay unchanged. Repeating the same edition number atomically replaces that edition's snapshot and statistics. Statistics do not require a website rebuild.
+This prepares the edition's kits, images, map overlays and statistics, validates them, saves a recovery copy of an existing database, and imports the statistics as published. If `mapArchiveConfig` is configured, it also prepares an immutable historical BlueMap render and promotes it only after all exporters and validation have succeeded. The current kit catalogue and live-map overlays stay unchanged. Repeating the same edition number replaces that edition's statistics and creates a new retained map revision. Statistics do not require a website rebuild.
+
+For production publication from the live server, configure `editionSnapshotCommand` as shown in [Historical 3D map archive](map-archive.md). The datapack must live inside the configured world so the privileged helper captures both in the same stopped-server copy. Minecraft is restarted immediately after that copy; BlueMap rendering does not extend the downtime.
 
 For production, point `databaseUrl` at the persistent website database and run with its filesystem permissions. The command needs a source checkout with dependencies; the standalone serving release does not include the exporters. Synchronize DiscordSRV afterward to refresh account links and current Minecraft identities from `usercache.json` (see [the README](../README.md#discord-login-and-cosmetics-optional)).
 

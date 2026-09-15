@@ -33,13 +33,13 @@ def digest(path):
 
 def load_config(path):
     config = json.loads(Path(path).read_text())
-    for key in ("app_root", "state_dir", "config_dir", "minecraft_dir", "node", "java"):
+    for key in ("app_root", "state_dir", "config_dir", "minecraft_dir", "map_archive_dir", "node", "java"):
         if not re.fullmatch(r"/[A-Za-z0-9_./-]+", config[key]) or ".." in Path(config[key]).parts:
             raise ValueError(f"{key} must be an absolute Linux path without spaces or traversal")
-    roots = [Path(config[key]) for key in ("app_root", "state_dir", "config_dir", "minecraft_dir")]
+    roots = [Path(config[key]) for key in ("app_root", "state_dir", "config_dir", "minecraft_dir", "map_archive_dir")]
     for index, root in enumerate(roots):
         if root == Path("/") or any(root.is_relative_to(other) or other.is_relative_to(root) for other in roots[index + 1:]):
-            raise ValueError("Application, state, configuration and Minecraft directories must be separate")
+            raise ValueError("Application, state, configuration, Minecraft and map archive directories must be separate")
     if not re.fullmatch(r"[a-zA-Z0-9.-]+", config["domain"]):
         raise ValueError("domain must be a hostname without a scheme or path")
     if not re.fullmatch(r"[1-9][0-9]*[MG]", config["minecraft_heap"]):
@@ -65,6 +65,7 @@ def render(config, output):
     caddy = caddy.replace("{$SGP_DOMAIN}", config["domain"])
     caddy = caddy.replace("{$SGP_BLUEMAP_PORT:8100}", str(config["bluemap_port"]))
     caddy = caddy.replace("{$SGP_WEBSITE_PORT:3000}", str(config["website_port"]))
+    caddy = caddy.replace("@map_archive_dir@", config["map_archive_dir"])
     (output / "Caddyfile").write_text(caddy, newline="\n")
     (output / "host.json").write_text(json.dumps(config, indent=2) + "\n")
 
@@ -128,6 +129,85 @@ def host_lock(config):
         yield
 
 
+def clear_stale_archive_lock(lock_path):
+    try:
+        owner = lock_path.read_text().strip()
+    except FileNotFoundError:
+        return True
+    match = re.search(r"(?:^|:)([1-9][0-9]*)$", owner)
+    if not match:
+        return False
+    try:
+        os.kill(int(match.group(1)), 0)
+        return False
+    except ProcessLookupError:
+        lock_path.unlink(missing_ok=True)
+        return True
+    except PermissionError:
+        return False
+
+
+@contextmanager
+def archive_lock(config, timeout=60):
+    private = Path(config["map_archive_dir"]) / "private"
+    if not private.is_dir():
+        raise ValueError(f"Map archive private directory is missing: {private}")
+    lock_path = private / "archive.lock"
+    deadline = time.monotonic() + timeout
+    descriptor = None
+    while descriptor is None:
+        try:
+            descriptor = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            if clear_stale_archive_lock(lock_path):
+                continue
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"Timed out waiting for map archive lock: {lock_path}")
+            time.sleep(0.1)
+    try:
+        os.write(descriptor, f"host:{os.getpid()}\n".encode())
+        yield
+    finally:
+        os.close(descriptor)
+        lock_path.unlink(missing_ok=True)
+
+
+def copytree_link_or_copy(source, destination):
+    try:
+        shutil.copytree(source, destination, copy_function=os.link)
+    except OSError:
+        shutil.rmtree(destination, ignore_errors=True)
+        shutil.copytree(source, destination)
+
+
+def validate_archive_snapshot(public):
+    manifest_path = public / "manifest.json"
+    if not manifest_path.exists():
+        return None
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get("schemaVersion") != 1 or not isinstance(manifest.get("editions"), dict):
+        raise ValueError("Map archive manifest is invalid")
+    for key, entry in manifest["editions"].items():
+        if not isinstance(entry, dict) or entry.get("snapshotKey") != key:
+            raise ValueError(f"Map archive entry is invalid: {key}")
+        web_path = entry.get("webPath")
+        revision = entry.get("revision")
+        if not isinstance(web_path, str) or not isinstance(revision, str):
+            raise ValueError(f"Map archive entry is invalid: {key}")
+        expected = f"editions/{key}/{revision}"
+        if web_path != expected or ".." in Path(web_path).parts or Path(web_path).is_absolute():
+            raise ValueError(f"Map archive path is unsafe: {web_path}")
+        target = public / web_path
+        for required in ("index.html", "settings.json", "maps/world/settings.json", "sgp-archive.json",
+                         "bluemap-archive.css", "bluemap-archive.js"):
+            if not (target / required).is_file():
+                raise ValueError(f"Map archive revision {key} is incomplete: {required}")
+        tiles = target / "maps/world/tiles"
+        if not tiles.is_dir() or not any(candidate.is_file() for candidate in tiles.rglob("*")):
+            raise ValueError(f"Map archive revision {key} has no rendered tiles")
+    return digest(manifest_path)
+
+
 def service_state(name):
     result = subprocess.run(["systemctl", "show", name, "--property=ActiveState", "--value"],
                             check=True, capture_output=True, text=True)
@@ -139,6 +219,65 @@ def service_state(name):
         if pid != "0":
             raise RuntimeError(f"{name} still has a running process")
     return state
+
+
+def minecraft_world(config):
+    minecraft = Path(config["minecraft_dir"]).resolve(strict=True)
+    properties = minecraft / "server.properties"
+    if not properties.is_file():
+        raise ValueError(f"Missing Minecraft server.properties: {properties}")
+    level_name = "world"
+    for raw in properties.read_text(errors="replace").splitlines():
+        line = raw.strip()
+        if line and not line.startswith("#") and line.startswith("level-name="):
+            level_name = line.split("=", 1)[1].strip() or "world"
+            break
+    level = Path(level_name)
+    if level.is_absolute() or len(level.parts) != 1 or level_name in (".", "..") or "/" in level_name or "\\" in level_name:
+        raise ValueError("level-name must be a simple directory name for safe edition snapshots")
+    world = (minecraft / level_name).resolve(strict=True)
+    if world.parent != minecraft or not (world / "level.dat").is_file():
+        raise ValueError(f"Configured Minecraft world is invalid: {world}")
+    return world
+
+
+def snapshot_world(config, target):
+    snapshots = (Path(config["map_archive_dir"]) / "private" / "snapshots").resolve(strict=True)
+    target = Path(target).absolute()
+    try:
+        parent = target.parent.resolve(strict=True)
+    except FileNotFoundError as error:
+        raise ValueError("Snapshot target must be a new direct child of map_archive_dir/private/snapshots") from error
+    if target.exists() or parent != snapshots or not re.fullmatch(r"edition-[1-9][0-9]*-[A-Za-z0-9_-]+", target.name):
+        raise ValueError("Snapshot target must be a new direct child of map_archive_dir/private/snapshots")
+    world = minecraft_world(config)
+    with host_lock(config):
+        running = service_state("sgp-minecraft.service") == "active"
+        try:
+            if running:
+                run("systemctl", "stop", "sgp-minecraft.service")
+            if service_state("sgp-minecraft.service") == "active":
+                raise RuntimeError("Minecraft must be stopped before taking an edition snapshot")
+            try:
+                shutil.copytree(world, target)
+            except BaseException:
+                shutil.rmtree(target, ignore_errors=True)
+                raise
+        finally:
+            if running:
+                run("systemctl", "start", "sgp-minecraft.service")
+    if not (target / "level.dat").is_file():
+        shutil.rmtree(target, ignore_errors=True)
+        raise RuntimeError("Edition snapshot is incomplete")
+    # The helper is privileged only for the cold copy. Everything after this runs
+    # as the normal website/publisher account. Do not strand a root-owned snapshot
+    # if ownership transfer itself fails.
+    try:
+        run("chown", "-R", "sgp:sgp", target)
+    except BaseException:
+        shutil.rmtree(target, ignore_errors=True)
+        raise
+    print(target)
 
 
 def migrate(config, release, check=False):
@@ -251,8 +390,15 @@ def create_backup_stage(config, stage, release):
     finally:
         if running:
             run("systemctl", "start", "sgp-minecraft.service")
+    archive_public = Path(config["map_archive_dir"]) / "public"
+    archive_hash = None
+    if archive_public.is_dir():
+        with archive_lock(config):
+            archive_hash = validate_archive_snapshot(archive_public)
+            copytree_link_or_copy(archive_public, stage / "map-archive/public")
     manifest = {"created_at": datetime.now(timezone.utc).isoformat(),
                 "database_sha256": digest(stage / "sgp.sqlite"),
+                "map_archive_manifest_sha256": archive_hash,
                 "release": json.loads((release / "release.json").read_text())}
     (stage / "backup.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
@@ -274,7 +420,11 @@ def verify_restore(snapshot):
             raise ValueError(f"Restored snapshot is missing {name}")
     if json.loads((snapshot / "website/release.json").read_text()) != metadata["release"]:
         raise ValueError("Restored release does not match backup metadata")
-    print(f"Restored files and SQLite verified: {snapshot}")
+    archive_public = snapshot / "map-archive/public"
+    restored_archive_hash = validate_archive_snapshot(archive_public) if archive_public.is_dir() else None
+    if restored_archive_hash != metadata.get("map_archive_manifest_sha256"):
+        raise ValueError("Restored map archive manifest does not match backup metadata")
+    print(f"Restored files, SQLite and map archive verified: {snapshot}")
 
 
 def restore_check(snapshot_id, target):
@@ -300,6 +450,8 @@ def main():
     activation = commands.add_parser("activate")
     activation.add_argument("release", type=Path)
     commands.add_parser("backup")
+    snapshot = commands.add_parser("snapshot-world")
+    snapshot.add_argument("target", type=Path)
     restore = commands.add_parser("restore-check")
     restore.add_argument("snapshot")
     restore.add_argument("target", type=Path)
@@ -314,12 +466,15 @@ def main():
             render(config, args.output)
         elif args.command == "activate":
             activate(config, args.release)
-        elif args.command == "backup":
-            # systemd stop/SIGTERM should unwind the copy and restart a previously running server.
+        elif args.command in ("backup", "snapshot-world"):
+            # systemd/sudo interruption should unwind a cold copy and restart a previously running server.
             def interrupted(_signum, _frame):
-                raise KeyboardInterrupt("Backup interrupted")
+                raise KeyboardInterrupt(f"{args.command} interrupted")
             signal.signal(signal.SIGTERM, interrupted)
-            backup(config)
+            if args.command == "backup":
+                backup(config)
+            else:
+                snapshot_world(config, args.target)
 
 
 if __name__ == "__main__":

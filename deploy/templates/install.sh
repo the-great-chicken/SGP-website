@@ -18,6 +18,8 @@ done
 install -d -m 0755 @app_root@ @app_root@/ops @app_root@/releases
 install -d -o sgp -g sgp -m 0700 @state_dir@ @state_dir@/next-cache
 install -d -o minecraft -g minecraft -m 0750 @minecraft_dir@
+install -d -o sgp -g sgp -m 0755 @map_archive_dir@ @map_archive_dir@/public
+install -d -o sgp -g sgp -m 0700 @map_archive_dir@/private @map_archive_dir@/private/snapshots @map_archive_dir@/private/staging @map_archive_dir@/private/bluemap
 install -d -m 0700 @config_dir@
 install -m 0644 "$source_dir/host.py" @app_root@/ops/host.py
 install -m 0600 host.json @config_dir@/host.json
@@ -30,6 +32,8 @@ done
 if [[ ! -e @config_dir@/restic-password ]]; then
     (umask 077; openssl rand -base64 48 > @config_dir@/restic-password)
 fi
+visudo -cf sgp-map-snapshot.sudoers >/dev/null
+install -m 0440 sgp-map-snapshot.sudoers /etc/sudoers.d/sgp-map-snapshot
 install -m 0644 sgp-*.service sgp-backup.timer /etc/systemd/system/
 if [[ -f /etc/caddy/Caddyfile ]]; then
     cp -p /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.before-sgp.$(date +%s)"

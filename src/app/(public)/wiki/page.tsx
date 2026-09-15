@@ -134,7 +134,7 @@ export default function WikiPage() {
         </div>
       </section>
 
-      <section className="history-map-plan" aria-labelledby="history-map-title">
+      <Link className="history-map-plan is-link" href="/wiki/carte" aria-labelledby="history-map-title">
         <div className="history-map-plan-icon" aria-hidden="true">
           <Map size={23} />
         </div>
@@ -142,11 +142,11 @@ export default function WikiPage() {
           <p className="eyebrow">Évolution de la carte</p>
           <h2 id="history-map-title">Comparer l’Arène au fil des éditions.</h2>
           <p>
-            Une comparaison dédiée permettra plus tard de passer d’une édition à l’autre, de retrouver les mêmes lieux et de voir comment l’Arène a changé au fil du temps.
+            Explorez les rendus 3D historiques et passez d’une édition à l’autre sans perdre le lieu que vous êtes en train d’observer.
           </p>
         </div>
-        <span className="history-status-chip">Prévu</span>
-      </section>
+        <span className="history-card-action">Explorer la carte <ArrowRight size={16} /></span>
+      </Link>
     </div>
   );
 }

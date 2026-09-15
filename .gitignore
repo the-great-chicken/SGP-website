@@ -34,3 +34,5 @@ next-env.d.ts
 
 # Test coverage artifacts
 /coverage/
+
+/map-archive.json

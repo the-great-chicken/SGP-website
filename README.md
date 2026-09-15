@@ -83,5 +83,6 @@ For schema changes, run `npm run db:generate` and commit the migration, then app
 ## Further documentation
 
 - [Content publishing](docs/publishing.md): refresh kits, images and map overlays; publish a finished edition.
-- [History content](docs/history.md): edition articles, archive media and the historical-map integration contract.
+- [Historical 3D map archive](docs/map-archive.md): render, replace and back up immutable BlueMap snapshots for the edition timeline.
+- [History content](docs/history.md): edition articles and archive media.
 - [Linux hosting](deploy/README.md): production services, HTTPS, secrets, deployment and backups.

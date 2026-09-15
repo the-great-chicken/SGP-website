@@ -1,0 +1,2 @@
+# host.py performs strict destination validation; this grants only its snapshot subcommand.
+sgp ALL=(root) NOPASSWD: /usr/bin/python3 @app_root@/ops/host.py --config @config_dir@/host.json snapshot-world @map_archive_dir@/private/snapshots/*

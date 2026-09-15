@@ -23,9 +23,11 @@ class HostingTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
-        self.config = {key: str(self.root / key) for key in ("app_root", "state_dir", "minecraft_dir", "config_dir")}
+        self.config = {key: str(self.root / key) for key in ("app_root", "state_dir", "minecraft_dir", "config_dir", "map_archive_dir")}
         for directory in self.config.values():
             Path(directory).mkdir()
+        (Path(self.config["map_archive_dir"]) / "public").mkdir()
+        (Path(self.config["map_archive_dir"]) / "private/snapshots").mkdir(parents=True)
         self.db = Path(self.config["state_dir"]) / "sgp.sqlite"
         with closing(sqlite3.connect(self.db)) as db:
             db.executescript("CREATE TABLE __drizzle_migrations (hash TEXT, created_at INTEGER); CREATE TABLE example (value TEXT); INSERT INTO example VALUES ('retained');")
@@ -121,6 +123,7 @@ class HostingTests(unittest.TestCase):
         self.assertIn("Environment=HOSTNAME=127.0.0.1", website)
         self.assertIn("Environment=DATABASE_URL=file:/var/lib/sgp/sgp.sqlite", website)
         self.assertIn("Environment=BLUEMAP_INTERNAL_URL=http://127.0.0.1:8100", website)
+        self.assertIn("Environment=MAP_ARCHIVE_DIR=/srv/map-archive", website)
         self.assertIn("EnvironmentFile=/etc/sgp/website.env", website)
         self.assertNotIn("TEST_SECRET", website)
         caddy = (output / "Caddyfile").read_text()
@@ -128,6 +131,8 @@ class HostingTests(unittest.TestCase):
         self.assertIn("handle /map {", caddy)
         self.assertIn("redir /map/ /map 308", caddy)
         self.assertIn("handle_path /map/*", caddy)
+        self.assertIn("handle_path /map-archive/*", caddy)
+        self.assertIn("root * /srv/map-archive/public", caddy)
         self.assertNotIn("rewrite * /api/map-shell", caddy)
 
     def test_config_rejects_overlapping_paths_and_line_injection(self):
@@ -217,6 +222,96 @@ class HostingTests(unittest.TestCase):
         self.assertIn(("systemctl", "start", "sgp-minecraft.service"), calls)
         self.assertFalse(any(call[:2] == ("restic", "forget") for call in calls))
         self.assertEqual(list(Path(self.config["state_dir"]).glob("backup-*")), [])
+
+    def test_snapshot_world_cold_copies_configured_level_and_restarts_server(self):
+        minecraft = Path(self.config["minecraft_dir"])
+        (minecraft / "server.properties").write_text("level-name=world\n")
+        (minecraft / "world/datapacks/SGP/data.txt").parent.mkdir(parents=True)
+        (minecraft / "world/datapacks/SGP/data.txt").write_text("frozen")
+        target = Path(self.config["map_archive_dir"]) / "private/snapshots/edition-5-test"
+        with patch.object(hosting, "service_state", side_effect=["active", "inactive"]), patch.object(hosting, "run") as commands:
+            hosting.snapshot_world(self.config, target)
+        self.assertEqual((target / "datapacks/SGP/data.txt").read_text(), "frozen")
+        self.assertEqual([call.args for call in commands.call_args_list], [
+            ("systemctl", "stop", "sgp-minecraft.service"),
+            ("systemctl", "start", "sgp-minecraft.service"),
+            ("chown", "-R", "sgp:sgp", target),
+        ])
+
+    def test_snapshot_world_restarts_after_copy_failure_and_removes_partial_target(self):
+        target = Path(self.config["map_archive_dir"]) / "private/snapshots/edition-5-failure"
+        original = hosting.shutil.copytree
+        def fail(source, destination, *args, **kwargs):
+            if source == Path(self.config["minecraft_dir"]) / "world":
+                Path(destination).mkdir()
+                raise OSError("disk full")
+            return original(source, destination, *args, **kwargs)
+        with patch.object(hosting, "service_state", side_effect=["active", "inactive"]), patch.object(hosting, "run") as commands, patch.object(hosting.shutil, "copytree", side_effect=fail):
+            with self.assertRaisesRegex(OSError, "disk full"):
+                hosting.snapshot_world(self.config, target)
+        self.assertFalse(target.exists())
+        self.assertEqual(commands.call_args.args, ("systemctl", "start", "sgp-minecraft.service"))
+
+    def test_snapshot_world_removes_copy_if_ownership_transfer_fails(self):
+        target = Path(self.config["map_archive_dir"]) / "private/snapshots/edition-5-chown-failure"
+        def command(*args, **kwargs):
+            if args[:2] == ("chown", "-R"):
+                raise subprocess.CalledProcessError(1, args)
+            return subprocess.CompletedProcess(args, 0)
+        with patch.object(hosting, "service_state", side_effect=["inactive", "inactive"]), patch.object(hosting, "run", side_effect=command):
+            with self.assertRaises(subprocess.CalledProcessError):
+                hosting.snapshot_world(self.config, target)
+        self.assertFalse(target.exists())
+
+    def test_snapshot_world_rejects_targets_outside_archive_snapshot_directory(self):
+        target = self.root / "elsewhere/edition-5-test"
+        with patch.object(hosting, "service_state") as state, patch.object(hosting, "run") as commands:
+            with self.assertRaises(ValueError):
+                hosting.snapshot_world(self.config, target)
+        state.assert_not_called()
+        commands.assert_not_called()
+
+    def test_archive_lock_recovers_after_dead_owner(self):
+        private = Path(self.config["map_archive_dir"]) / "private"
+        (private / "archive.lock").write_text("node:99999999\n")
+        with hosting.archive_lock(self.config):
+            self.assertTrue((private / "archive.lock").is_file())
+        self.assertFalse((private / "archive.lock").exists())
+
+    def test_backup_includes_valid_map_archive_but_not_private_renderer_state(self):
+        public = Path(self.config["map_archive_dir"]) / "public"
+        revision = public / "editions/edition-1/r1"
+        for name in (
+            "index.html",
+            "settings.json",
+            "maps/world/settings.json",
+            "sgp-archive.json",
+            "bluemap-archive.css",
+            "bluemap-archive.js",
+            "maps/world/tiles/0/x0/z0.prbm.gz",
+        ):
+            (revision / name).parent.mkdir(parents=True, exist_ok=True)
+            (revision / name).write_text("{}")
+        (public / "manifest.json").write_text(json.dumps({"schemaVersion": 1, "editions": {"edition-1": {
+            "snapshotKey": "edition-1", "revision": "r1", "webPath": "editions/edition-1/r1"
+        }}}))
+        (Path(self.config["map_archive_dir"]) / "private/bluemap").mkdir()
+        (Path(self.config["map_archive_dir"]) / "private/bluemap/bluemap.jar").write_text("large renderer")
+        stage, _ = self.stage(running=False)
+        self.assertTrue((stage / "map-archive/public/editions/edition-1/r1/index.html").is_file())
+        self.assertFalse((stage / "map-archive/private").exists())
+        hosting.verify_restore(stage)
+
+    def test_restore_rejects_archive_manifest_traversal(self):
+        public = Path(self.config["map_archive_dir"]) / "public"
+        (public / "manifest.json").write_text(json.dumps({"schemaVersion": 1, "editions": {"edition-1": {
+            "snapshotKey": "edition-1", "revision": "r1", "webPath": "../private"
+        }}}))
+        stage = self.root / "bad-stage"
+        stage.mkdir()
+        with patch.object(hosting, "service_state", side_effect=["inactive", "inactive"]):
+            with self.assertRaisesRegex(ValueError, "unsafe"):
+                hosting.create_backup_stage(self.config, stage, self.release)
 
     @unittest.skipUnless(sys.platform == "linux" and shutil.which("restic"), "Requires Linux and restic")
     def test_encrypted_restic_backup_and_verified_restore(self):

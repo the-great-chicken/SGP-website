@@ -9,5 +9,6 @@
   "minecraft_heap": "6G",
   "website_port": 3000,
   "bluemap_port": 8100,
-  "backup_schedule": "*-*-* 05:00:00 UTC"
+  "backup_schedule": "*-*-* 05:00:00 UTC",
+  "map_archive_dir": "/srv/map-archive"
 }

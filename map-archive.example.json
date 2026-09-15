@@ -1,0 +1,43 @@
+{
+  "archiveDirectory": "../map-archive",
+  "java": "java",
+  "retainRevisions": 2,
+  "editions": {
+    "1": {
+      "snapshotKey": "edition-1",
+      "world": "../world-backups/edition-1",
+      "resourcePack": null,
+      "minecraftVersion": "1.15.2",
+      "dimension": "minecraft:overworld",
+      "center": { "x": 0, "z": 0 },
+      "renderRadius": 768
+    },
+    "2": {
+      "snapshotKey": "edition-2",
+      "world": "../world-backups/edition-2",
+      "resourcePack": "../resource-packs/edition-2.zip",
+      "minecraftVersion": "1.20.1",
+      "dimension": "minecraft:overworld",
+      "center": { "x": 0, "z": 0 },
+      "renderRadius": 768
+    },
+    "3": {
+      "snapshotKey": "edition-3",
+      "world": "../world-backups/edition-3",
+      "resourcePack": "../resource-packs/edition-3.zip",
+      "minecraftVersion": "1.20.2",
+      "dimension": "minecraft:overworld",
+      "center": { "x": 0, "z": 0 },
+      "renderRadius": 768
+    },
+    "4": {
+      "snapshotKey": "edition-4",
+      "world": "../world-backups/edition-4",
+      "resourcePack": "../resource-packs/edition-4.zip",
+      "minecraftVersion": "1.21.1",
+      "dimension": "minecraft:overworld",
+      "center": { "x": 0, "z": 0 },
+      "renderRadius": 768
+    }
+  }
+}

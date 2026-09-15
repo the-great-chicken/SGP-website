@@ -7,6 +7,7 @@ import test from "node:test";
 import { createClient } from "@libsql/client";
 import { promoteCurrent, publishingConfigSchema, runCommand, runPublishing } from "../src/publishing/workflow";
 import { getItemRenderSignature } from "../src/lib/item-rendering";
+import { readMapArchiveManifest, resolveMapArchivePaths, mapArchiveConfigSchema } from "../src/map-archive/archive";
 
 const root = process.cwd();
 const uuid = "11111111-1111-4111-8111-111111111111";
@@ -19,6 +20,7 @@ async function fixture() {
     await mkdir(path.join(workspace, directory), { recursive: true });
   }
   await writeFile(path.join(workspace, "inputs/client.jar"), "fixture");
+  await writeFile(path.join(workspace, "inputs/world/level.dat"), "world fixture");
   await writeFile(path.join(workspace, "data/kit-manifest.json"), "current manifest");
   await writeFile(path.join(workspace, "public/bluemap/overlays.json"), "current overlays");
   await cp(path.join(root, "drizzle"), path.join(workspace, "drizzle"), { recursive: true });
@@ -61,6 +63,43 @@ async function fixture() {
     }
   };
   return { workspace, config, command, calls, failAt: (value: string) => { fail = value; }, cleanup: () => rm(workspace, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }) };
+}
+
+
+async function enableMapArchive(f: Awaited<ReturnType<typeof fixture>>) {
+  const archiveConfig = {
+    archiveDirectory: "map-archive",
+    blueMapJar: "bluemap-5.24-cli.jar",
+    retainRevisions: 2,
+    editions: {
+      "5": {
+        snapshotKey: "edition-5",
+        minecraftVersion: "26.1",
+        dimension: "minecraft:overworld",
+        center: { x: 120, z: -80 },
+        renderRadius: 512,
+      },
+    },
+  };
+  await writeFile(path.join(f.workspace, "map-archive.json"), JSON.stringify(archiveConfig));
+  await writeFile(path.join(f.workspace, "bluemap-5.24-cli.jar"), "fake jar");
+  f.config.mapArchiveConfig = "map-archive.json";
+  return mapArchiveConfigSchema.parse(archiveConfig);
+}
+
+function withFakeBlueMap(f: Awaited<ReturnType<typeof fixture>>, options: { failRender?: boolean } = {}) {
+  return async (executable: string, args: string[], cwd: string) => {
+    if (args[0] === "-jar") {
+      if (options.failRender) throw new Error("Simulated BlueMap failure");
+      await mkdir(path.join(cwd, "web/maps/world/tiles/0/x0"), { recursive: true });
+      await writeFile(path.join(cwd, "web/index.html"), "<html>archive</html>");
+      await writeFile(path.join(cwd, "web/settings.json"), "{}");
+      await writeFile(path.join(cwd, "web/maps/world/settings.json"), "{}");
+      await writeFile(path.join(cwd, "web/maps/world/tiles/0/x0/z0.prbm.gz"), "tile");
+      return;
+    }
+    await f.command(executable, args, cwd);
+  };
 }
 
 test("failed refresh leaves current content and database untouched", async () => {
@@ -338,5 +377,79 @@ test("prepare-only validates an edition without creating its database", async ()
   try {
     await runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "edition", number: 5 }, command: f.command, prepareOnly: true });
     assert.ok(!(await readdir(f.workspace)).includes("website.sqlite"));
+  } finally { await f.cleanup(); }
+});
+
+
+test("edition publication archives the same validated world without coupling old maps to the database", async () => {
+  const f = await fixture();
+  try {
+    const archiveConfig = await enableMapArchive(f);
+    await runPublishing({
+      root: f.workspace,
+      configDirectory: f.workspace,
+      config: f.config,
+      mode: { kind: "edition", number: 5 },
+      command: withFakeBlueMap(f),
+    });
+    const paths = resolveMapArchivePaths(f.workspace, archiveConfig);
+    const manifest = await readMapArchiveManifest(paths.publicRoot);
+    assert.equal(manifest.editions["edition-5"].editionNumber, 5);
+    assert.equal(manifest.editions["edition-5"].center.x, 120);
+    assert.equal(await readFile(path.join(paths.publicRoot, manifest.editions["edition-5"].webPath, "index.html"), "utf8"), "<html>archive</html>");
+  } finally { await f.cleanup(); }
+});
+
+test("BlueMap render failure stops edition publication before the database is touched", async () => {
+  const f = await fixture();
+  try {
+    const archiveConfig = await enableMapArchive(f);
+    await assert.rejects(
+      runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "edition", number: 5 }, command: withFakeBlueMap(f, { failRender: true }) }),
+      /Simulated BlueMap failure/,
+    );
+    assert.ok(!(await readdir(f.workspace)).includes("website.sqlite"));
+    const paths = resolveMapArchivePaths(f.workspace, archiveConfig);
+    assert.deepEqual((await readMapArchiveManifest(paths.publicRoot)).editions, {});
+  } finally { await f.cleanup(); }
+});
+
+test("editionSnapshotCommand feeds statistics and BlueMap from one cold snapshot and removes it afterwards", async () => {
+  const f = await fixture();
+  try {
+    const archiveConfig = await enableMapArchive(f);
+    const datapack = path.join(f.workspace, "inputs/world/datapacks/TGCdatapack");
+    await mkdir(path.join(datapack, "stats_analysis"), { recursive: true });
+    f.config.editions["5"].source.datapack = "inputs/world/datapacks/TGCdatapack";
+    f.config.editionSnapshotCommand = ["snapshot-helper"];
+    let snapshotTarget = "";
+    let renderedWorld = "";
+    const command = async (executable: string, args: string[], cwd: string) => {
+      if (executable === "snapshot-helper") {
+        snapshotTarget = args.at(-1)!;
+        await cp(path.join(f.workspace, "inputs/world"), snapshotTarget, { recursive: true });
+        return;
+      }
+      if (args[0] === "-jar") {
+        const configRoot = args[args.indexOf("-c") + 1];
+        const mapConfig = await readFile(path.join(configRoot, "maps/world.conf"), "utf8");
+        renderedWorld = JSON.parse(mapConfig.match(/^world: (.+)$/m)![1]);
+        await mkdir(path.join(cwd, "web/maps/world/tiles/0/x0"), { recursive: true });
+        await writeFile(path.join(cwd, "web/index.html"), "<html>snapshot archive</html>");
+        await writeFile(path.join(cwd, "web/settings.json"), "{}");
+        await writeFile(path.join(cwd, "web/maps/world/settings.json"), "{}");
+        await writeFile(path.join(cwd, "web/maps/world/tiles/0/x0/z0.prbm.gz"), "tile");
+        return;
+      }
+      await f.command(executable, args, cwd);
+    };
+
+    const stage = await runPublishing({ root: f.workspace, configDirectory: f.workspace, config: f.config, mode: { kind: "edition", number: 5 }, command });
+    assert.ok(snapshotTarget);
+    assert.equal(renderedWorld, snapshotTarget);
+    const publication = JSON.parse(await readFile(path.join(stage, "publication.json"), "utf8"));
+    assert.equal(publication.source.world, "<frozen-edition-snapshot>");
+    assert.equal(publication.source.datapack, "<inside-frozen-edition-snapshot>");
+    assert.deepEqual(await readdir(path.join(resolveMapArchivePaths(f.workspace, archiveConfig).privateRoot, "snapshots")), []);
   } finally { await f.cleanup(); }
 });

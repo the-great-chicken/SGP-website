@@ -34,7 +34,9 @@
     "test:map-shell": "tsx --test tests/map-shell.test.ts",
     "test:app": "node --conditions=react-server --import tsx --test tests/app/routes.test.ts",
     "test:e2e": "playwright test",
-    "test:integration": "node scripts/run-integration-tests.mjs"
+    "test:integration": "node scripts/run-integration-tests.mjs",
+    "map:setup": "tsx scripts/setup-map-archive.mts",
+    "map:archive": "tsx scripts/archive-map.mts"
   },
   "dependencies": {
     "@libsql/client": "0.18.0",

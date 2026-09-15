@@ -30,7 +30,7 @@ export PATH="/opt/node/bin:$PATH"
 
 Move the downloaded archive and checksum file outside the checkout before building. Keep the pinned runtime updated through tested releases; Ubuntu packages receive normal security updates.
 
-Copy `deploy/host.example.json` to ignored `deploy/host.json` and edit it for the future host. Paths default to `/srv/sgp` (releases), `/var/lib/sgp` (database/cache), `/etc/sgp` (secrets), and `/srv/minecraft` (server). The remaining commands assume those defaults; use your configured paths if changed.
+Copy `deploy/host.example.json` to ignored `deploy/host.json` and edit it for the future host. Paths default to `/srv/sgp` (releases), `/var/lib/sgp` (database/cache), `/etc/sgp` (secrets), `/srv/minecraft` (server), and `/srv/map-archive` (immutable historical renders plus private render/snapshot workspace). These roots must remain separate. The remaining commands assume those defaults; use your configured paths if changed.
 
 ```bash
 python3 deploy/host.py render
@@ -56,6 +56,12 @@ Run `restic init` only for a new repository. Caddy manages certificate issuance 
 3. Keep the cosmetics bridge listening on loopback and set the same secret as `website.env`.
 
 The provided service handles graceful shutdown. Backup consistency depends on running this server through `sgp-minecraft.service` and keeping world/plugin files inside its directory; avoid external symlinks or concurrent manual Java processes.
+
+## Historical map snapshots
+
+The installer creates `/srv/map-archive/{public,private}` and installs a narrowly scoped sudo rule allowing the `sgp` account to invoke only the validated `snapshot-world` host command beneath `/srv/map-archive/private/snapshots/`. The helper takes the same host operations lock as backups, stops Minecraft only for the world copy, restarts it in a `finally` path, then transfers ownership of the frozen copy to `sgp`.
+
+Follow [Historical 3D map archive](../docs/map-archive.md) to configure `map-archive.json`, install the pinned BlueMap CLI, bootstrap Editions 1–4, and opt normal edition publication into the cold-snapshot flow. Historical renders are served by Caddy directly at `/map-archive/*`; there is no additional BlueMap daemon.
 
 ## Build and activate a release
 
@@ -93,9 +99,9 @@ systemctl list-timers sgp-backup.timer
 
 The default is daily at **05:00 UTC**. Each backup uses SQLite's online backup API, then stops Minecraft for the local world/plugin copy and restarts it before uploading. A server already stopped remains stopped. Downtime lasts as long as that copy takes; choose a schedule outside editions. Missed backups are not run automatically at boot. Leave enough free disk space for one full local copy of the server and release, plus database snapshots.
 
-Encrypted backups contain the website release, SQLite snapshot, host settings, website secrets, worlds, plugins and resource pack. Generated BlueMap tiles at the default `bluemap/web/maps` path, caches and logs are excluded. Retention is 7 daily, 4 weekly and 6 monthly snapshots. Every successful run checks repository structure; `restore-check` downloads and verifies actual data, including SQLite integrity and foreign keys. Repeat a restore drill after hosting changes and periodically. Check backup failures with `systemctl --failed` and `journalctl -u sgp-backup`; external failure notifications still need an alert destination.
+Encrypted backups contain the website release, SQLite snapshot, host settings, website secrets, worlds, plugins, resource pack, and the **published historical map archive**. Generated tiles for the live `/map` BlueMap instance at the default `bluemap/web/maps` path, caches, logs, archive renderer JARs, render staging and temporary publication snapshots are excluded. Historical archive files are immutable, so the local backup staging step hard-links them where possible before restic deduplicates them. Retention is 7 daily, 4 weekly and 6 monthly snapshots. Every successful run checks repository structure; `restore-check` downloads and verifies actual data, including SQLite integrity and foreign keys. Repeat a restore drill after hosting changes and periodically. Check backup failures with `systemctl --failed` and `journalctl -u sgp-backup`; external failure notifications still need an alert destination.
 
-For host loss, prepare a replacement with this repository, recover your restic credentials, and run `restore-check` there. Its output identifies the restored snapshot directory. With the website, Minecraft and backup timer stopped, restore `minecraft/` into an empty server directory, `sgp.sqlite` into an empty state directory, `website/` into a new release directory, and `config/website.env` into `/etc/sgp/`. Apply the new host settings, restore service ownership (`sgp` for state, `minecraft` for server), keep secrets root-only, and activate that release. Start Minecraft and Caddy, verify the site, then re-enable backups. BlueMap regenerates omitted map tiles.
+For host loss, prepare a replacement with this repository, recover your restic credentials, and run `restore-check` there. Its output identifies the restored snapshot directory. With the website, Minecraft and backup timer stopped, restore `minecraft/` into an empty server directory, `sgp.sqlite` into an empty state directory, `website/` into a new release directory, `map-archive/public/` into the configured archive's `public/` directory, and `config/website.env` into `/etc/sgp/`. Apply the new host settings, restore service ownership (`sgp` for state and the map archive, `minecraft` for server), keep secrets root-only, and activate that release. Start Minecraft and Caddy, verify the site, then re-enable backups. The live BlueMap instance regenerates its omitted tiles; historical map revisions are restored from backup.
 
 For a failed update, activation leaves the website stopped and prints the pre-deployment SQLite snapshot path. The `previous` symlink records the former release after a switch. Reactivating an older release is permitted only when its migrations match the database. If a migration changed the schema, stop the backup timer and website, preserve the entire failed state directory (including SQLite WAL/SHM files), and restore the pre-deployment snapshot into a fresh state directory as `sgp.sqlite`. Recreate its `next-cache` directory and `sgp` ownership, then activate the matching old release. Restoring this snapshot discards writes made after it; retain the failed database for reconciliation. Pre-deployment snapshots are local recovery aids, not off-machine backups; remove obsolete ones only after validating recovery.
 
