@@ -76,7 +76,7 @@ async function enableMapArchive(f: Awaited<ReturnType<typeof fixture>>) {
         snapshotKey: "edition-5",
         minecraftVersion: "26.1",
         dimension: "minecraft:overworld",
-        center: { x: 120, z: -80 },
+        center: { x: 120, y: 200, z: -80 },
         renderRadius: 512,
       },
     },

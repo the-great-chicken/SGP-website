@@ -37,6 +37,7 @@ async function fixture() {
         minecraftVersion: "1.15.2",
         center: { x: 100, y: 72, z: -40 },
         renderRadius: 512,
+        minY: 40,
       },
     },
   });
@@ -88,16 +89,58 @@ test("generated BlueMap configuration is static, perspective-only and bounded", 
     });
     assert.match(configs["webserver.conf"], /enabled: false/);
     assert.match(configs["webapp.conf"], /client-decompression: true/);
+    assert.match(configs["webapp.conf"], /hires-slider-default: 250/);
     assert.match(configs["webapp.conf"], /scripts: \["\.\/bluemap-archive\.js"\]/);
     assert.match(configs["webapp.conf"], /styles: \["\.\/bluemap-archive\.css"\]/);
+    assert.match(configs["webapp.conf"], /start-location: "world:100:72:-40:1500:0:0:0:0:perspective"/);
     assert.match(configs["maps/world.conf"], /enable-perspective-view: true/);
     assert.match(configs["maps/world.conf"], /enable-flat-view: false/);
     assert.match(configs["maps/world.conf"], /enable-free-flight-view: false/);
     assert.match(configs["maps/world.conf"], /type: box/);
     assert.match(configs["maps/world.conf"], /min-x: -412/);
     assert.match(configs["maps/world.conf"], /max-z: 472/);
+    assert.match(configs["maps/world.conf"], /min-y: 40/);
+    assert.match(configs["maps/world.conf"], /render-edges: true/);
     assert.match(configs["maps/world.conf"], /start-pos: \{ x: 100, z: -40 \}/);
     assert.doesNotMatch(configs["maps/world.conf"], /start-pos:.*y:/);
+  } finally { await f.cleanup(); }
+});
+
+test("archive center Y is required and minY remains optional", async () => {
+  assert.throws(() => mapArchiveConfigSchema.parse({
+    editions: {
+      "1": { snapshotKey: "edition-1", minecraftVersion: "1.15.2", center: { x: 0, z: 0 } },
+    },
+  }), /y/);
+
+  const parsed = mapArchiveConfigSchema.parse({
+    editions: {
+      "1": { snapshotKey: "edition-1", minecraftVersion: "1.15.2", center: { x: 0, y: 200, z: 0 } },
+    },
+  });
+  const configs = createBlueMapConfigText({
+    world: "/world", webroot: "/web", data: "/data", resourcePack: null, edition: parsed.editions["1"],
+  });
+  assert.doesNotMatch(configs["maps/world.conf"], /min-y:/);
+});
+
+test("manifest rejects entries without a finite XYZ center", async () => {
+  const f = await fixture();
+  try {
+    const paths = resolveMapArchivePaths(f.workspace, f.config);
+    await mkdir(paths.publicRoot, { recursive: true });
+    await writeFile(path.join(paths.publicRoot, "manifest.json"), JSON.stringify({
+      schemaVersion: 1,
+      editions: {
+        "edition-1": {
+          editionNumber: 1, snapshotKey: "edition-1", revision: "r1", webPath: "editions/edition-1/r1",
+          center: { x: 0, z: 0 }, renderRadius: 1, dimension: "minecraft:overworld",
+          minecraftVersion: "1.15.2", blueMapVersion: "5.24", renderedAt: new Date().toISOString(),
+          sourceFingerprint: "x", resourcePackFingerprint: null,
+        },
+      },
+    }));
+    await assert.rejects(readMapArchiveManifest(paths.publicRoot), /Invalid map archive entry: edition-1/);
   } finally { await f.cleanup(); }
 });
 
@@ -118,6 +161,8 @@ test("a prepared render is invisible until promotion and then becomes current", 
     assert.doesNotMatch(provenance, /sourceWorld|sourceResourcePack/);
     assert.equal(await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "bluemap-archive.js"), "utf8").then((value) => value.includes("mapEventSource.close()")), true);
     assert.equal(await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "bluemap-archive.css"), "utf8").then((value) => value.includes("#map-container")), true);
+    assert.equal(await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "sgp-controls.mjs"), "utf8").then((value) => value.includes("installSgpBlueMapControls")), true);
+    assert.equal(JSON.parse(provenance).minY, 40);
     const mode = (await stat(path.join(paths.publicRoot, prepared.entry.webPath))).mode & 0o777;
     assert.equal(mode, 0o755);
     await prepared.cleanup();
@@ -229,8 +274,8 @@ test("promotion rejects unsafe manifest paths", async () => {
       stagingWebroot: staging,
       retainRevisions: 2,
       entry: {
-        editionNumber: 1, snapshotKey: "edition-1", revision: "r1", webPath: "../escape", center: { x: 0, z: 0 },
-        renderRadius: 1, dimension: "minecraft:overworld", minecraftVersion: "1.15.2", blueMapVersion: "5.24",
+        editionNumber: 1, snapshotKey: "edition-1", revision: "r1", webPath: "../escape", center: { x: 0, y: 0, z: 0 },
+        renderRadius: 1, minY: null, dimension: "minecraft:overworld", minecraftVersion: "1.15.2", blueMapVersion: "5.24",
         renderedAt: new Date().toISOString(), sourceFingerprint: "x", resourcePackFingerprint: null,
       },
     }), /Unsafe archived map path|does not match/);
@@ -238,14 +283,10 @@ test("promotion rejects unsafe manifest paths", async () => {
 });
 
 test("camera translation preserves BlueMap view fields and aligns centers", () => {
-  const source = "#world:125:80:-10:320:1.2:0.6:0.2:false:perspective";
+  const source = "#world:125:80:-10:320:1.2:0.6:0.2:0:perspective";
   assert.equal(
     translateBlueMapHash(source, { x: 100, y: 70, z: -40 }, { x: -200, y: 65, z: 300 }),
-    "#world:-175:75:330:320:1.2:0.6:0.2:false:perspective",
+    "#world:-175:75:330:320:1.2:0.6:0.2:0:perspective",
   );
-  assert.equal(
-    translateBlueMapHash(source, { x: 100, z: -40 }, { x: -200, z: 300 }),
-    "#world:-175:80:330:320:1.2:0.6:0.2:false:perspective",
-  );
-  assert.equal(translateBlueMapHash("#not-a-camera", { x: 0, z: 0 }, { x: 1, z: 1 }), "");
+  assert.equal(translateBlueMapHash("#not-a-camera", { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }), "");
 });

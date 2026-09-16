@@ -38,7 +38,7 @@ Open **[localhost:3000/map](http://localhost:3000/map)**. No development reverse
 
 The injected document adds `<base href="/map/">`, so BlueMap's untouched relative `./assets/...`, `settings.json`, `maps/...` and live-data URLs keep resolving correctly even though the public document URL is `/map`. Hash camera/map links such as `/map#world:...` remain native BlueMap state.
 
-In BlueMap's `webapp.conf`, keep `styles: ["/bluemap/sgp.css"]` and `scripts: ["/bluemap/sgp.js"]`. The shell also loads `sgp.css` before first paint. Its loading surface waits for BlueMap 5.23's own `mapViewer.data.mapState === "loaded"`; the mere creation of BlueMap's WebGL canvas is intentionally not treated as ready.
+Run BlueMap 5.24 on the live Minecraft server; deploying this website does not upgrade the BlueMap plugin/JAR. In its `webapp.conf`, keep `styles: ["/bluemap/sgp.css"]` and `scripts: ["/bluemap/sgp.js"]`. The shell also loads `sgp.css` before first paint. Its loading surface waits for BlueMap's own `mapViewer.data.mapState === "loaded"`; the mere creation of BlueMap's WebGL canvas is intentionally not treated as ready.
 
 If BlueMap is not running, `/map` returns a navigable Slate error page instead of a raw proxy error. `content:refresh` exports data; it does not start BlueMap.
 
@@ -70,7 +70,7 @@ npm run check
 
 The gate runs lint, TypeScript typechecking, the standard TypeScript/JavaScript tests, critical-module coverage gates, every Python `test_*.py` test, the cross-process publishing integration suite, the production Next.js build, and seven Playwright browser journeys against that production build, including narrow-viewport layout/overflow checks. CI installs the pinned Chromium automatically. For a first local browser run, use `npx playwright install chromium` (on Linux, `npx playwright install --with-deps chromium` if the browser system libraries are not already installed). The narrower `test:*` scripts remain available for faster iteration on one area; `npm run test:app` runs the Next route-boundary suite and, after a production build exists, `npm run test:e2e` runs only the browser smoke suite. `scripts/check-cosmetic-hooks.py` validates the datapack cosmetic hooks without starting Minecraft.
 
-Database-backed TypeScript tests should use `createTestDatabase(t)` from `tests/support/database.ts`; it applies the real Drizzle migrations and registers idempotent client cleanup with the Node test context. `tests/migrations.test.ts` separately protects the production upgrade path by creating a populated database at migration `0004` and then applying the current migration folder in place.
+Database-backed TypeScript tests should use `createTestDatabase(t)` from `tests/support/database.ts`; it applies the real Drizzle migrations and registers idempotent client cleanup with the Node test context.
 
 `npm run test:integration` owns tests that deliberately cross runtime/process boundaries. Its publishing test executes the real Python kit and map exporter CLIs, feeds those artifacts through the TypeScript publishing schemas and workflow, and verifies the real SQLite import. Minecraft item rendering and the external statistics exporter stay as explicit boundaries in that test so it remains deterministic and fixture-sized.
 

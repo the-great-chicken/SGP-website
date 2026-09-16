@@ -3612,43 +3612,6 @@ select:focus-visible,
   margin-inline: 0.22em;
 }
 
-.history-awards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 28px;
-  border-top: 1px solid var(--line);
-}
-
-.history-awards > div {
-  min-height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 13px 16px 13px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.history-awards > div:nth-child(odd) {
-  margin-right: 22px;
-}
-
-.history-awards > div:nth-child(even) {
-  padding-left: 22px;
-  border-left: 1px solid var(--line);
-}
-
-.history-awards span {
-  color: var(--accent-amber);
-  font-size: 0.75rem;
-  font-weight: 750;
-}
-
-.history-awards .history-reference-link {
-  font-size: 0.82rem;
-  font-weight: 650;
-  text-decoration: none;
-}
 
 .history-closing-note {
   display: grid;
@@ -3840,18 +3803,6 @@ select:focus-visible,
     gap: 14px;
   }
 
-  .history-awards {
-    grid-template-columns: 1fr;
-  }
-
-  .history-awards > div:nth-child(odd) {
-    margin-right: 0;
-  }
-
-  .history-awards > div:nth-child(even) {
-    padding-left: 0;
-    border-left: 0;
-  }
 
   .history-edition-navigation {
     grid-template-columns: 1fr;

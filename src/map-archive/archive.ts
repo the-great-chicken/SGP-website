@@ -16,13 +16,14 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { SGP_HIRES_VIEW_DISTANCE } from "../lib/map-viewer-settings";
 
 export const BLUE_MAP_VERSION = "5.24";
 export const BLUE_MAP_DOWNLOAD_URL = `https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v${BLUE_MAP_VERSION}/bluemap-${BLUE_MAP_VERSION}-cli.jar`;
 
 const centerSchema = z.object({
   x: z.int(),
-  y: z.int().optional(),
+  y: z.int(),
   z: z.int(),
 }).strict();
 
@@ -34,6 +35,7 @@ const editionSchema = z.object({
   dimension: z.string().min(1).default("minecraft:overworld"),
   center: centerSchema,
   renderRadius: z.int().positive().max(100_000).default(768),
+  minY: z.int().optional(),
 }).strict();
 
 export const mapArchiveConfigSchema = z.object({
@@ -56,6 +58,7 @@ export type MapArchiveManifestEntry = {
   webPath: string;
   center: MapCenter;
   renderRadius: number;
+  minY: number | null;
   dimension: string;
   minecraftVersion: string;
   blueMapVersion: string;
@@ -178,9 +181,10 @@ function blueMapConfigs(options: {
   const maxX = Math.ceil(edition.center.x + edition.renderRadius);
   const minZ = Math.floor(edition.center.z - edition.renderRadius);
   const maxZ = Math.ceil(edition.center.z + edition.renderRadius);
-  // BlueMap 5.24 start-pos is a 2D Vector2i. Optional center.y is SGP-only
-  // metadata used to preserve relative camera elevation between editions.
+  // BlueMap's map start-pos is X/Z-only; start-location carries the full SGP
+  // reset target, including the freely movable orbit target's initial Y.
   const startPos = `{ x: ${edition.center.x}, z: ${edition.center.z} }`;
+  const startLocation = `world:${edition.center.x}:${edition.center.y}:${edition.center.z}:1500:0:0:0:0:perspective`;
 
   return {
     "core.conf": [
@@ -203,6 +207,8 @@ function blueMapConfigs(options: {
       "update-settings-file: true",
       "use-cookies: false",
       "default-to-flat-view: false",
+      `hires-slider-default: ${SGP_HIRES_VIEW_DISTANCE}`,
+      `start-location: ${quoteHocon(startLocation)}`,
       "client-decompression: true",
       "map-data-root: \"maps\"",
       "live-data-root: \"maps\"",
@@ -237,6 +243,7 @@ function blueMapConfigs(options: {
       `    max-x: ${maxX}`,
       `    min-z: ${minZ}`,
       `    max-z: ${maxZ}`,
+      ...(edition.minY === undefined ? [] : [`    min-y: ${edition.minY}`]),
       "  }",
       "]",
       "",
@@ -274,7 +281,10 @@ export async function readMapArchiveManifest(publicRoot: string): Promise<MapArc
   for (const [snapshotKey, raw] of Object.entries(parsed.editions as Record<string, unknown>)) {
     if (!raw || typeof raw !== "object") throw new Error(`Invalid map archive entry: ${snapshotKey}`);
     const entry = raw as MapArchiveManifestEntry;
-    if (entry.snapshotKey !== snapshotKey || typeof entry.webPath !== "string" || typeof entry.revision !== "string") {
+    const center = entry.center;
+    if (entry.snapshotKey !== snapshotKey || typeof entry.webPath !== "string" || typeof entry.revision !== "string"
+      || !center || !Number.isFinite(center.x) || !Number.isFinite(center.y) || !Number.isFinite(center.z)
+      || (entry.minY !== undefined && entry.minY !== null && !Number.isFinite(entry.minY))) {
       throw new Error(`Invalid map archive entry: ${snapshotKey}`);
     }
     validateWebPath(entry);
@@ -512,6 +522,7 @@ export async function prepareMapArchive(options: RenderMapArchiveOptions): Promi
       webPath: `editions/${edition.snapshotKey}/${revision}`,
       center: edition.center,
       renderRadius: edition.renderRadius,
+      minY: edition.minY ?? null,
       dimension: edition.dimension,
       minecraftVersion: edition.minecraftVersion,
       blueMapVersion: BLUE_MAP_VERSION,
@@ -531,6 +542,7 @@ export async function prepareMapArchive(options: RenderMapArchiveOptions): Promi
     for (const name of ["bluemap-archive.css", "bluemap-archive.js"] as const) {
       await cp(path.join(options.root, "public/map-archive", name), path.join(webroot, name));
     }
+    await cp(path.join(options.root, "public/bluemap/sgp-controls.mjs"), path.join(webroot, "sgp-controls.mjs"));
 
     // Public provenance intentionally excludes absolute source paths. Fingerprints
     // identify the source tree without publishing server filesystem layout.

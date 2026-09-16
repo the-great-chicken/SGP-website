@@ -129,11 +129,11 @@ class HostingTests(unittest.TestCase):
         caddy = (output / "Caddyfile").read_text()
         self.assertIn("sgp.example.com", caddy)
         self.assertIn("handle /map {", caddy)
-        self.assertIn("redir /map/ /map 308", caddy)
+        self.assertIn("handle /map/ {", caddy)
+        self.assertIn("respond 404", caddy)
         self.assertIn("handle_path /map/*", caddy)
         self.assertIn("handle_path /map-archive/*", caddy)
         self.assertIn("root * /srv/map-archive/public", caddy)
-        self.assertNotIn("rewrite * /api/map-shell", caddy)
 
     def test_config_rejects_overlapping_paths_and_line_injection(self):
         config = json.loads((ROOT / "deploy/host.example.json").read_text())

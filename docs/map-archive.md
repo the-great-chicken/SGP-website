@@ -17,9 +17,9 @@ cp map-archive.example.json map-archive.json
 - `world`: that edition's saved Java world;
 - `resourcePack`: its matching pack, or `null` if unavailable;
 - `minecraftVersion`: the version that world was played on;
-- `center.x` and `center.z`: the block that represents the same logical centre in every edition;
-- optional `center.y`: only used when translating an existing camera between editions; BlueMap's own reset position is two-dimensional;
-- `renderRadius`: half-size of the square render mask around the centre.
+- `center.x`, `center.y` and `center.z`: the same logical point in every edition. The full XYZ point is the initial/reset orbit target, but users can freely pan away from it afterward;
+- `renderRadius`: half-size of the square X/Z render mask around the centre;
+- optional `minY`: lowest world Y included in the render. It only clips rendering; it does not change Minecraft coordinates or the camera centre.
 
 No datapack markers, playable-area metadata, player positions or map overlays are read by this archive renderer.
 
@@ -55,13 +55,16 @@ map-archive/
     editions/edition-2/<revision>/...
       bluemap-archive.css
       bluemap-archive.js
+      sgp-controls.mjs
   private/
     bluemap/
     staging/
     snapshots/
 ```
 
-Each revision carries its own tiny SGP viewer CSS/JS bridge, so upgrading the renderer later cannot change old maps in place. The public provenance file contains versions, fingerprints and spatial metadata, but never absolute source paths.
+Each revision carries its own tiny SGP viewer CSS/JS bridge and the exact SGP camera-control shim used by that revision, so later website changes cannot alter an immutable historical map. The public provenance file contains versions, fingerprints and spatial metadata, but never absolute source paths.
+
+When `minY` is present, the generated BlueMap box render-mask gets a `min-y` bound while remaining unbounded above. `render-edges: true` stays enabled so the retained blocks get proper exposed faces at the cutoff.
 
 ## Future editions during normal publication
 
@@ -97,7 +100,9 @@ For local/offline publication, omit `editionSnapshotCommand`; the configured sou
 
 `/wiki/carte` lists the editions from the normal history content and enables only those present in the archive manifest. BlueMap's normal UI is removed; the iframe keeps orbit/pan/zoom plus the SGP edition selector and reset button. Player/marker polling and SSE are disposed after startup, and empty live-data files prevent noisy initial marker requests.
 
-BlueMap's camera URL is translated from one edition to another relative to `center`. X/Z are always translated; Y is translated only when both editions define `center.y`. Distance, rotation, angle, tilt, projection and perspective mode are preserved unchanged.
+The archived BlueMap webapp stays stock 5.24 and uses the same 250-block high-resolution view distance as the live map. The timeline also reapplies that distance at runtime, so already-published immutable revisions do not need replacement solely for this viewer setting. Its injected SGP shim changes only the arena camera assumptions: left-drag pans in the camera's screen plane, the orbit target has a free Y instead of terrain-height snapping, and perspective angle is no longer reduced as distance grows. Orbit/rotation and zoom continue through BlueMap's own controls. If the expected 5.24 internals are not present, the shim logs a warning and leaves stock controls running.
+
+BlueMap's camera URL is translated from one edition to another relative to the full XYZ `center`. If the camera is 20 blocks above one edition's logical centre, it remains 20 blocks above the next edition's centre. Distance, rotation, angle, tilt, projection and perspective mode are preserved unchanged. Fresh loads and reset use the edition's full XYZ centre through BlueMap's `start-location`.
 
 ## Backups
 

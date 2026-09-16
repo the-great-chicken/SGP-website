@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -52,6 +52,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
     "COSMETICS_BRIDGE_URL",
     "COSMETICS_BRIDGE_SECRET",
     "BLUEMAP_INTERNAL_URL",
+    "MAP_ARCHIVE_DIR",
     "NODE_ENV",
   ]) previousEnvironment.set(name, process.env[name]);
 
@@ -64,6 +65,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
   process.env.COSMETICS_BRIDGE_URL = "http://127.0.0.1:8766";
   process.env.COSMETICS_BRIDGE_SECRET = bridgeSecret;
   process.env.BLUEMAP_INTERNAL_URL = "http://127.0.0.1:8100";
+  process.env.MAP_ARCHIVE_DIR = path.join(temporaryDirectory, "map-archive");
 
   const migratedDatabase = await createTestDatabase(t, { url: databaseUrl });
   const { client: migrationClient, database } = migratedDatabase;
@@ -145,6 +147,7 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
     const logoutRoute = await import("../../src/app/api/auth/logout/route");
     const skinRoute = await import("../../src/app/api/minecraft/skin/[hash]/route");
     const mapRoute = await import("../../src/app/map/route");
+    const mapArchiveRoute = await import("../../src/app/map-archive/[...path]/route");
     const healthRoute = await import("../../src/app/api/health/route");
     const cosmeticsRoute = await import("../../src/app/api/me/cosmetics/route");
 
@@ -306,6 +309,21 @@ test("high-value Next route boundaries preserve auth, proxy, health and cosmetic
       assert.equal(unavailable.headers.get("cache-control"), "no-store");
       assert.match(await unavailable.text(), /La carte ne répond pas\./);
       blueMapMode = "ok";
+    });
+
+    await t.test("historical map route serves revision-local ES modules with a JavaScript MIME type", async () => {
+      const relative = ["editions", "edition-1", "revision-1", "sgp-controls.mjs"];
+      const target = path.join(process.env.MAP_ARCHIVE_DIR!, "public", ...relative);
+      await mkdir(path.dirname(target), { recursive: true });
+      await writeFile(target, "export const ok = true;\n");
+      const response = await mapArchiveRoute.GET(
+        new Request(`https://sgp.test/map-archive/${relative.join("/")}`),
+        { params: Promise.resolve({ path: relative }) },
+      );
+      assert.equal(response.status, 200);
+      assert.equal(response.headers.get("content-type"), "text/javascript; charset=utf-8");
+      assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+      assert.equal(await response.text(), "export const ok = true;\n");
     });
 
     await t.test("/api/me/cosmetics uses the request session at the real route boundary and reaches the authenticated bridge", async () => {

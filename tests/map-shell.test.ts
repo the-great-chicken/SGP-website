@@ -4,7 +4,7 @@ import { injectBlueMapShell, renderMapHeader, renderMapUnavailablePage } from ".
 import { blueMapDevelopmentRewrites, blueMapDevRewriteDestination, resolveBlueMapOrigin } from "../src/lib/bluemap-routing";
 import { siteNavigation } from "../src/lib/site-navigation";
 
-// Matches the generated structure shipped by BlueMap 5.23. The hashed asset
+// Matches the generated BlueMap index structure. The hashed asset
 // names are deliberately arbitrary: the shell must not depend on a build hash.
 const bluemapIndex = `<!DOCTYPE html>
 <html lang="en">

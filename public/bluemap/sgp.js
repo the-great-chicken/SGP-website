@@ -1,7 +1,27 @@
-// Loaded by BlueMap 5.23 through webapp.conf, after its app has initialized.
-(() => {
+// Loaded by BlueMap through webapp.conf, after its app has initialized.
+void (async () => {
   const themeUrl = new URL(".", document.currentScript.src);
+  const initialCameraLocation = window.location.hash || window.bluemap?.settings?.startLocation || "";
   import(new URL("../branding/site-logo.mjs", themeUrl).href);
+
+  // The live world render-mask currently keeps Y 195..300. BlueMap does not
+  // expose render-mask bounds to custom browser scripts, so this is the one
+  // browser-side mirror needed to place reset halfway through the rendered box.
+  const liveWorldRenderMinY = 195;
+  const liveWorldRenderMaxY = 300;
+  try {
+    const controls = await import(new URL("sgp-controls.mjs", themeUrl).href);
+    const liveWorldResetY = controls.midpoint(liveWorldRenderMinY, liveWorldRenderMaxY);
+    const requestedTargetY = controls.cameraTargetY(initialCameraLocation);
+    const installed = controls.installSgpBlueMapControls({
+      resetY: (map) => map.data.id === "world" ? liveWorldResetY : null,
+      initialTargetY: requestedTargetY ?? ((map) => map?.data?.id === "world" ? liveWorldResetY : null),
+    });
+    document.documentElement.dataset.sgpMapControls = installed ? "active" : "inactive";
+  } catch (error) {
+    document.documentElement.dataset.sgpMapControls = "error";
+    console.error(`[SGP map controls] Failed to load the BlueMap 5.24 camera shim: ${error instanceof Error ? error.message : error}`);
+  }
   const logoUrl = new URL("/media/sgp-logo.png", window.location.origin).href;
   document.documentElement.classList.add("sgp-map");
   document.title = "Carte — SGP";
@@ -11,7 +31,6 @@
   if (favicon) favicon.href = logoUrl;
 
   const bluemap = window.bluemap;
-  // BlueMap 5.23 installs its live translation function on the mounted Vue app.
   const appRoot = document.getElementById("app");
   const translations = appRoot.__vue_app__.config.globalProperties;
   bluemap.settings.hiresSliderDefault = 250;
@@ -147,7 +166,7 @@
     const overlays = await response.json();
     if (overlays.schemaVersion !== 1) throw new Error("Unsupported SGP map overlay format");
 
-    // BlueMap 5.23 replaces normal marker sets on refresh. Merge our sets into that update
+    // BlueMap replaces normal marker sets on refresh. Merge our sets into that update
     // so they survive its regular refreshes and follow the selected map.
     const prototype = window.BlueMap.NormalMarkerManager.prototype;
     const updateFromData = prototype.updateFromData;

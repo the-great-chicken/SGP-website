@@ -52,7 +52,7 @@ Run `restic init` only for a new repository. Caddy manages certificate issuance 
 ## Apply Minecraft changes yourself
 
 1. Stop your old server and copy its complete directory into `/srv/minecraft`, including worlds, plugins, BlueMap configuration and `packs/`. Use the intended Paper version as `paper.jar`; retain the accepted EULA and give the `minecraft` account ownership of the copied directory (`sudo chown -R minecraft:minecraft /srv/minecraft`). Do not run the old and new copies simultaneously.
-2. In BlueMap's `webserver.conf`, use `ip: "127.0.0.1"` and `port: 8100` (or the configured port). Keep its webroot and storage inside the Minecraft directory. Preserve the playable-area mask, pack, automatic updates and live players already configured. Keep `styles: ["/bluemap/sgp.css"]` and `scripts: ["/bluemap/sgp.js"]` in `webapp.conf`.
+2. Run BlueMap 5.24 on the Minecraft server (the website release does not replace the plugin/JAR). In BlueMap's `webserver.conf`, use `ip: "127.0.0.1"` and `port: 8100` (or the configured port). Keep its webroot and storage inside the Minecraft directory. Preserve the playable-area mask, pack, automatic updates and live players already configured. Keep `styles: ["/bluemap/sgp.css"]` and `scripts: ["/bluemap/sgp.js"]` in `webapp.conf`.
 3. Keep the cosmetics bridge listening on loopback and set the same secret as `website.env`.
 
 The provided service handles graceful shutdown. Backup consistency depends on running this server through `sgp-minecraft.service` and keeping world/plugin files inside its directory; avoid external symlinks or concurrent manual Java processes.

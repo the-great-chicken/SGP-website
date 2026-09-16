@@ -22,7 +22,7 @@ export function translateBlueMapHash(hash: string, from: MapCenter, to: MapCente
 
   parts[0] = "world";
   parts[1] = String(x - from.x + to.x);
+  parts[2] = String(y - from.y + to.y);
   parts[3] = String(z - from.z + to.z);
-  if (from.y !== undefined && to.y !== undefined) parts[2] = String(y - from.y + to.y);
   return `#${parts.join(":")}`;
 }

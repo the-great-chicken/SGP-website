@@ -9,8 +9,9 @@
       "resourcePack": null,
       "minecraftVersion": "1.15.2",
       "dimension": "minecraft:overworld",
-      "center": { "x": 0, "z": 0 },
-      "renderRadius": 768
+      "center": { "x": 0, "y": 200, "z": 0 },
+      "renderRadius": 768,
+      "minY": 80
     },
     "2": {
       "snapshotKey": "edition-2",
@@ -18,7 +19,7 @@
       "resourcePack": "../resource-packs/edition-2.zip",
       "minecraftVersion": "1.20.1",
       "dimension": "minecraft:overworld",
-      "center": { "x": 0, "z": 0 },
+      "center": { "x": 0, "y": 200, "z": 0 },
       "renderRadius": 768
     },
     "3": {
@@ -27,7 +28,7 @@
       "resourcePack": "../resource-packs/edition-3.zip",
       "minecraftVersion": "1.20.2",
       "dimension": "minecraft:overworld",
-      "center": { "x": 0, "z": 0 },
+      "center": { "x": 0, "y": 200, "z": 0 },
       "renderRadius": 768
     },
     "4": {
@@ -36,7 +37,7 @@
       "resourcePack": "../resource-packs/edition-4.zip",
       "minecraftVersion": "1.21.1",
       "dimension": "minecraft:overworld",
-      "center": { "x": 0, "z": 0 },
+      "center": { "x": 0, "y": 200, "z": 0 },
       "renderRadius": 768
     }
   }

@@ -4,6 +4,7 @@ import { RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MapArchiveManifestEntry } from "@/map-archive/archive";
 import { translateBlueMapHash } from "@/lib/map-timeline";
+import { applySgpHiresViewDistance } from "@/lib/map-viewer-settings";
 
 type TimelineEdition = {
   number: number;
@@ -36,6 +37,15 @@ export function MapTimeline({ editions }: Props) {
       if (event.origin !== window.location.origin || event.source !== iframe.current?.contentWindow) return;
       if (event.data?.type !== "sgp-map-camera" || typeof event.data.hash !== "string") return;
       cameraHash.current = event.data.hash;
+      // Archive revisions are immutable. Normalize the same-origin runtime here
+      // too so already-published revisions get the live map's hi-res radius
+      // without replacing or mutating their files.
+      try {
+        const frameWindow = iframe.current?.contentWindow as (Window & { bluemap?: Parameters<typeof applySgpHiresViewDistance>[0] }) | null;
+        applySgpHiresViewDistance(frameWindow?.bluemap);
+      } catch {
+        // The camera bridge remains useful even if browser isolation changes.
+      }
     }
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
@@ -119,7 +129,7 @@ export function MapTimeline({ editions }: Props) {
           allow="fullscreen"
         />
       </div>
-      <p className="map-timeline-hint">Glisser pour tourner · molette ou pincement pour zoomer · changer d’édition conserve le même lieu relatif.</p>
+      <p className="map-timeline-hint">Clic gauche : déplacer · clic droit : tourner · molette ou pincement : zoomer · changer d’édition conserve le même point relatif.</p>
     </section>
   );
 }

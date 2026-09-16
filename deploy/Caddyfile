@@ -6,9 +6,11 @@
 		reverse_proxy 127.0.0.1:{$SGP_WEBSITE_PORT:3000}
 	}
 
-	# Preserve old /map/ bookmarks while keeping /map as the canonical document
-	# URL. Fragments remain client-side and are preserved by normal redirects.
-	redir /map/ /map 308
+	# /map is the only HTML document URL. Do not let /map/ fall through to
+	# BlueMap's unmodified generated index.
+	handle /map/ {
+		respond 404
+	}
 
 	# Historical map revisions are immutable files generated offline. Keep them
 	# completely outside Next and outside the live BlueMap service.

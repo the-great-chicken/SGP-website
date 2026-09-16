@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
     if (process.env.NODE_ENV !== "development") return [];
     return blueMapDevelopmentRewrites();
   },
-  // BlueMap 5.23 keeps an EventSource open for live updates. Next's external
+  // BlueMap keeps an EventSource open for live updates. Next's external
   // rewrite proxy otherwise closes an idle upstream socket after 30 seconds in
   // development. This setting affects only Next's proxy layer; production map
   // traffic is handled directly by Caddy.
