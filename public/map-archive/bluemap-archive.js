@@ -33,10 +33,11 @@
     const archive = await response.json();
     const center = archive?.center;
     if (![center?.x, center?.y, center?.z].every(Number.isFinite)) throw new Error("archive center is invalid");
-    const requestedTargetY = module.cameraTargetY(initialCameraHash);
+    const defaultTarget = module.cameraTarget(archive?.startLocation) ?? center;
+    const requestedTarget = module.cameraTarget(initialCameraHash);
     module.installSgpBlueMapControls({
-      resetCenter: center,
-      initialTargetY: requestedTargetY ?? center.y,
+      resetCenter: defaultTarget,
+      initialTargetY: requestedTarget?.y ?? defaultTarget.y,
     });
   }
   installArenaControls().catch((error) => console.warn(`[SGP archive controls] ${error instanceof Error ? error.message : error}`));

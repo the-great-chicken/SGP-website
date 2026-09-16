@@ -2,6 +2,8 @@
   "archiveDirectory": "../map-archive",
   "java": "java",
   "retainRevisions": 2,
+  "startLocation": "world:0:230:0:96:0.01:1.35:0:0:perspective",
+  "startLocationEdition": 4,
   "editions": {
     "1": {
       "snapshotKey": "edition-1",

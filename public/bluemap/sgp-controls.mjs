@@ -247,12 +247,18 @@ export function installSgpBlueMapControls(options = {}) {
   }
 }
 
-export function cameraTargetY(location) {
+export function cameraTarget(location) {
   if (typeof location !== "string") return null;
   const parts = location.replace(/^#/, "").split(":");
   if (parts.length !== 10) return null;
+  const x = Number(parts[1]);
   const y = Number(parts[2]);
-  return finiteNumber(y) ? y : null;
+  const z = Number(parts[3]);
+  return finiteNumber(x) && finiteNumber(y) && finiteNumber(z) ? { x, y, z } : null;
+}
+
+export function cameraTargetY(location) {
+  return cameraTarget(location)?.y ?? null;
 }
 
 export function midpoint(min, max) {

@@ -1,60 +1,26 @@
 # History content
 
-The public history is deliberately separate from the statistics database.
+History content is independent from the statistics database.
 
-- `src/content/history/editions.ts` is the structured registry shared by the history landing page, edition routes and the future map comparison. `timelineImageSrc` reserves the square-ish visual used by each edition on the landing timeline.
-- `src/content/history/editions/edition-*.mdx` contains editorial article bodies.
-- `src/content/history/characters.ts` contains reusable character metadata; `src/content/history/characters/*.mdx` contains the character articles. `_template.mdx` is the starting point for future characters and is not routed.
-- `src/content/history/story.mdx` contains the short cross-edition “L’histoire jusqu’ici” narrative.
-- `src/content/history/changelogs.ts` and `src/content/history/changelogs/edition-*.mdx` contain the three public changelogs (editions 2–4).
-- `src/components/history/` contains reusable presentation components that MDX articles can embed.
-- `src/app/(public)/wiki/` owns routing and page composition.
-- `public/history/editions/<number>/archive/` contains only historical images selected to illustrate the edition narratives.
+- `src/content/history/editions.ts`: edition metadata used by the wiki and map timeline.
+- `src/content/history/editions/edition-*.mdx`: edition articles.
+- `src/content/history/characters.ts` and `characters/*.mdx`: character metadata and articles.
+- `src/content/history/story.mdx`: the cross-edition story summary.
+- `src/content/history/changelogs.ts` and `changelogs/edition-*.mdx`: published changelogs.
+- `public/history/editions/<number>/archive/`: selected historical images used by the articles.
 
-## MDX boundary
+Keep routing/publication metadata in TypeScript and editorial prose in MDX.
 
-History prose lives in MDX because the pages are primarily editorial text with occasional structured components. Routing, publication state, edition metadata and historical-map identifiers stay in TypeScript so they can be reused by the timeline and other site features without parsing article prose.
+## Editorial rules
 
-The project uses the official `@next/mdx` integration. `src/mdx-components.tsx` is the required App Router MDX component hook; article-specific components are imported explicitly in each MDX file so their dependencies remain easy to see during review.
+Public history should explain what made an edition distinct, what changed, what happened during the event, and what remains worth remembering. Detailed reconstruction notes, uncertain statistics, unused branches, and development-only lore stay in source material rather than the public narrative.
 
-## Editorial rule
+Write the story directly. Prefer concrete events and player actions over commentary such as “the archives show” or explanations of how evidence was interpreted. Avoid recap paragraphs that repeat the previous section.
 
-The archaeology dossiers remain the exhaustive source material. Public pages should only retain information that helps a player understand:
-
-1. what made an edition distinct;
-2. what changed from the previous edition;
-3. what happened during the evening;
-4. what is still worth remembering.
-
-Detailed log reconstruction, uncertain inferred statistics, unplayed branches and development-only lore stay out of the public narrative.
-
-The public site does not expose a general document archive. Changelogs are the only archival documents published as standalone material; invitations, planning sheets and other surviving documents remain source material unless they are deliberately reused as narrative illustrations. Development-only captures should not be published merely because they survived in the source archive.
-
-### Writing style
-
-Write the public article as the story itself, not as commentary about the archaeology. Prefer concrete events, player actions and details over phrases such as “the archives show”, “traces remain”, “this already establishes…” or explanations of what the material means for SGP as a concept. Use that editorial reasoning to choose facts, then remove the reasoning from the final prose.
-
-History pages are reading pages rather than dense UI: body copy and narrative cards should remain comfortably larger than labels/metadata. Archive images get at most one visible caption each; gallery labels are accessibility metadata rather than a second caption layer.
-
-Avoid recap paragraphs that merely repeat material already explained in the preceding section. A mechanic or event should normally be introduced once, where it matters to the story; repeat it later only when the later passage adds a genuinely new consequence or perspective.
-
+Publish archival documents only when they have a deliberate place in the narrative. Changelogs are the normal standalone exception; surviving planning material is not automatically public content.
 
 ## Character pages
 
-Character pages deliberately separate confirmed material from future scriptwriting. The shared page template provides a full-width 16:9 portrait slot, a compact infobox, a canon section and explicit editorial placeholders. Set `portrait.src` in `characters.ts` once a final banner exists; the same asset can then appear in the character index automatically.
+Only facts already shown to players belong in canon sections. Unused branches, notes, and future backstory stay in the scenarist placeholders until deliberately canonized.
 
-Only facts already shown to players should be prefilled. Notes, unused branches and backstory drafts belong in the scenarist placeholders until they are deliberately canonized.
-
-## Historical map contract
-
-Each edition owns a stable `map.snapshotKey` in the edition registry. `map.previewSrc` is nullable until historical map media exists.
-
-The intended experience is:
-
-- the `/wiki` timeline shows a fixed-frame preview for each edition;
-- each edition article links to its historical state;
-- a future `/wiki/carte` comparison owns the full interactive view.
-
-The world footprint is constant across these editions. Historical previews/comparison should therefore preserve the same bounds/camera wherever possible so changes inside the world are directly comparable.
-
-Do not couple this feature to the live `/map` route. The live route remains the current BlueMap experience; historical map generation can be designed independently from retained edition world snapshots.
+Set `portrait.src` in `characters.ts` when a final portrait is available; the shared character views reuse it automatically.

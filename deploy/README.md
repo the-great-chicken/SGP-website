@@ -1,36 +1,19 @@
 # Linux hosting
 
-One Ubuntu Server 26.04 LTS machine runs Caddy, the Next.js website and Paper with BlueMap. SQLite stays outside releases. These files prepare the host; nothing is installed until you run the commands below. The domain and machine location can be chosen later.
-
-Public traffic uses HTTPS: `/` → website. The `/map` HTML document is served by the website itself so the SGP navbar/background exist at first paint; `/map/*` assets, tiles and live/SSE traffic proxy directly to BlueMap with the prefix stripped. Caddy connects to both through loopback, and BlueMap's SGP CSS/JS remain served from the website's `/bluemap/` directory. Minecraft has its separate game port.
+Production runs Caddy, the Next.js website, Paper/BlueMap, SQLite, and the external historical map archive on one Linux host. The examples below use the default paths from `deploy/host.example.json`.
 
 ## Prepare the host
 
-Use a dedicated host. The installer replaces Caddy's configuration, retaining a copy of the old file, and creates `sgp` and `minecraft` service accounts. It preserves existing secret files and does not start the services.
+Install the host dependencies:
 
 ```bash
 sudo apt update
 sudo apt install caddy restic openjdk-25-jre-headless python3 python3-venv curl xz-utils openssl
 ```
 
-Install the exact Node version from `.node-version` on both the build machine and host. From this repository, on Linux:
+Install the exact Node version from `.node-version` at `/opt/node`, then copy `deploy/host.example.json` to the ignored `deploy/host.json` and edit it for the host.
 
-```bash
-set -euo pipefail
-version=$(cat .node-version)
-case "$(uname -m)" in x86_64) arch=x64 ;; aarch64) arch=arm64 ;; *) exit 1 ;; esac
-archive="node-v$version-linux-$arch.tar.xz"
-curl -fSLO "https://nodejs.org/dist/v$version/$archive"
-curl -fSLO "https://nodejs.org/dist/v$version/SHASUMS256.txt"
-awk -v name="$archive" '$2 == name' SHASUMS256.txt | sha256sum --check --status
-sudo mkdir -p /opt/node
-sudo tar -xJf "$archive" --strip-components=1 -C /opt/node
-export PATH="/opt/node/bin:$PATH"
-```
-
-Move the downloaded archive and checksum file outside the checkout before building. Keep the pinned runtime updated through tested releases; Ubuntu packages receive normal security updates.
-
-Copy `deploy/host.example.json` to ignored `deploy/host.json` and edit it for the future host. Paths default to `/srv/sgp` (releases), `/var/lib/sgp` (database/cache), `/etc/sgp` (secrets), `/srv/minecraft` (server), and `/srv/map-archive` (immutable historical renders plus private render/snapshot workspace). These roots must remain separate. The remaining commands assume those defaults; use your configured paths if changed.
+Generate and install the host configuration:
 
 ```bash
 python3 deploy/host.py render
@@ -39,70 +22,65 @@ sudoedit /etc/sgp/website.env
 sudoedit /etc/sgp/backup.env
 ```
 
-`website.env` contains Discord credentials and the cosmetics bridge secret. Register its exact HTTPS callback in Discord. These values are read at service startup, never built into the release. Restart the website after changing them. Secret files stay root-owned, mode `0600`; systemd supplies them to the service.
+`website.env` holds website secrets. `backup.env` configures an off-machine restic repository. Keep the restic credentials and `/etc/sgp/restic-password` somewhere independent from the server.
 
-Choose an off-machine restic repository in `backup.env` (SFTP, S3, etc.) and add its credentials as needed. Save those credentials and `/etc/sgp/restic-password` separately in a password manager: losing the host must not lose the key to its backups. This file uses simple `KEY=value` lines; quote values consistently for both systemd and Bash.
+Initialize a new backup repository once:
 
 ```bash
 sudo bash -c 'set -a; source /etc/sgp/backup.env; set +a; restic init'
 ```
 
-Run `restic init` only for a new repository. Caddy manages certificate issuance and renewal and keeps its own state under `/var/lib/caddy`. Once DNS points at the host, allow inbound TCP 80/443 and the configured Minecraft game port; keep SSH restricted to your administration access. Do not expose website port 3000, BlueMap port 8100 or cosmetics bridge port 8766. A home host also needs router forwarding and a reachable public address; those details do not change these files.
+Expose only HTTPS and the Minecraft game port publicly. Website, BlueMap, and cosmetics bridge ports stay on loopback.
 
-## Apply Minecraft changes yourself
+## Minecraft and BlueMap
 
-1. Stop your old server and copy its complete directory into `/srv/minecraft`, including worlds, plugins, BlueMap configuration and `packs/`. Use the intended Paper version as `paper.jar`; retain the accepted EULA and give the `minecraft` account ownership of the copied directory (`sudo chown -R minecraft:minecraft /srv/minecraft`). Do not run the old and new copies simultaneously.
-2. Run BlueMap 5.24 on the Minecraft server (the website release does not replace the plugin/JAR). In BlueMap's `webserver.conf`, use `ip: "127.0.0.1"` and `port: 8100` (or the configured port). Keep its webroot and storage inside the Minecraft directory. Preserve the playable-area mask, pack, automatic updates and live players already configured. Keep `styles: ["/bluemap/sgp.css"]` and `scripts: ["/bluemap/sgp.js"]` in `webapp.conf`.
-3. Keep the cosmetics bridge listening on loopback and set the same secret as `website.env`.
+Copy the complete Minecraft server into `/srv/minecraft`, make it owned by `minecraft`, and run it through `sgp-minecraft.service`.
 
-The provided service handles graceful shutdown. Backup consistency depends on running this server through `sgp-minecraft.service` and keeping world/plugin files inside its directory; avoid external symlinks or concurrent manual Java processes.
+Use **BlueMap 5.24** with its webserver bound to loopback at the configured BlueMap port. Apply the website integration from [Live map](../docs/map.md).
 
-## Historical map snapshots
+Keep the cosmetics bridge on loopback and use the same bridge secret as `website.env`.
 
-The installer creates `/srv/map-archive/{public,private}` and installs a narrowly scoped sudo rule allowing the `sgp` account to invoke only the validated `snapshot-world` host command beneath `/srv/map-archive/private/snapshots/`. The helper takes the same host operations lock as backups, stops Minecraft only for the world copy, restarts it in a `finally` path, then transfers ownership of the frozen copy to `sgp`.
-
-Follow [Historical 3D map archive](../docs/map-archive.md) to configure `map-archive.json`, install the pinned BlueMap CLI, bootstrap Editions 1–4, and opt normal edition publication into the cold-snapshot flow. Historical renders are served by Caddy directly at `/map-archive/*`; there is no additional BlueMap daemon.
+The installer also prepares `/srv/map-archive` and the restricted `snapshot-world` helper used during edition publishing. Historical archive setup is documented in [Historical 3D map archive](../docs/map-archive.md).
 
 ## Build and activate a release
 
-Build on Linux with the same CPU architecture as production, from a clean committed checkout with no `.env` files. The build machine needs Python 3.11+ with `venv` support and `restic` because the release gate runs all Python tests, including encrypted backup/restore. The same gate also runs Chromium smoke tests; after installing the repository dependencies on a build machine for the first time, run `sudo npx playwright install-deps chromium` once to install Chromium's Linux system libraries. `build-release.sh` downloads the browser binary pinned by `package-lock.json`. Copy the [generated current-content files](../docs/publishing.md#refresh-current-content) into this checkout before building. Production statistics and player data come from SQLite.
+Build on Linux with the same CPU architecture as production. Use a clean checkout, copy in the generated current-content files, and run:
 
 ```bash
 export PATH="/opt/node/bin:$PATH"
 bash deploy/build-release.sh /tmp/sgp-release
 ```
 
-This installs locked dependencies without the offline renderer's graphics setup scripts, creates an isolated Python test environment from `.[test]`, runs the same full `npm run check` gate as CI, builds standalone Next.js, and packages its runtime, static assets and migrations. No development database or secret files are shipped. Transfer that release directory to the host under a unique name, for example `/srv/sgp/releases/2026-09-06`, preserving file modes. Make it root-owned and keep completed releases unchanged.
+Transfer the resulting release directory under `/srv/sgp/releases/<unique-name>`, then activate it:
 
 ```bash
-sudo python3 /srv/sgp/ops/host.py --config /etc/sgp/host.json activate /srv/sgp/releases/2026-09-06
+sudo python3 /srv/sgp/ops/host.py --config /etc/sgp/host.json activate /srv/sgp/releases/<unique-name>
 sudo systemctl enable sgp-website sgp-minecraft
 sudo systemctl start sgp-minecraft
 sudo systemctl enable --now caddy
 sudo systemctl reload caddy
 ```
 
-Activation checks runtime compatibility, stops the website, snapshots an existing database, applies migrations, switches `current`, and checks `/api/health`. First deployment creates an empty migrated database. Follow [Content publishing](../docs/publishing.md#publish-a-finished-edition) as user `sgp`, with `databaseUrl` in `publish.json` set to `file:/var/lib/sgp/sgp.sqlite`. Then, from a source checkout with dependencies and filesystem access to both the database and Minecraft account files, synchronize DiscordSRV with `DATABASE_URL=file:/var/lib/sgp/sgp.sqlite`, `DISCORDSRV_ACCOUNTS_PATH=/srv/minecraft/plugins/DiscordSRV/accounts.aof`, and `MINECRAFT_USERCACHE_PATH=/srv/minecraft/usercache.json`. The sync imports current Minecraft identities before applying Discord links, so it does not depend on an edition import. The standalone release contains only the serving runtime, not the import/sync tooling.
+Activation applies migrations, switches the current release, and checks `/api/health`. Publish content separately from a source checkout as user `sgp`; see [Content publishing](../docs/publishing.md).
 
-Check `https://YOUR_DOMAIN/api/health`, `/`, `/map`, live markers and Discord login before opening the site to players. Read failures with `journalctl -u sgp-website -u sgp-minecraft -u caddy`. Caddy forwards the public Host header to the website.
+After deployment, verify `/api/health`, `/`, `/map`, live markers, and Discord login. Service logs are available through:
+
+```bash
+journalctl -u sgp-website -u sgp-minecraft -u caddy
+```
 
 ## Backups and recovery
 
-Run one backup, then restore it into a new disposable directory before enabling the schedule:
+Test one backup and restore before enabling the schedule:
 
 ```bash
 sudo systemctl start sgp-backup
 sudo bash -c 'set -a; source /etc/sgp/backup.env; set +a; python3 /srv/sgp/ops/host.py restore-check latest /var/tmp/sgp-restore-check'
 sudo systemctl enable --now sgp-backup.timer
-systemctl list-timers sgp-backup.timer
 ```
 
-The default is daily at **05:00 UTC**. Each backup uses SQLite's online backup API, then stops Minecraft for the local world/plugin copy and restarts it before uploading. A server already stopped remains stopped. Downtime lasts as long as that copy takes; choose a schedule outside editions. Missed backups are not run automatically at boot. Leave enough free disk space for one full local copy of the server and release, plus database snapshots.
+Backups include the website release, SQLite, host configuration/secrets, Minecraft worlds/plugins/resource pack, and published historical map revisions. Live BlueMap tiles, caches/logs, archive renderer JARs, staging data, and temporary publication snapshots are excluded.
 
-Encrypted backups contain the website release, SQLite snapshot, host settings, website secrets, worlds, plugins, resource pack, and the **published historical map archive**. Generated tiles for the live `/map` BlueMap instance at the default `bluemap/web/maps` path, caches, logs, archive renderer JARs, render staging and temporary publication snapshots are excluded. Historical archive files are immutable, so the local backup staging step hard-links them where possible before restic deduplicates them. Retention is 7 daily, 4 weekly and 6 monthly snapshots. Every successful run checks repository structure; `restore-check` downloads and verifies actual data, including SQLite integrity and foreign keys. Repeat a restore drill after hosting changes and periodically. Check backup failures with `systemctl --failed` and `journalctl -u sgp-backup`; external failure notifications still need an alert destination.
+For host loss, prepare a replacement host, run `restore-check`, then restore the returned snapshot's website, database, Minecraft directory, `map-archive/public`, and website configuration to their configured locations before activating the restored release.
 
-For host loss, prepare a replacement with this repository, recover your restic credentials, and run `restore-check` there. Its output identifies the restored snapshot directory. With the website, Minecraft and backup timer stopped, restore `minecraft/` into an empty server directory, `sgp.sqlite` into an empty state directory, `website/` into a new release directory, `map-archive/public/` into the configured archive's `public/` directory, and `config/website.env` into `/etc/sgp/`. Apply the new host settings, restore service ownership (`sgp` for state and the map archive, `minecraft` for server), keep secrets root-only, and activate that release. Start Minecraft and Caddy, verify the site, then re-enable backups. The live BlueMap instance regenerates its omitted tiles; historical map revisions are restored from backup.
-
-For a failed update, activation leaves the website stopped and prints the pre-deployment SQLite snapshot path. The `previous` symlink records the former release after a switch. Reactivating an older release is permitted only when its migrations match the database. If a migration changed the schema, stop the backup timer and website, preserve the entire failed state directory (including SQLite WAL/SHM files), and restore the pre-deployment snapshot into a fresh state directory as `sgp.sqlite`. Recreate its `next-cache` directory and `sgp` ownership, then activate the matching old release. Restoring this snapshot discards writes made after it; retain the failed database for reconciliation. Pre-deployment snapshots are local recovery aids, not off-machine backups; remove obsolete ones only after validating recovery.
-
-References: [Next.js standalone output](https://nextjs.org/docs/app/api-reference/config/next-config-js/output), [Caddy HTTPS](https://caddyserver.com/docs/automatic-https), [SQLite backup API](https://sqlite.org/backup.html), [restic restore](https://restic.readthedocs.io/en/stable/050_restore.html).
+For a failed release activation, use the pre-deployment SQLite snapshot reported by the activation command and reactivate the matching previous release. Do not run an older release against a database schema it does not support.

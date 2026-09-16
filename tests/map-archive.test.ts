@@ -11,6 +11,7 @@ import {
   readMapArchiveManifest,
   renderMapArchive,
   resolveMapArchivePaths,
+  resolveMapArchiveStartLocation,
 } from "../src/map-archive/archive";
 import { translateBlueMapHash } from "../src/lib/map-timeline";
 
@@ -106,6 +107,58 @@ test("generated BlueMap configuration is static, perspective-only and bounded", 
   } finally { await f.cleanup(); }
 });
 
+test("optional canonical archive start camera translates from its reference edition", () => {
+  const config = mapArchiveConfigSchema.parse({
+    startLocation: "world:2481:230:2166:96:0.01:1.35:0:0:perspective",
+    startLocationEdition: 3,
+    editions: {
+      "3": {
+        snapshotKey: "edition-3", minecraftVersion: "1.20.2",
+        center: { x: 2500, y: 220, z: 2200 },
+      },
+      "4": {
+        snapshotKey: "edition-4", minecraftVersion: "1.21.1",
+        center: { x: 800, y: 190, z: -400 },
+      },
+    },
+  });
+
+  assert.equal(
+    resolveMapArchiveStartLocation(config, 3),
+    "world:2481:230:2166:96:0.01:1.35:0:0:perspective",
+  );
+  assert.equal(
+    resolveMapArchiveStartLocation(config, 4),
+    "world:781:200:-434:96:0.01:1.35:0:0:perspective",
+  );
+
+  const configs = createBlueMapConfigText({
+    world: "/world", webroot: "/web", data: "/data", resourcePack: null,
+    edition: config.editions["4"],
+    startLocation: resolveMapArchiveStartLocation(config, 4),
+  });
+  assert.match(configs["webapp.conf"], /start-location: "world:781:200:-434:96:0\.01:1\.35:0:0:perspective"/);
+});
+
+test("canonical archive start camera settings are optional but must be configured as a valid pair", () => {
+  const editions = {
+    "1": { snapshotKey: "edition-1", minecraftVersion: "1.15.2", center: { x: 0, y: 200, z: 0 } },
+  };
+  assert.doesNotThrow(() => mapArchiveConfigSchema.parse({ editions }));
+  assert.throws(() => mapArchiveConfigSchema.parse({
+    startLocation: "world:0:200:0:96:0:1:0:0:perspective", editions,
+  }), /startLocationEdition/);
+  assert.throws(() => mapArchiveConfigSchema.parse({
+    startLocationEdition: 1, editions,
+  }), /startLocation/);
+  assert.throws(() => mapArchiveConfigSchema.parse({
+    startLocation: "world:0:200:0:96:0:1:0:0:perspective", startLocationEdition: 2, editions,
+  }), /not configured/);
+  assert.throws(() => mapArchiveConfigSchema.parse({
+    startLocation: "world:0:200:0:96:0:1:0:0:flat", startLocationEdition: 1, editions,
+  }), /perspective camera location/);
+});
+
 test("archive center Y is required and minY remains optional", async () => {
   assert.throws(() => mapArchiveConfigSchema.parse({
     editions: {
@@ -159,10 +212,14 @@ test("a prepared render is invisible until promotion and then becomes current", 
     assert.equal(await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "maps/world/live/markers.json"), "utf8"), '{}\n');
     const provenance = await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "sgp-archive.json"), "utf8");
     assert.doesNotMatch(provenance, /sourceWorld|sourceResourcePack/);
-    assert.equal(await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "bluemap-archive.js"), "utf8").then((value) => value.includes("mapEventSource.close()")), true);
+    const archiveBridge = await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "bluemap-archive.js"), "utf8");
+    assert.equal(archiveBridge.includes("mapEventSource.close()"), true);
+    assert.equal(archiveBridge.includes("archive?.startLocation"), true);
     assert.equal(await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "bluemap-archive.css"), "utf8").then((value) => value.includes("#map-container")), true);
     assert.equal(await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "sgp-controls.mjs"), "utf8").then((value) => value.includes("installSgpBlueMapControls")), true);
-    assert.equal(JSON.parse(provenance).minY, 40);
+    const provenanceData = JSON.parse(provenance);
+    assert.equal(provenanceData.minY, 40);
+    assert.equal(provenanceData.startLocation, "world:100:72:-40:1500:0:0:0:0:perspective");
     const mode = (await stat(path.join(paths.publicRoot, prepared.entry.webPath))).mode & 0o777;
     assert.equal(mode, 0o755);
     await prepared.cleanup();

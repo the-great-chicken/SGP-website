@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cameraTargetY, installSgpBlueMapControls, midpoint } from "../public/bluemap/sgp-controls.mjs";
+import { cameraTarget, cameraTargetY, installSgpBlueMapControls, midpoint } from "../public/bluemap/sgp-controls.mjs";
 
 class Vector3 {
   constructor(x = 0, y = 0, z = 0) { this.set(x, y, z); }
@@ -194,6 +194,13 @@ test("shim reset and perspective transition do not reintroduce terrain Y", () =>
   } finally {
     cleanup();
   }
+});
+
+test("camera target parser exposes full XYZ for archive defaults", () => {
+  assert.deepEqual(cameraTarget("world:2481:230:2166:96:0.01:1.35:0:0:perspective"), { x: 2481, y: 230, z: 2166 });
+  assert.deepEqual(cameraTarget("#world:10.5:20:-30.25:96:0:1:0:0:perspective"), { x: 10.5, y: 20, z: -30.25 });
+  assert.equal(cameraTarget("not-a-camera"), null);
+  assert.equal(cameraTargetY("world:2481:230:2166:96:0.01:1.35:0:0:perspective"), 230);
 });
 
 test("startup recovery handles a terrain snap before the async shim loads", () => {

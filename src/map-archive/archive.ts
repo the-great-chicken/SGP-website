@@ -16,6 +16,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { parseBlueMapCamera, translateBlueMapCamera } from "../lib/bluemap-camera";
 import { SGP_HIRES_VIEW_DISTANCE } from "../lib/map-viewer-settings";
 
 export const BLUE_MAP_VERSION = "5.24";
@@ -44,8 +45,38 @@ export const mapArchiveConfigSchema = z.object({
   blueMapJar: z.string().min(1).optional(),
   retainRevisions: z.int().min(1).max(10).default(2),
   renderThreads: z.int().min(1).max(128).optional(),
+  startLocation: z.string().min(1).optional(),
+  startLocationEdition: z.int().positive().optional(),
   editions: z.record(z.string().regex(/^[1-9][0-9]*$/), editionSchema).default({}),
-}).strict();
+}).strict().superRefine((config, context) => {
+  const hasLocation = config.startLocation !== undefined;
+  const hasEdition = config.startLocationEdition !== undefined;
+  if (hasLocation !== hasEdition) {
+    context.addIssue({
+      code: "custom",
+      path: hasLocation ? ["startLocationEdition"] : ["startLocation"],
+      message: "startLocation and startLocationEdition must be configured together",
+    });
+    return;
+  }
+  if (config.startLocation === undefined || config.startLocationEdition === undefined) return;
+
+  const camera = parseBlueMapCamera(config.startLocation);
+  if (!camera || camera.view !== "perspective") {
+    context.addIssue({
+      code: "custom",
+      path: ["startLocation"],
+      message: "startLocation must be a BlueMap 5.24 perspective camera location (map:x:y:z:distance:rotation:angle:tilt:ortho:perspective)",
+    });
+  }
+  if (!config.editions[String(config.startLocationEdition)]) {
+    context.addIssue({
+      code: "custom",
+      path: ["startLocationEdition"],
+      message: `startLocationEdition ${config.startLocationEdition} is not configured in editions`,
+    });
+  }
+});
 
 export type MapArchiveConfig = z.infer<typeof mapArchiveConfigSchema>;
 export type MapArchiveEditionConfig = z.infer<typeof editionSchema>;
@@ -57,6 +88,7 @@ export type MapArchiveManifestEntry = {
   revision: string;
   webPath: string;
   center: MapCenter;
+  startLocation?: string;
   renderRadius: number;
   minY: number | null;
   dimension: string;
@@ -168,15 +200,31 @@ async function sourceFingerprint(source: string) {
   throw new Error(`Unsupported archive source: ${source}`);
 }
 
+export function resolveMapArchiveStartLocation(config: MapArchiveConfig, editionNumber: number) {
+  const edition = config.editions[String(editionNumber)];
+  if (!edition) throw new Error(`Configure map archive edition ${editionNumber} first`);
+
+  if (config.startLocation === undefined || config.startLocationEdition === undefined) {
+    return `world:${edition.center.x}:${edition.center.y}:${edition.center.z}:1500:0:0:0:0:perspective`;
+  }
+
+  const reference = config.editions[String(config.startLocationEdition)];
+  if (!reference) throw new Error(`Map archive startLocationEdition ${config.startLocationEdition} is not configured`);
+  const translated = translateBlueMapCamera(config.startLocation, reference.center, edition.center, { mapId: "world", hash: false });
+  if (!translated) throw new Error("Map archive startLocation is not a valid BlueMap 5.24 camera location");
+  return translated;
+}
+
 function blueMapConfigs(options: {
   world: string;
   webroot: string;
   data: string;
   resourcePack: string | null;
   edition: MapArchiveEditionConfig;
+  startLocation?: string;
   renderThreads?: number;
 }) {
-  const { world, webroot, data, resourcePack, edition, renderThreads } = options;
+  const { world, webroot, data, resourcePack, edition, startLocation, renderThreads } = options;
   const minX = Math.floor(edition.center.x - edition.renderRadius);
   const maxX = Math.ceil(edition.center.x + edition.renderRadius);
   const minZ = Math.floor(edition.center.z - edition.renderRadius);
@@ -184,7 +232,8 @@ function blueMapConfigs(options: {
   // BlueMap's map start-pos is X/Z-only; start-location carries the full SGP
   // reset target, including the freely movable orbit target's initial Y.
   const startPos = `{ x: ${edition.center.x}, z: ${edition.center.z} }`;
-  const startLocation = `world:${edition.center.x}:${edition.center.y}:${edition.center.z}:1500:0:0:0:0:perspective`;
+  const resolvedStartLocation = startLocation
+    ?? `world:${edition.center.x}:${edition.center.y}:${edition.center.z}:1500:0:0:0:0:perspective`;
 
   return {
     "core.conf": [
@@ -208,7 +257,7 @@ function blueMapConfigs(options: {
       "use-cookies: false",
       "default-to-flat-view: false",
       `hires-slider-default: ${SGP_HIRES_VIEW_DISTANCE}`,
-      `start-location: ${quoteHocon(startLocation)}`,
+      `start-location: ${quoteHocon(resolvedStartLocation)}`,
       "client-decompression: true",
       "map-data-root: \"maps\"",
       "live-data-root: \"maps\"",
@@ -282,8 +331,10 @@ export async function readMapArchiveManifest(publicRoot: string): Promise<MapArc
     if (!raw || typeof raw !== "object") throw new Error(`Invalid map archive entry: ${snapshotKey}`);
     const entry = raw as MapArchiveManifestEntry;
     const center = entry.center;
+    const startCamera = entry.startLocation === undefined ? null : parseBlueMapCamera(entry.startLocation);
     if (entry.snapshotKey !== snapshotKey || typeof entry.webPath !== "string" || typeof entry.revision !== "string"
       || !center || !Number.isFinite(center.x) || !Number.isFinite(center.y) || !Number.isFinite(center.z)
+      || (entry.startLocation !== undefined && (!startCamera || startCamera.view !== "perspective"))
       || (entry.minY !== undefined && entry.minY !== null && !Number.isFinite(entry.minY))) {
       throw new Error(`Invalid map archive entry: ${snapshotKey}`);
     }
@@ -491,12 +542,14 @@ export async function prepareMapArchive(options: RenderMapArchiveOptions): Promi
   try {
     await mkdir(webroot, { recursive: true });
     await mkdir(data, { recursive: true });
+    const startLocation = resolveMapArchiveStartLocation(options.config, options.editionNumber);
     await writeBlueMapConfig(configRoot, blueMapConfigs({
       world,
       webroot,
       data,
       resourcePack,
       edition,
+      startLocation,
       renderThreads: options.config.renderThreads,
     }));
     await command(options.config.java, ["-jar", paths.blueMapJar, "-c", configRoot, "-r"], stage);
@@ -521,6 +574,7 @@ export async function prepareMapArchive(options: RenderMapArchiveOptions): Promi
       revision,
       webPath: `editions/${edition.snapshotKey}/${revision}`,
       center: edition.center,
+      startLocation,
       renderRadius: edition.renderRadius,
       minY: edition.minY ?? null,
       dimension: edition.dimension,
