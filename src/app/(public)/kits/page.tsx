@@ -29,15 +29,13 @@ export default async function KitsPage() {
       <PageIntro
         eyebrow="Équipement et capacités"
         title="Kits"
-        description="Parcourez chaque loadout, lisez les objets comme en jeu et comparez les tendances relevées au fil des éditions."
+        description="Parcourez chaque loadout, lisez les objets comme en jeu et comparez les tendances de la dernière édition publiée."
         aside={
           <div className="manifest-badge">
             <Boxes size={17} />
             <span>
               <strong>{kits.length || "—"} kits</strong>
-              {manifest
-                ? `Minecraft ${manifest.minecraftVersion}${stats.editionCount ? ` · ${stats.editionCount} édition${stats.editionCount > 1 ? "s" : ""}` : ""}`
-                : "Bientôt disponibles"}
+              {manifest ? `Minecraft ${manifest.minecraftVersion}` : "Bientôt disponibles"}
             </span>
           </div>
         }

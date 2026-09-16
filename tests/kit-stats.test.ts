@@ -111,6 +111,139 @@ test("kit aggregates follow edition kit snapshots instead of assuming stable num
   }
 });
 
+test("kit stats only use the latest public edition", async (t) => {
+  const { database, close } = await createTestDatabase(t);
+
+  try {
+    const editionRows = await database
+      .insert(schema.editions)
+      .values([
+        {
+          number: 3,
+          status: "archived",
+          minecraftVersion: "1.20.2",
+          statisticsSchemaVersion: 7,
+        },
+        {
+          number: 4,
+          status: "published",
+          minecraftVersion: "1.21.1",
+          statisticsSchemaVersion: 7,
+        },
+      ])
+      .returning({ id: schema.editions.id, number: schema.editions.number });
+    const edition3 = editionRows.find((edition) => edition.number === 3)!;
+    const edition4 = editionRows.find((edition) => edition.number === 4)!;
+
+    await database.insert(schema.players).values({
+      uuid: "44444444-4444-4444-8444-444444444444",
+      currentMinecraftName: "LatestPlayer",
+    });
+    await database.insert(schema.kitSnapshots).values([
+      {
+        editionId: edition3.id,
+        kitKey: "archer",
+        kitId: 1,
+        manifestSchemaVersion: 2,
+        manifest: {},
+      },
+      {
+        editionId: edition4.id,
+        kitKey: "archer",
+        kitId: 8,
+        manifestSchemaVersion: 2,
+        manifest: {},
+      },
+    ]);
+    await database.insert(schema.editionStatisticsMetadata).values([
+      { editionId: edition3.id, deathPositionMetadata: {}, elo: {} },
+      { editionId: edition4.id, deathPositionMetadata: {}, elo: {} },
+    ]);
+    await database.insert(schema.editionPicks).values([
+      {
+        editionId: edition3.id,
+        playerUuid: "44444444-4444-4444-8444-444444444444",
+        kitId: 1,
+        totalTimeTicks: 12_000,
+        count: 20,
+      },
+      {
+        editionId: edition4.id,
+        playerUuid: "44444444-4444-4444-8444-444444444444",
+        kitId: 8,
+        totalTimeTicks: 1_800,
+        count: 3,
+      },
+    ]);
+
+    const snapshot = await queryKitStats(database);
+
+    assert.equal(snapshot.editionCount, 1);
+    assert.equal(snapshot.totalPicks, 3);
+    assert.equal(snapshot.byKitKey.archer.picks, 3);
+    assert.equal(snapshot.byKitKey.archer.totalTimeTicks, 1_800);
+  } finally {
+    close();
+  }
+});
+
+test("a newer public edition with no statistics never falls back to an older edition", async (t) => {
+  const { database, close } = await createTestDatabase(t);
+
+  try {
+    const editionRows = await database
+      .insert(schema.editions)
+      .values([
+        {
+          number: 4,
+          status: "archived",
+          minecraftVersion: "1.21.1",
+          statisticsSchemaVersion: 7,
+        },
+        {
+          number: 5,
+          status: "published",
+          minecraftVersion: "1.21.4",
+          statisticsSchemaVersion: 7,
+        },
+      ])
+      .returning({ id: schema.editions.id, number: schema.editions.number });
+    const edition4 = editionRows.find((edition) => edition.number === 4)!;
+
+    await database.insert(schema.players).values({
+      uuid: "55555555-5555-4555-8555-555555555555",
+      currentMinecraftName: "OlderPlayer",
+    });
+    await database.insert(schema.kitSnapshots).values({
+      editionId: edition4.id,
+      kitKey: "archer",
+      kitId: 8,
+      manifestSchemaVersion: 2,
+      manifest: {},
+    });
+    await database.insert(schema.editionStatisticsMetadata).values({
+      editionId: edition4.id,
+      deathPositionMetadata: {},
+      elo: {},
+    });
+    await database.insert(schema.editionPicks).values({
+      editionId: edition4.id,
+      playerUuid: "55555555-5555-4555-8555-555555555555",
+      kitId: 8,
+      totalTimeTicks: 9_000,
+      count: 15,
+    });
+
+    const snapshot = await queryKitStats(database);
+
+    assert.equal(snapshot.editionCount, 1);
+    assert.equal(snapshot.totalPicks, 0);
+    assert.deepEqual(snapshot.byKitKey, {});
+  } finally {
+    close();
+  }
+});
+
 test("draft editions do not leak into public kit aggregates", async (t) => {
   const { database, close } = await createTestDatabase(t);
   try {

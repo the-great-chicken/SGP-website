@@ -280,7 +280,7 @@ export default async function KitPage({ params }: KitPageProps) {
               <section className="kit-stats-panel refined-kit-stats">
                 <div className="panel-heading compact-heading">
                   <div>
-                    <p className="eyebrow">Historique</p>
+                    <p className="eyebrow">Dernière édition</p>
                     <h2>Statistiques</h2>
                   </div>
                   <BarChart3 size={19} />
@@ -306,7 +306,7 @@ export default async function KitPage({ params }: KitPageProps) {
                 </div>
                 <p className="stats-caption">
                   {statsSnapshot.editionCount
-                    ? `Cumul de ${statsSnapshot.editionCount} édition${statsSnapshot.editionCount > 1 ? "s" : ""} publiée${statsSnapshot.editionCount > 1 ? "s" : ""} ou archivée${statsSnapshot.editionCount > 1 ? "s" : ""}.`
+                    ? "Statistiques de la dernière édition publiée."
                     : "Les statistiques apparaîtront après la publication d’une première édition."}
                 </p>
               </section>

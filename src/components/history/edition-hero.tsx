@@ -22,7 +22,7 @@ export function EditionHero({ edition }: EditionHeroProps) {
         <dl className="history-edition-facts">
           <div>
             <dt><CalendarDays size={15} aria-hidden="true" /> Date</dt>
-            <dd><time dateTime={edition.dateIso}>{edition.dateLabel}</time></dd>
+            <dd><time dateTime={edition.dateIso ?? undefined}>{edition.dateLabel}</time></dd>
           </div>
           <div>
             <dt><MapPinned size={15} aria-hidden="true" /> Lieu</dt>
@@ -36,7 +36,7 @@ export function EditionHero({ edition }: EditionHeroProps) {
       </div>
       <div className="history-edition-mark" aria-hidden="true">
         <span>{String(edition.number).padStart(2, "0")}</span>
-        <strong>{edition.year}</strong>
+        <strong>{edition.year ?? "???"}</strong>
       </div>
     </header>
   );

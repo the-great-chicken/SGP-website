@@ -7,6 +7,7 @@ import {
   MAP_TIMELINE_VIEWER_CACHE_SIZE,
   mapTimelineAdjacentNumbers,
   mapTimelineEvictionCandidate,
+  mapTimelineStartHash,
   translateBlueMapHash,
 } from "@/lib/map-timeline";
 import { disposeMapViewerFrame } from "@/lib/map-viewer-lifecycle";
@@ -39,7 +40,6 @@ type ViewerState = {
 type BlueMapFrameWindow = Window & {
   bluemap?: BlueMapHiresRuntime & {
     loadPageAddress?: () => Promise<boolean> | boolean;
-    resetCamera?: () => void;
     updatePageAddress?: () => void;
   };
 };
@@ -124,7 +124,6 @@ export function MapTimeline({ editions }: Props) {
   const viewerRefs = useRef(new Map<number, HTMLIFrameElement>());
   const cameraHashes = useRef(new Map<number, string>());
   const desiredCameraHashes = useRef(new Map<number, string>());
-  const pendingResets = useRef(new Set<number>());
   const usageOrder = useRef(initialEdition ? [initialEdition.number] : []);
   const visitedNumbers = useRef(new Set(initialEdition ? [initialEdition.number] : []));
   // A viewer that has actually been shown stays full-quality while it remains in
@@ -202,25 +201,6 @@ export function MapTimeline({ editions }: Props) {
     return false;
   }, [postToViewer]);
 
-  const resetViewer = useCallback((editionNumber: number) => {
-    const frame = viewerRefs.current.get(editionNumber);
-    try {
-      const frameWindow = frame?.contentWindow as BlueMapFrameWindow | null;
-      if (typeof frameWindow?.bluemap?.resetCamera === "function") {
-        frameWindow.bluemap.resetCamera();
-        frameWindow.bluemap.updatePageAddress?.();
-        const hash = frameWindow.location.hash;
-        cameraHashes.current.set(editionNumber, hash);
-        pendingResets.current.delete(editionNumber);
-        return true;
-      }
-    } catch {
-      // Fall through to the archive bridge.
-    }
-    postToViewer(editionNumber, { type: "sgp-map-reset" });
-    return false;
-  }, [postToViewer]);
-
   const markViewerReady = useCallback((editionNumber: number, postedHash?: string) => {
     if (postedHash) cameraHashes.current.set(editionNumber, postedHash);
     const nextViewers = viewersRef.current.map((viewer) => viewer.editionNumber === editionNumber && !viewer.ready
@@ -244,13 +224,9 @@ export function MapTimeline({ editions }: Props) {
     }
 
     postToViewer(editionNumber, { type: "sgp-map-active", active });
-    if (pendingResets.current.has(editionNumber)) {
-      resetViewer(editionNumber);
-      return;
-    }
     const desired = desiredCameraHashes.current.get(editionNumber);
     if (desired) applyCameraToViewer(editionNumber, desired);
-  }, [applyCameraToViewer, postToViewer, resetViewer, setViewerHiresDistance]);
+  }, [applyCameraToViewer, postToViewer, setViewerHiresDistance]);
 
   useEffect(() => {
     function receive(event: MessageEvent) {
@@ -277,10 +253,6 @@ export function MapTimeline({ editions }: Props) {
         return;
       }
 
-      if (event.data?.type === "sgp-map-reset-complete") {
-        pendingResets.current.delete(editionNumber);
-        if (typeof event.data.hash === "string") cameraHashes.current.set(editionNumber, event.data.hash);
-      }
     }
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
@@ -299,7 +271,6 @@ export function MapTimeline({ editions }: Props) {
     const present = new Set(viewers.map((viewer) => viewer.editionNumber));
     for (const number of cameraHashes.current.keys()) if (!present.has(number)) cameraHashes.current.delete(number);
     for (const number of desiredCameraHashes.current.keys()) if (!present.has(number)) desiredCameraHashes.current.delete(number);
-    for (const number of pendingResets.current) if (!present.has(number)) pendingResets.current.delete(number);
   }, [viewers]);
 
   const ensureViewer = useCallback((
@@ -416,10 +387,11 @@ export function MapTimeline({ editions }: Props) {
   const reset = useCallback(() => {
     if (!selected?.map) return;
     const number = selected.number;
-    desiredCameraHashes.current.delete(number);
-    pendingResets.current.add(number);
-    resetViewer(number);
-  }, [resetViewer, selected]);
+    const hash = mapTimelineStartHash(selected.map);
+    desiredCameraHashes.current.set(number, hash);
+    cameraHashes.current.set(number, hash);
+    applyCameraToViewer(number, hash);
+  }, [applyCameraToViewer, selected]);
 
   if (!available.length) {
     return (

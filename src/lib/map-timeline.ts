@@ -1,4 +1,4 @@
-import type { MapCenter } from "@/map-archive/archive";
+import type { MapArchiveManifestEntry, MapCenter } from "@/map-archive/archive";
 import { translateBlueMapCamera } from "./bluemap-camera";
 
 export const MAP_TIMELINE_VIEWER_CACHE_SIZE = 3;
@@ -9,6 +9,17 @@ export const MAP_TIMELINE_VIEWER_CACHE_SIZE = 3;
  */
 export function translateBlueMapHash(hash: string, from: MapCenter, to: MapCenter) {
   return translateBlueMapCamera(hash, from, to, { mapId: "world", hash: true });
+}
+
+/** Return the canonical camera configured when an archive revision was rendered. */
+export function mapTimelineStartHash(
+  entry: Pick<MapArchiveManifestEntry, "center" | "startLocation">,
+) {
+  if (entry.startLocation) {
+    return entry.startLocation.startsWith("#") ? entry.startLocation : `#${entry.startLocation}`;
+  }
+  const { x, y, z } = entry.center;
+  return `#world:${x}:${y}:${z}:1500:0:0:0:0:perspective`;
 }
 
 /** Return the immediately adjacent archived editions, with no direction bias. */

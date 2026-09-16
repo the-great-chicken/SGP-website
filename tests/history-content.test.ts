@@ -5,12 +5,13 @@ import { historyCharacters } from "../src/content/history/characters";
 import { historyChangelogs } from "../src/content/history/changelogs";
 
 test("history edition registry stays chronological and map-addressable", () => {
-  assert.deepEqual(historyEditions.map((edition) => edition.number), [1, 2, 3, 4]);
+  assert.deepEqual(historyEditions.map((edition) => edition.number), [1, 2, 3, 4, 5]);
   assert.deepEqual(historyEditions.map((edition) => edition.dateIso), [
     "2023-06-03",
     "2023-08-27",
     "2024-04-06",
     "2024-08-31",
+    null,
   ]);
 
   const snapshotKeys = historyEditions.map((edition) => edition.map.snapshotKey);

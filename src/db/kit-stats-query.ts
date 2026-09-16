@@ -1,9 +1,8 @@
-import { and, count, eq, isNotNull, ne, sum } from "drizzle-orm";
+import { and, desc, eq, isNotNull, ne, sum } from "drizzle-orm";
 import {
   editionDamageReceived,
   editionKills,
   editionPicks,
-  editionStatisticsMetadata,
   editions,
   kitSnapshots,
 } from "./schema";
@@ -12,12 +11,22 @@ import { emptyStats, type KitAggregateStats, type KitStatsSnapshot } from "@/lib
 type SgpDatabase = typeof import("./client").db;
 
 export async function queryKitStats(database: SgpDatabase): Promise<KitStatsSnapshot> {
-  const [editionRows, pickRows, killRows, deathRows, damageRows] = await Promise.all([
-    database
-      .select({ value: count() })
-      .from(editionStatisticsMetadata)
-      .innerJoin(editions, eq(editionStatisticsMetadata.editionId, editions.id))
-      .where(ne(editions.status, "draft")),
+  const [latestEdition] = await database
+    .select({ id: editions.id })
+    .from(editions)
+    .where(ne(editions.status, "draft"))
+    .orderBy(desc(editions.number))
+    .limit(1);
+
+  if (!latestEdition) {
+    return {
+      editionCount: 0,
+      totalPicks: 0,
+      byKitKey: {},
+    };
+  }
+
+  const [pickRows, killRows, deathRows, damageRows] = await Promise.all([
     database
       .select({
         kitKey: kitSnapshots.kitKey,
@@ -25,7 +34,6 @@ export async function queryKitStats(database: SgpDatabase): Promise<KitStatsSnap
         totalTimeTicks: sum(editionPicks.totalTimeTicks),
       })
       .from(editionPicks)
-      .innerJoin(editions, eq(editionPicks.editionId, editions.id))
       .innerJoin(
         kitSnapshots,
         and(
@@ -33,12 +41,11 @@ export async function queryKitStats(database: SgpDatabase): Promise<KitStatsSnap
           eq(editionPicks.kitId, kitSnapshots.kitId),
         ),
       )
-      .where(ne(editions.status, "draft"))
+      .where(eq(editionPicks.editionId, latestEdition.id))
       .groupBy(kitSnapshots.kitKey),
     database
       .select({ kitKey: kitSnapshots.kitKey, value: sum(editionKills.count) })
       .from(editionKills)
-      .innerJoin(editions, eq(editionKills.editionId, editions.id))
       .innerJoin(
         kitSnapshots,
         and(
@@ -46,12 +53,11 @@ export async function queryKitStats(database: SgpDatabase): Promise<KitStatsSnap
           eq(editionKills.killerKitId, kitSnapshots.kitId),
         ),
       )
-      .where(ne(editions.status, "draft"))
+      .where(eq(editionKills.editionId, latestEdition.id))
       .groupBy(kitSnapshots.kitKey),
     database
       .select({ kitKey: kitSnapshots.kitKey, value: sum(editionKills.count) })
       .from(editionKills)
-      .innerJoin(editions, eq(editionKills.editionId, editions.id))
       .innerJoin(
         kitSnapshots,
         and(
@@ -59,12 +65,11 @@ export async function queryKitStats(database: SgpDatabase): Promise<KitStatsSnap
           eq(editionKills.victimKitId, kitSnapshots.kitId),
         ),
       )
-      .where(ne(editions.status, "draft"))
+      .where(eq(editionKills.editionId, latestEdition.id))
       .groupBy(kitSnapshots.kitKey),
     database
       .select({ kitKey: kitSnapshots.kitKey, value: sum(editionDamageReceived.amount) })
       .from(editionDamageReceived)
-      .innerJoin(editions, eq(editionDamageReceived.editionId, editions.id))
       .innerJoin(
         kitSnapshots,
         and(
@@ -74,7 +79,7 @@ export async function queryKitStats(database: SgpDatabase): Promise<KitStatsSnap
       )
       .where(
         and(
-          ne(editions.status, "draft"),
+          eq(editionDamageReceived.editionId, latestEdition.id),
           isNotNull(editionDamageReceived.sourceUuid),
           ne(editionDamageReceived.sourceUuid, editionDamageReceived.targetUuid),
         ),
@@ -102,7 +107,7 @@ export async function queryKitStats(database: SgpDatabase): Promise<KitStatsSnap
   }
 
   return {
-    editionCount: editionRows[0].value,
+    editionCount: 1,
     totalPicks: Object.values(byKitKey).reduce((total, stats) => total + stats.picks, 0),
     byKitKey,
   };

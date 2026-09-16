@@ -15,8 +15,7 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="footer-links">
-          <Link href="/wiki">À propos</Link>
-          <Link href="/kits">Explorer les kits</Link>
+          <Link href="/a-propos">À propos</Link>
           <Link href="/login">Connexion</Link>
         </div>
       </div>

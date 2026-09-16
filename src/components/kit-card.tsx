@@ -32,9 +32,6 @@ export function KitCard({ kit, stats, statsContext, metricDomains, compact = fal
     >
       <article className="kit-card">
         <div className="kit-card-art">
-          {compact ? (
-            <span className="kit-index">{kit.id === null ? "—" : String(kit.id).padStart(2, "0")}</span>
-          ) : null}
           {kit.iconSrc ? (
             <Image className="kit-icon" src={kit.iconSrc} width={96} height={96} alt="" unoptimized />
           ) : (
@@ -44,13 +41,8 @@ export function KitCard({ kit, stats, statsContext, metricDomains, compact = fal
         </div>
 
         <div className="kit-card-copy">
-          {compact ? <p className="kit-label">{kit.abilityName ?? "Kit spécial"}</p> : null}
           <h2>{kit.name}</h2>
-          {compact ? (
-            <p className="kit-card-open">Équipement et capacité <ArrowUpRight size={14} /></p>
-          ) : (
-            <p className="kit-label kit-ability-below">{kit.abilityName ?? "Kit spécial"}</p>
-          )}
+          <p className="kit-label kit-ability-below">{kit.abilityName ?? "Kit spécial"}</p>
         </div>
 
         <div className="kit-card-meta">

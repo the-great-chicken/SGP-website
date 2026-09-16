@@ -16,6 +16,7 @@ import {
 import {
   mapTimelineAdjacentNumbers,
   mapTimelineEvictionCandidate,
+  mapTimelineStartHash,
   translateBlueMapHash,
 } from "../src/lib/map-timeline";
 
@@ -357,6 +358,20 @@ test("camera translation preserves BlueMap view fields and aligns centers", () =
     "#world:-175:75:330:320:1.2:0.6:0.2:0:perspective",
   );
   assert.equal(translateBlueMapHash("#not-a-camera", { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }), "");
+});
+
+test("timeline recentering uses the archived start camera, not BlueMap's generic reset", () => {
+  assert.equal(
+    mapTimelineStartHash({
+      center: { x: 100, y: 72, z: -40 },
+      startLocation: "world:125:80:-10:320:1.2:0.6:0.2:0:perspective",
+    }),
+    "#world:125:80:-10:320:1.2:0.6:0.2:0:perspective",
+  );
+  assert.equal(
+    mapTimelineStartHash({ center: { x: 100, y: 72, z: -40 }, startLocation: undefined }),
+    "#world:100:72:-40:1500:0:0:0:0:perspective",
+  );
 });
 
 

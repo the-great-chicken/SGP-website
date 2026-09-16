@@ -31,73 +31,11 @@ export default function WikiPage() {
         }
       />
 
-      <section className="history-index-section" id="editions" aria-labelledby="history-editions-title">
-        <div className="history-index-heading">
-          <div>
-            <p className="eyebrow">Chronologie</p>
-            <h2 id="history-editions-title">Les éditions</h2>
-          </div>
-        </div>
-
-        <ol className="history-timeline">
-          {historyEditions.map((edition) => {
-            const content = (
-              <>
-                <span className="history-timeline-marker" aria-hidden="true">
-                  {String(edition.number).padStart(2, "0")}
-                </span>
-                <div className={`history-timeline-visual${edition.timelineImageSrc ? " has-image" : ""}`}>
-                  {edition.timelineImageSrc ? (
-                    <Image
-                      src={edition.timelineImageSrc}
-                      alt=""
-                      fill
-                      sizes="(max-width: 640px) 84px, 132px"
-                    />
-                  ) : (
-                    <div className="history-timeline-visual-placeholder" aria-hidden="true" />
-                  )}
-                </div>
-                <div className="history-timeline-card-copy">
-                  <div className="history-timeline-meta">
-                    <time dateTime={edition.dateIso}>{edition.dateLabel}</time>
-                    {edition.status === "published" ? (
-                      <span className="history-status-chip is-live">Disponible</span>
-                    ) : (
-                      <span className="history-status-chip">Article à venir</span>
-                    )}
-                  </div>
-                  <p className="history-timeline-kicker">{edition.shortTitle}</p>
-                  <h3>Édition {edition.number}</h3>
-                  {edition.subtitle ? <p className="history-timeline-subtitle">{edition.subtitle}</p> : null}
-                  <p className="history-timeline-summary">{edition.summary}</p>
-                </div>
-                <span className="history-timeline-action" aria-hidden="true">
-                  {edition.status === "published" ? <ArrowRight size={18} /> : String(edition.year)}
-                </span>
-              </>
-            );
-
-            return (
-              <li className={`history-timeline-item is-${edition.status}`} key={edition.number}>
-                {edition.status === "published" ? (
-                  <Link className="history-timeline-card" href={`/wiki/editions/${edition.number}`}>
-                    {content}
-                  </Link>
-                ) : (
-                  <div className="history-timeline-card">{content}</div>
-                )}
-              </li>
-            );
-          })}
-        </ol>
-      </section>
-
       <section className="history-reading-section" aria-labelledby="history-reading-title">
         <div className="history-index-heading">
           <div>
-            <p className="eyebrow">Pour continuer</p>
-            <h2 id="history-reading-title">Autres entrées dans l’histoire</h2>
+            <p className="eyebrow">Pour commencer</p>
+            <h2 id="history-reading-title">Explorer l’histoire</h2>
           </div>
         </div>
 
@@ -132,6 +70,74 @@ export default function WikiPage() {
             <span className="history-card-action">Parcourir les changelogs <ArrowRight size={16} /></span>
           </Link>
         </div>
+      </section>
+
+
+      <section className="history-index-section" id="editions" aria-labelledby="history-editions-title">
+        <div className="history-index-heading">
+          <div>
+            <p className="eyebrow">Chronologie</p>
+            <h2 id="history-editions-title">Les éditions</h2>
+          </div>
+        </div>
+
+        <ol className="history-timeline">
+          {historyEditions.map((edition) => {
+            const content = (
+              <>
+                <span className="history-timeline-marker" aria-hidden="true">
+                  {String(edition.number).padStart(2, "0")}
+                </span>
+                <div className={`history-timeline-visual${edition.timelineImageSrc ? " has-image" : ""}`}>
+                  {edition.timelineImageSrc ? (
+                    <Image
+                      src={edition.timelineImageSrc}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 84px, 132px"
+                      loading={edition.number === 1 ? "eager" : "lazy"}
+                    />
+                  ) : (
+                    <div className="history-timeline-visual-placeholder" aria-hidden="true" />
+                  )}
+                </div>
+                <div className="history-timeline-card-copy">
+                  <div className="history-timeline-meta">
+                    {edition.dateIso ? (
+                      <time dateTime={edition.dateIso}>{edition.dateLabel}</time>
+                    ) : (
+                      <span>{edition.dateLabel}</span>
+                    )}
+                    {edition.status === "published" ? (
+                      <span className="history-status-chip is-live">Disponible</span>
+                    ) : (
+                      <span className="history-status-chip">À venir</span>
+                    )}
+                  </div>
+                  <p className="history-timeline-kicker">{edition.shortTitle}</p>
+                  <h3>Édition {edition.number}</h3>
+                  {edition.subtitle ? <p className="history-timeline-subtitle">{edition.subtitle}</p> : null}
+                  <p className="history-timeline-summary">{edition.summary}</p>
+                </div>
+                <span className="history-timeline-action" aria-hidden="true">
+                  {edition.status === "published" ? <ArrowRight size={18} /> : (edition.year ?? "???")}
+                </span>
+              </>
+            );
+
+            return (
+              <li className={`history-timeline-item is-${edition.status}`} key={edition.number}>
+                {edition.status === "published" ? (
+                  <Link className="history-timeline-card" href={`/wiki/editions/${edition.number}`}>
+                    {content}
+                  </Link>
+                ) : (
+                  <div className="history-timeline-card">{content}</div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
       </section>
 
       <Link className="history-map-plan is-link" href="/wiki/carte" aria-labelledby="history-map-title">

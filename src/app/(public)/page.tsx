@@ -1,12 +1,12 @@
-import { ArrowRight, Boxes } from "lucide-react";
+import { ArrowRight, BookOpenText, Boxes, Map, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { KitCard } from "@/components/kit-card";
 import { loadLeaderboard } from "@/db/historical-stats";
 import { loadKitStats } from "@/db/kit-stats";
 import {
+  formatCount,
   formatEditionLabel,
-  formatLeaderboardValue,
 } from "@/lib/historical-stats";
 import { compareKits, toKitCardView } from "@/lib/kit-manifest";
 import { loadItemImageResolver } from "@/lib/item-renders";
@@ -14,24 +14,24 @@ import { loadKitManifest } from "@/lib/kits";
 
 export const dynamic = "force-dynamic";
 
-const loreLinks = [
+const historyLinks = [
   {
     href: "/wiki",
-    number: "01",
-    title: "Les éditions",
-    description: "Dates, règles, cartes et moments marquants de chaque édition.",
+    title: "Les éditions de la SGP",
+    description: "Retrouvez la chronologie, les changements et les moments marquants de chaque soirée.",
+    icon: BookOpenText,
   },
   {
-    href: "/players",
-    number: "02",
-    title: "Les joueurs",
-    description: "Profils, participations et parcours dans les archives de la SGP.",
+    href: "/wiki/personnages",
+    title: "Les personnages",
+    description: "Grand Poulet, Canarchimage et les autres figures qui ont façonné l’histoire de la SGP.",
+    icon: UsersRound,
   },
   {
-    href: "/wiki",
-    number: "03",
-    title: "Les règles et récits",
-    description: "Évolutions du jeu, anecdotes et souvenirs qui méritent de rester.",
+    href: "/wiki/carte",
+    title: "L’évolution de l’Arène",
+    description: "Comparez les versions historiques de la carte et observez comment l’Arène a changé.",
+    icon: Map,
   },
 ];
 
@@ -71,6 +71,22 @@ export default async function HomePage() {
       </section>
 
       <div className="home-content shell">
+        <section className="home-section home-trailer-section" aria-labelledby="home-trailer-title">
+          <div className="section-heading">
+            <p className="eyebrow">La Soirée du Grand Poulet</p>
+            <h2 id="home-trailer-title">Trailer</h2>
+          </div>
+          <div className="home-trailer-frame">
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/XU8zjLW3BE0"
+              title="Trailer de la Soirée du Grand Poulet"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          </div>
+        </section>
+
         <section className="home-section" id="kits">
           <div className="section-heading split-heading">
             <div>
@@ -110,7 +126,7 @@ export default async function HomePage() {
               sizes="(max-width: 820px) 100vw, 60vw"
               unoptimized
             />
-            <span className="home-map-label">VUE D’ENSEMBLE</span>
+            <span className="home-map-label">Aperçu</span>
           </a>
           <div className="home-map-copy">
             <p className="eyebrow">Le serveur</p>
@@ -160,7 +176,7 @@ export default async function HomePage() {
                           </span>
                         </Link>
                       </th>
-                      <td>{formatLeaderboardValue("elo", entry.value)}</td>
+                      <td>{formatCount(entry.value)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -180,20 +196,26 @@ export default async function HomePage() {
 
         <section className="home-section home-lore-section" id="stories">
           <div className="section-heading">
-            <p className="eyebrow">Archives</p>
-            <h2>Histoire de la SGP</h2>
+            <p className="eyebrow">Pour aller plus loin</p>
+            <h2>Découvrir la SGP</h2>
           </div>
           <div className="home-story-list">
-            {loreLinks.map((item) => (
-              <Link href={item.href} className="home-story-row" key={item.number}>
-                <span className="home-story-number">{item.number}</span>
-                <span className="home-story-copy">
-                  <strong>{item.title}</strong>
-                  <small>{item.description}</small>
-                </span>
-                <ArrowRight size={17} />
-              </Link>
-            ))}
+            {historyLinks.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <Link href={item.href} className="home-story-row" key={item.href}>
+                  <span className="home-story-icon" aria-hidden="true">
+                    <Icon size={20} strokeWidth={1.8} />
+                  </span>
+                  <span className="home-story-copy">
+                    <strong>{item.title}</strong>
+                    <small>{item.description}</small>
+                  </span>
+                  <ArrowRight className="home-story-arrow" size={17} aria-hidden="true" />
+                </Link>
+              );
+            })}
           </div>
         </section>
       </div>

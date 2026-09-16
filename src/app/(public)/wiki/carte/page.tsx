@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Map as MapIcon } from "lucide-react";
 import { MapTimeline } from "@/components/history/map-timeline";
 import { PageIntro } from "@/components/page-intro";
-import { historyEditions } from "@/content/history/editions";
+import { publishedHistoryEditions } from "@/content/history/editions";
 import { getMapArchiveManifest } from "@/map-archive/server";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function MapHistoryPage() {
   const manifest = await getMapArchiveManifest();
-  const editions = historyEditions.map((edition) => ({
+  const editions = publishedHistoryEditions().map((edition) => ({
     number: edition.number,
     dateLabel: edition.dateLabel,
     shortTitle: edition.shortTitle,
@@ -28,7 +28,7 @@ export default async function MapHistoryPage() {
       <PageIntro
         eyebrow="Archives de l’Arène"
         title="Évolution de la carte"
-        description="La même Arène, édition après édition. Déplacez la caméra puis changez d’édition : la vue reste calée sur le même point de référence pour rendre les transformations directement comparables."
+        description="La même Arène, édition après édition."
         aside={<span className="round-icon large"><MapIcon size={27} /></span>}
       />
       <MapTimeline editions={editions} />

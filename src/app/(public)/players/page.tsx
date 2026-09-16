@@ -33,7 +33,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
             <UsersRound size={17} />
             <span>
               <strong>{formatCount(directory.totalPlayers)} joueurs</strong>
-              Dans les archives publiques
+              Dans les éditions publiées
             </span>
           </div>
         }

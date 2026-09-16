@@ -1,9 +1,9 @@
 export type HistoryEditionStatus = "published" | "planned";
 
 export type HistoryEdition = {
-  number: 1 | 2 | 3 | 4;
-  year: number;
-  dateIso: string;
+  number: 1 | 2 | 3 | 4 | 5;
+  year: number | null;
+  dateIso: string | null;
   dateLabel: string;
   name: string;
   shortTitle: string;
@@ -93,6 +93,24 @@ export const historyEditions: readonly HistoryEdition[] = [
     timelineImageSrc: "/history/editions/4/main.png",
     map: {
       snapshotKey: "edition-4",
+      previewSrc: null,
+    },
+  },
+  {
+    number: 5,
+    year: null,
+    dateIso: null,
+    dateLabel: "???",
+    name: "5e édition de la Soirée du Grand Poulet",
+    shortTitle: "La prochaine édition de la Soirée du Grand Poulet",
+    subtitle: null,
+    locationLabel: "???",
+    minecraftVersion: "???",
+    summary: "La prochaine édition de la Soirée du Grand Poulet. Les détails seront révélés plus tard.",
+    status: "planned",
+    timelineImageSrc: null,
+    map: {
+      snapshotKey: "edition-5",
       previewSrc: null,
     },
   },
