@@ -133,6 +133,9 @@ class HostingTests(unittest.TestCase):
         self.assertIn("respond 404", caddy)
         self.assertIn("handle_path /map/*", caddy)
         self.assertIn("handle_path /map-archive/*", caddy)
+        self.assertIn('Cache-Control "public, max-age=31536000, immutable"', caddy)
+        self.assertIn('Cache-Control "no-cache"', caddy)
+        self.assertIn("encode zstd gzip", caddy)
         self.assertIn("root * /srv/map-archive/public", caddy)
 
     def test_config_rejects_overlapping_paths_and_line_injection(self):

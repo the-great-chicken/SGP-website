@@ -71,7 +71,7 @@ For offline/local publication, omit `editionSnapshotCommand` and use the configu
 
 `/wiki/carte` enables editions present in the archive manifest. The archive viewer keeps only the 3D map, orbit/pan/zoom, edition switching, and reset.
 
-Camera position is translated between editions relative to each full XYZ `center`; orientation and zoom are preserved. The archive uses the same 250-block high-resolution distance and SGP perspective controls as the live map.
+Camera position is translated between editions relative to each full XYZ `center`; orientation and zoom are preserved. The active edition uses a 250-block high-resolution distance. Speculatively preloaded neighbors start at 125 blocks and are promoted to 250 when selected.
 
 ## Backups
 

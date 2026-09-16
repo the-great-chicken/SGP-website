@@ -14,6 +14,13 @@ const uuid = "11111111-1111-4111-8111-111111111111";
 const item = { id: "minecraft:stone", count: 1, components: {}, removedComponents: [] };
 const itemKey = createHash("sha256").update(getItemRenderSignature(item)).digest("hex");
 
+test("publishing config requires map archive protection for edition snapshot commands", () => {
+  const result = publishingConfigSchema.safeParse({ editionSnapshotCommand: ["snapshot-helper"] });
+  assert.equal(result.success, false);
+  if (result.success) return;
+  assert.deepEqual(result.error.issues.map((issue) => issue.path), [["editionSnapshotCommand"]]);
+});
+
 async function fixture() {
   const workspace = await mkdtemp(path.join(os.tmpdir(), "sgp-publishing-"));
   for (const directory of ["inputs/world", "inputs/datapack", "inputs/pack", "data", "public/bluemap", "public/generated/item-icons"]) {
@@ -83,6 +90,8 @@ async function enableMapArchive(f: Awaited<ReturnType<typeof fixture>>) {
   };
   await writeFile(path.join(f.workspace, "map-archive.json"), JSON.stringify(archiveConfig));
   await writeFile(path.join(f.workspace, "bluemap-5.24-cli.jar"), "fake jar");
+  await cp(path.join(root, "public/map-archive"), path.join(f.workspace, "public/map-archive"), { recursive: true });
+  await cp(path.join(root, "public/bluemap/sgp-controls.mjs"), path.join(f.workspace, "public/bluemap/sgp-controls.mjs"));
   f.config.mapArchiveConfig = "map-archive.json";
   return mapArchiveConfigSchema.parse(archiveConfig);
 }

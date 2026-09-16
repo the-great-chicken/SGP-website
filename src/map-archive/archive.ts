@@ -17,7 +17,7 @@ import {
 import path from "node:path";
 import { z } from "zod";
 import { parseBlueMapCamera, translateBlueMapCamera } from "../lib/bluemap-camera";
-import { SGP_HIRES_VIEW_DISTANCE } from "../lib/map-viewer-settings";
+import { SGP_HIRES_VIEW_DISTANCE, SGP_PRELOAD_HIRES_VIEW_DISTANCE } from "../lib/map-viewer-settings";
 
 export const BLUE_MAP_VERSION = "5.24";
 export const BLUE_MAP_DOWNLOAD_URL = `https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v${BLUE_MAP_VERSION}/bluemap-${BLUE_MAP_VERSION}-cli.jar`;
@@ -256,7 +256,7 @@ function blueMapConfigs(options: {
       "update-settings-file: true",
       "use-cookies: false",
       "default-to-flat-view: false",
-      `hires-slider-default: ${SGP_HIRES_VIEW_DISTANCE}`,
+      `hires-slider-default: ${SGP_PRELOAD_HIRES_VIEW_DISTANCE}`,
       `start-location: ${quoteHocon(resolvedStartLocation)}`,
       "client-decompression: true",
       "map-data-root: \"maps\"",
@@ -600,7 +600,13 @@ export async function prepareMapArchive(options: RenderMapArchiveOptions): Promi
 
     // Public provenance intentionally excludes absolute source paths. Fingerprints
     // identify the source tree without publishing server filesystem layout.
-    await writeFile(path.join(webroot, "sgp-archive.json"), JSON.stringify(entry, null, 2) + "\n");
+    await writeFile(path.join(webroot, "sgp-archive.json"), JSON.stringify({
+      ...entry,
+      viewerHires: {
+        preload: SGP_PRELOAD_HIRES_VIEW_DISTANCE,
+        active: SGP_HIRES_VIEW_DISTANCE,
+      },
+    }, null, 2) + "\n");
     // Revisions are served directly by Caddy, not by the sgp account. Enforce
     // predictable read/traverse permissions regardless of the publisher's umask.
     await makePublicTreeReadable(webroot);

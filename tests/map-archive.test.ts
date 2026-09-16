@@ -13,7 +13,11 @@ import {
   resolveMapArchivePaths,
   resolveMapArchiveStartLocation,
 } from "../src/map-archive/archive";
-import { translateBlueMapHash } from "../src/lib/map-timeline";
+import {
+  mapTimelineAdjacentNumbers,
+  mapTimelineEvictionCandidate,
+  translateBlueMapHash,
+} from "../src/lib/map-timeline";
 
 const root = process.cwd();
 
@@ -90,7 +94,7 @@ test("generated BlueMap configuration is static, perspective-only and bounded", 
     });
     assert.match(configs["webserver.conf"], /enabled: false/);
     assert.match(configs["webapp.conf"], /client-decompression: true/);
-    assert.match(configs["webapp.conf"], /hires-slider-default: 250/);
+    assert.match(configs["webapp.conf"], /hires-slider-default: 125/);
     assert.match(configs["webapp.conf"], /scripts: \["\.\/bluemap-archive\.js"\]/);
     assert.match(configs["webapp.conf"], /styles: \["\.\/bluemap-archive\.css"\]/);
     assert.match(configs["webapp.conf"], /start-location: "world:100:72:-40:1500:0:0:0:0:perspective"/);
@@ -213,13 +217,20 @@ test("a prepared render is invisible until promotion and then becomes current", 
     const provenance = await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "sgp-archive.json"), "utf8");
     assert.doesNotMatch(provenance, /sourceWorld|sourceResourcePack/);
     const archiveBridge = await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "bluemap-archive.js"), "utf8");
-    assert.equal(archiveBridge.includes("mapEventSource.close()"), true);
+    assert.equal(archiveBridge.includes("mapEventSource?.close?.()"), true);
     assert.equal(archiveBridge.includes("archive?.startLocation"), true);
+    assert.equal(archiveBridge.includes('type: "sgp-map-ready"'), true);
+    assert.equal(archiveBridge.includes('type === "sgp-map-set-camera"'), true);
+    assert.equal(archiveBridge.includes('type === "sgp-map-active"'), true);
+    assert.equal(archiveBridge.includes('type === "sgp-map-hires"'), true);
+    assert.equal(archiveBridge.includes("sgpArchiveDispose"), true);
+    assert.equal(archiveBridge.includes('cache: "force-cache"'), true);
     assert.equal(await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "bluemap-archive.css"), "utf8").then((value) => value.includes("#map-container")), true);
     assert.equal(await readFile(path.join(paths.publicRoot, prepared.entry.webPath, "sgp-controls.mjs"), "utf8").then((value) => value.includes("installSgpBlueMapControls")), true);
     const provenanceData = JSON.parse(provenance);
     assert.equal(provenanceData.minY, 40);
     assert.equal(provenanceData.startLocation, "world:100:72:-40:1500:0:0:0:0:perspective");
+    assert.deepEqual(provenanceData.viewerHires, { preload: 125, active: 250 });
     const mode = (await stat(path.join(paths.publicRoot, prepared.entry.webPath))).mode & 0o777;
     assert.equal(mode, 0o755);
     await prepared.cleanup();
@@ -346,4 +357,43 @@ test("camera translation preserves BlueMap view fields and aligns centers", () =
     "#world:-175:75:330:320:1.2:0.6:0.2:0:perspective",
   );
   assert.equal(translateBlueMapHash("#not-a-camera", { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 }), "");
+});
+
+
+test("timeline preload targets both immediate neighbors without direction bias", () => {
+  assert.deepEqual(mapTimelineAdjacentNumbers([1, 2, 3, 4], 1), [2]);
+  assert.deepEqual(mapTimelineAdjacentNumbers([1, 2, 3, 4], 2), [1, 3]);
+  assert.deepEqual(mapTimelineAdjacentNumbers([1, 2, 3, 4], 3), [2, 4]);
+  assert.deepEqual(mapTimelineAdjacentNumbers([1, 2, 3, 4], 4), [3]);
+});
+
+test("timeline viewer cache only evicts entries outside the protected comparison set", () => {
+  const visited = new Set([2, 3, 4]);
+
+  // While edition 3 is active, 2/3/4 are the useful working set. Nothing moves.
+  assert.equal(mapTimelineEvictionCandidate({
+    viewerNumbers: [2, 3, 4],
+    incomingNumber: 1,
+    protectedNumbers: new Set([2, 3, 4]),
+    usageOrder: [2, 4, 3],
+    visitedNumbers: visited,
+  }), null);
+
+  // Once edition 2 is active, 1/2/3 is the useful set and edition 4 can go.
+  assert.equal(mapTimelineEvictionCandidate({
+    viewerNumbers: [2, 3, 4],
+    incomingNumber: 1,
+    protectedNumbers: new Set([1, 2, 3]),
+    usageOrder: [4, 3, 2],
+    visitedNumbers: visited,
+  }), 4);
+
+  // Outside the protected set, discard speculative viewers before visited ones.
+  assert.equal(mapTimelineEvictionCandidate({
+    viewerNumbers: [1, 3, 4],
+    incomingNumber: 2,
+    protectedNumbers: new Set([3]),
+    usageOrder: [1, 4, 3],
+    visitedNumbers: new Set([1, 3]),
+  }), 4);
 });

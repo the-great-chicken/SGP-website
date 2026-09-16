@@ -1,4 +1,5 @@
 export const SGP_HIRES_VIEW_DISTANCE = 250;
+export const SGP_PRELOAD_HIRES_VIEW_DISTANCE = 125;
 
 export type BlueMapHiresRuntime = {
   settings?: { hiresSliderDefault?: number } | null;
@@ -9,9 +10,8 @@ export type BlueMapHiresRuntime = {
 };
 
 /**
- * Keep the normal archive viewer at the same high-resolution radius as the live
- * map. This is intentionally safe to call repeatedly, including against older
- * immutable archive revisions from the same-origin timeline iframe.
+ * Apply a BlueMap high-resolution radius. Safe to call repeatedly, including
+ * against older immutable archive revisions from the same-origin timeline.
  */
 export function applySgpHiresViewDistance(
   bluemap: BlueMapHiresRuntime | null | undefined,

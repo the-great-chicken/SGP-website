@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applySgpHiresViewDistance, SGP_HIRES_VIEW_DISTANCE } from "../src/lib/map-viewer-settings";
+import { applySgpHiresViewDistance, SGP_HIRES_VIEW_DISTANCE, SGP_PRELOAD_HIRES_VIEW_DISTANCE } from "../src/lib/map-viewer-settings";
 
 test("archive viewer normalizes hi-res distance to the live-map value", () => {
   let updates = 0;
@@ -13,12 +13,17 @@ test("archive viewer normalizes hi-res distance to the live-map value", () => {
   };
 
   assert.equal(SGP_HIRES_VIEW_DISTANCE, 250);
+  assert.equal(SGP_PRELOAD_HIRES_VIEW_DISTANCE, 125);
   assert.equal(applySgpHiresViewDistance(bluemap), true);
   assert.equal(bluemap.settings.hiresSliderDefault, 250);
   assert.equal(bluemap.mapViewer.data.loadedHiresViewDistance, 250);
   assert.equal(updates, 1);
   assert.equal(applySgpHiresViewDistance(bluemap), true);
   assert.equal(updates, 1);
+  assert.equal(applySgpHiresViewDistance(bluemap, SGP_PRELOAD_HIRES_VIEW_DISTANCE), true);
+  assert.equal(bluemap.settings.hiresSliderDefault, 125);
+  assert.equal(bluemap.mapViewer.data.loadedHiresViewDistance, 125);
+  assert.equal(updates, 2);
 });
 
 test("hi-res normalization is safe before BlueMap is ready", () => {
