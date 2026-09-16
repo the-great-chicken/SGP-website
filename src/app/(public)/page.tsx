@@ -53,7 +53,7 @@ export default async function HomePage() {
       <section className="immersive-hero">
         <div className="immersive-hero-art" aria-hidden="true">
           <Image
-            src="/media/sgp-landscape.svg"
+            src="/media/sgp-landscape.png"
             alt=""
             fill
             priority
@@ -62,10 +62,9 @@ export default async function HomePage() {
           />
         </div>
         <div className="immersive-hero-wide immersive-hero-copy">
-          <p className="eyebrow">Minecraft · SGP</p>
           <h1>
             Soirée du
-            <span>Grand Poulet.</span>
+            <span>Grand Poulet</span>
           </h1>
           <p className="hero-lede">Kits, classements, joueurs, histoire et carte.</p>
         </div>
@@ -105,7 +104,7 @@ export default async function HomePage() {
         <section className="home-section home-map-section" id="world">
           <a className="home-map-art" href="/map" aria-label="Ouvrir la carte du serveur">
             <Image
-              src="/media/sgp-landscape.svg"
+              src="/media/sgp-map.png"
               alt="Aperçu illustré du terrain de la SGP"
               fill
               sizes="(max-width: 820px) 100vw, 60vw"

@@ -52,7 +52,7 @@ export const historyEditions: readonly HistoryEdition[] = [
     summary:
       "Plusieurs zones de la Haute-Cour sont retravaillées, de nouveaux jeux apparaissent et l’Oielchimiste entre dans l’histoire.",
     status: "published",
-    timelineImageSrc: null,
+    timelineImageSrc: "/history/editions/2/main.png",
     map: {
       snapshotKey: "edition-2",
       previewSrc: null,
@@ -90,7 +90,7 @@ export const historyEditions: readonly HistoryEdition[] = [
     summary:
       "Deux camps, deux séries de quêtes et une course à l’énergie : le Grand Poulet et le Canarchimage font enfin de leur rivalité la compétition centrale de la soirée.",
     status: "published",
-    timelineImageSrc: null,
+    timelineImageSrc: "/history/editions/4/main.png",
     map: {
       snapshotKey: "edition-4",
       previewSrc: null,
