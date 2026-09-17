@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 const historyLinks = [
   {
-    href: "/wiki",
+    href: "/wiki#editions",
     title: "Les éditions de la SGP",
     description: "Retrouvez la chronologie, les changements et les moments marquants de chaque soirée.",
     icon: BookOpenText,

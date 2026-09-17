@@ -92,7 +92,7 @@ void (async () => {
           <svg class="sgp-map-menu-close-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="sgp-map-mobile-menu" id="sgp-map-mobile-navigation">
+      <div class="sgp-map-mobile-menu" id="sgp-map-mobile-navigation" inert>
         <nav class="sgp-map-mobile-nav" aria-label="Navigation mobile">
           <a class="sgp-map-mobile-nav-link" href="/">Accueil</a>
           <a class="sgp-map-mobile-nav-link" href="/kits">Kits</a>
@@ -107,17 +107,8 @@ void (async () => {
     return header;
   }
 
-  const header = document.querySelector("[data-sgp-map-header='true']") || createHeaderFallback();
-  const menuButton = header.querySelector(".sgp-map-menu-button");
-  const mobileMenu = header.querySelector(".sgp-map-mobile-menu");
-  function setMenuOpen(open) {
-    if (!menuButton || !mobileMenu) return;
-    menuButton.setAttribute("aria-expanded", String(open));
-    menuButton.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
-    mobileMenu.classList.toggle("is-open", open);
-  }
-  menuButton?.addEventListener("click", () => setMenuOpen(menuButton.getAttribute("aria-expanded") !== "true"));
-  mobileMenu?.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => setMenuOpen(false)));
+  if (!document.querySelector("[data-sgp-map-header='true']")) createHeaderFallback();
+  await import(new URL("sgp-navigation.mjs", themeUrl).href);
 
   const mapContainer = document.getElementById("map-container");
   const playerMarkerPattern = /^bm-marker-bm-player-([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i;

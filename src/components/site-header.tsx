@@ -3,18 +3,24 @@
 import { Menu, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { SiteLogo } from "@/components/site-logo";
 import { siteNavigation } from "@/lib/site-navigation";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
 
   return (
-    <header className="site-header">
+    <header className="site-header" onKeyDown={(event) => {
+      if (event.key === "Escape" && menuOpen) {
+        setMenuOpen(false);
+        menuButton.current?.focus();
+      }
+    }}>
       <div className="shell header-inner">
-        <Link className="brand" href="/" aria-label="SGP — Accueil">
+        <Link className="brand" href="/" aria-label="SGP — Accueil" onClick={() => setMenuOpen(false)}>
           <span className="brand-mark" aria-hidden="true">
             <SiteLogo priority />
           </span>
@@ -46,6 +52,7 @@ export function SiteHeader() {
 
         <button
           className="menu-button"
+          ref={menuButton}
           type="button"
           aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={menuOpen}
@@ -59,6 +66,7 @@ export function SiteHeader() {
       <div
         className={menuOpen ? "mobile-menu is-open" : "mobile-menu"}
         id="mobile-navigation"
+        inert={!menuOpen}
       >
         <nav className="shell mobile-nav" aria-label="Navigation mobile">
           {siteNavigation.map((item) => {

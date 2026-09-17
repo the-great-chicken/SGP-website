@@ -212,10 +212,11 @@ export function renderMapHeader(): string {
       <svg class="sgp-map-menu-close-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
   </div>
-  <div class="sgp-map-mobile-menu" id="sgp-map-mobile-navigation">
+  <div class="sgp-map-mobile-menu" id="sgp-map-mobile-navigation" inert>
     <nav class="sgp-map-mobile-nav" aria-label="Navigation mobile">${mobileLinks}${renderProfileLink("sgp-map-profile sgp-map-mobile-profile")}</nav>
   </div>
-</header>`;
+</header>
+<script type="module" src="/bluemap/sgp-navigation.mjs"></script>`;
 }
 
 function renderLoadingSurface(): string {

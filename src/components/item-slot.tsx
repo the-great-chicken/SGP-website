@@ -2,7 +2,7 @@
 
 import { Box } from "lucide-react";
 import Image from "next/image";
-import { useId, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MinecraftText } from "@/components/minecraft-text";
 import {
@@ -20,15 +20,55 @@ type ItemSlotProps = {
   showLabel?: boolean;
 };
 
-type TooltipPosition = {
-  top: number;
-  left?: number;
-  right?: number;
-};
-
 export function ItemSlot({ operation, slotLabel, compact = false, imageSrc, showLabel = true }: ItemSlotProps) {
   const tooltipId = useId();
-  const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const tooltip = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const element = tooltip.current;
+    if (!anchor || !element) return;
+    const edge = 12;
+    const viewport = window.visualViewport;
+    const leftEdge = (viewport?.offsetLeft ?? 0) + edge;
+    const topEdge = (viewport?.offsetTop ?? 0) + edge;
+    const width = viewport?.width ?? document.documentElement.clientWidth;
+    const height = viewport?.height ?? window.innerHeight;
+    element.style.maxWidth = `${width - edge * 2}px`;
+    element.style.maxHeight = `${height - edge * 2}px`;
+    const rect = anchor.getBoundingClientRect();
+    const bounds = element.getBoundingClientRect();
+    const above = rect.top - bounds.height - 8;
+    const top = above >= topEdge ? above : rect.bottom + 8;
+    element.style.left = `${Math.max(leftEdge, Math.min(rect.left, leftEdge + width - edge * 2 - bounds.width))}px`;
+    element.style.top = `${Math.max(topEdge, Math.min(top, topEdge + height - edge * 2 - bounds.height))}px`;
+  }, [anchor]);
+
+  useEffect(() => {
+    if (!anchor) return;
+    const dismiss = () => setAnchor(null);
+    const outside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !anchor.contains(event.target) && !tooltip.current?.contains(event.target)) dismiss();
+    };
+    const scroll = (event: Event) => {
+      if (!(event.target instanceof Node) || !tooltip.current?.contains(event.target)) dismiss();
+    };
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") dismiss();
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("scroll", scroll, true);
+    document.addEventListener("keydown", keydown);
+    window.addEventListener("resize", dismiss);
+    window.visualViewport?.addEventListener("resize", dismiss);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("scroll", scroll, true);
+      document.removeEventListener("keydown", keydown);
+      window.removeEventListener("resize", dismiss);
+      window.visualViewport?.removeEventListener("resize", dismiss);
+    };
+  }, [anchor]);
 
   if (!operation) {
     return (
@@ -49,37 +89,24 @@ export function ItemSlot({ operation, slotLabel, compact = false, imageSrc, show
     glintOverride === true ||
     (glintOverride !== false && typeof enchantments === "object" && enchantments !== null);
 
-  function showTooltip(element: HTMLElement) {
-    const rect = element.getBoundingClientRect();
-    const alignRight = rect.left + rect.width / 2 > window.innerWidth / 2;
-    const edgeGap = 12;
-    const anchorGap = 8;
-    setTooltipPosition({
-      top: rect.top - anchorGap,
-      ...(alignRight
-        ? { right: Math.max(edgeGap, window.innerWidth - rect.right - anchorGap) }
-        : { left: Math.max(edgeGap, rect.left - anchorGap) }),
-    });
-  }
-
-  const tooltipStyle: CSSProperties | undefined = tooltipPosition
-    ? {
-        top: tooltipPosition.top,
-        ...(tooltipPosition.left === undefined ? {} : { left: tooltipPosition.left }),
-        ...(tooltipPosition.right === undefined ? {} : { right: tooltipPosition.right }),
-      }
-    : undefined;
-
   return (
-    <div
+    <button
       className={`inventory-entry${compact ? " is-compact" : ""}`}
-      tabIndex={0}
+      type="button"
       aria-label={`${slotLabel} : ${name}, quantité ${item.count}`}
-      aria-describedby={tooltipPosition ? tooltipId : undefined}
-      onMouseEnter={(event) => showTooltip(event.currentTarget)}
-      onMouseLeave={() => setTooltipPosition(null)}
-      onFocus={(event) => showTooltip(event.currentTarget)}
-      onBlur={() => setTooltipPosition(null)}
+      aria-describedby={anchor ? tooltipId : undefined}
+      aria-expanded={Boolean(anchor)}
+      onPointerEnter={(event) => {
+        if (event.pointerType === "mouse") setAnchor(event.currentTarget);
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType === "mouse") setAnchor(null);
+      }}
+      onFocus={(event) => {
+        if (event.currentTarget.matches(":focus-visible")) setAnchor(event.currentTarget);
+      }}
+      onBlur={() => setAnchor(null)}
+      onClick={(event) => setAnchor(anchor ? null : event.currentTarget)}
     >
       {showLabel ? <span className="inventory-slot-label">{slotLabel}</span> : null}
       <span
@@ -105,9 +132,9 @@ export function ItemSlot({ operation, slotLabel, compact = false, imageSrc, show
         )}
         {item.count > 1 ? <strong className="stack-count">{item.count}</strong> : null}
       </span>
-      {tooltipPosition
+      {anchor
         ? createPortal(
-            <span id={tooltipId} className="minecraft-tooltip" role="tooltip" style={tooltipStyle}>
+            <span ref={tooltip} id={tooltipId} className="minecraft-tooltip" role="tooltip">
               <strong className="minecraft-tooltip-name">
                 {nameComponent ? <MinecraftText value={nameComponent} /> : name}
               </strong>
@@ -122,6 +149,6 @@ export function ItemSlot({ operation, slotLabel, compact = false, imageSrc, show
             document.body,
           )
         : null}
-    </div>
+    </button>
   );
 }

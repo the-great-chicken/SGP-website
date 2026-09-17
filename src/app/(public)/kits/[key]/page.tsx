@@ -223,7 +223,7 @@ export default async function KitPage({ params }: KitPageProps) {
               <section className="loadout-panel refined-loadout-panel">
                 <div className="loadout-panel-heading">
                   <h2>Équipement</h2>
-                  <span className="small-label">Survoler un objet pour voir ses détails</span>
+                  <span className="small-label">Sélectionnez un objet pour voir ses détails</span>
                 </div>
 
                 <div className="loadout-group hotbar-group">

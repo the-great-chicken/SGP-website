@@ -278,7 +278,8 @@ html.sgp-map {
 }
 
 .sgp-map .sgp-map-unavailable {
-  min-height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
   box-sizing: border-box;
   display: grid;
   place-items: center;
@@ -693,8 +694,8 @@ html.sgp-map {
   }
 
   .sgp-map-menu-button {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     display: inline-grid;
     place-items: center;
     flex: 0 0 auto;
@@ -729,7 +730,9 @@ html.sgp-map {
     min-height: 0;
     margin-inline: auto;
     display: grid;
-    overflow: hidden;
+    max-height: calc(100dvh - var(--sgp-header-height));
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
   }
 
   .sgp-map-mobile-nav-link {
@@ -745,6 +748,7 @@ html.sgp-map {
   }
 
   .sgp-map-mobile-profile {
+    min-height: 44px;
     display: inline-flex;
     margin-block: 12px 18px;
   }

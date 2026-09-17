@@ -40,16 +40,6 @@ export default function WikiPage() {
         </div>
 
         <div className="history-next-grid">
-          <Link className="history-next-card is-link" href="/wiki/personnages">
-            <span className="round-icon"><UsersRound size={19} aria-hidden="true" /></span>
-            <p className="eyebrow">Personnages</p>
-            <h2>Les figures du récit</h2>
-            <p>
-              Grand Poulet, Canarchimage, Oielchimiste, Corbeautaniste… des fiches séparées des profils joueurs, avec ce qui est déjà établi et de la place pour la suite.
-            </p>
-            <span className="history-card-action">Voir les personnages <ArrowRight size={16} /></span>
-          </Link>
-
           <Link className="history-next-card is-link" href="/wiki/histoire-jusquici">
             <span className="round-icon"><Sparkles size={19} aria-hidden="true" /></span>
             <p className="eyebrow">Le récit jusqu’ici</p>
@@ -68,6 +58,16 @@ export default function WikiPage() {
               Les changelogs des éditions 2, 3 et 4, pour retrouver les changements apportés aux kits, aux événements, à l’Arène et au serveur.
             </p>
             <span className="history-card-action">Parcourir les changelogs <ArrowRight size={16} /></span>
+          </Link>
+
+          <Link className="history-next-card is-link" href="/wiki/personnages">
+            <span className="round-icon"><UsersRound size={19} aria-hidden="true" /></span>
+            <p className="eyebrow">Personnages</p>
+            <h2>Les figures du récit</h2>
+            <p>
+              Grand Poulet, Canarchimage, Oielchimiste, Corbeautaniste… des fiches séparées des profils joueurs, avec ce qui est déjà établi et de la place pour la suite.
+            </p>
+            <span className="history-card-action">Voir les personnages <ArrowRight size={16} /></span>
           </Link>
         </div>
       </section>

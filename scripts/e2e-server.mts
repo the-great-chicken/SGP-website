@@ -116,6 +116,16 @@ async function prepareStandaloneAssets() {
 
 async function prepareFixtures() {
   await mkdir(resolve(".data"), { recursive: true });
+  // A local build can include generated renders from the real catalogue.
+  const renderDirectory = resolve(".next/standalone/data");
+  await mkdir(renderDirectory, { recursive: true });
+  await writeFile(resolve(renderDirectory, "item-renders.json"), JSON.stringify({
+    schemaVersion: 2,
+    datapackRelease: kitManifest.datapackRelease,
+    resourcePackRelease: kitManifest.resourcePackRelease,
+    minecraftVersion: kitManifest.minecraftVersion,
+    items: {},
+  }), "utf8");
   for (const suffix of ["", "-shm", "-wal"]) {
     await rm(`${databasePath}${suffix}`, { force: true });
   }

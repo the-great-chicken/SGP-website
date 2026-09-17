@@ -2459,6 +2459,14 @@ h3 {
   outline: none;
 }
 
+button.inventory-entry {
+  padding-inline: 0;
+  padding-bottom: 0;
+  border: 0;
+  background: transparent;
+  text-align: inherit;
+}
+
 .inventory-slot-label {
   position: absolute;
   top: 0;
@@ -2561,10 +2569,11 @@ h3 {
   font-size: var(--font-min);
   font-weight: 400;
   line-height: 1.35;
-  pointer-events: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
   text-align: left;
   text-shadow: 1px 1px #1f1f1f;
-  transform: translateY(-100%);
   white-space: pre-wrap;
 }
 
