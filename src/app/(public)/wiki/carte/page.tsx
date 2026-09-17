@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Map as MapIcon } from "lucide-react";
+import Link from "next/link";
 import { MapTimeline } from "@/components/history/map-timeline";
 import { PageIntro } from "@/components/page-intro";
 import { publishedHistoryEditions } from "@/content/history/editions";
@@ -26,7 +27,12 @@ export default async function MapHistoryPage() {
   return (
     <div className="shell page-stack history-map-page">
       <PageIntro
-        eyebrow="Archives de l’Arène"
+        eyebrowClassName="history-breadcrumb"
+        eyebrow={<>
+          <Link className="history-breadcrumb-link" href="/wiki">Histoire</Link>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">Évolutions</span>
+        </>}
         title="Évolution de la carte"
         description="La même Arène, édition après édition."
         aside={<span className="round-icon large"><MapIcon size={27} /></span>}

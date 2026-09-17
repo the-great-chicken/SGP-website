@@ -7,7 +7,7 @@ test.use({ isMobile: true, hasTouch: true });
 for (const width of [320, 390, 600, 820]) {
   test(`public layouts fit a ${width}px screen`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
-    for (const path of ["/", "/kits", "/kits/warrior", "/leaderboards", "/players", `/players/${e2ePlayerUuid}`, "/wiki", "/wiki/editions/4", "/wiki/personnages", "/wiki/personnages/corbeautaniste", "/wiki/changelogs/4", "/wiki/carte", "/a-propos", "/login"]) {
+    for (const path of ["/", "/kits", "/kits/warrior", "/leaderboards", "/players", `/players/${e2ePlayerUuid}`, "/wiki", "/wiki/editions/4", "/wiki/personnages", "/wiki/personnages/corbeautaniste", "/wiki/changelogs/4", "/wiki/carte", "/about", "/login"]) {
       await page.goto(path);
       await expect(page.locator("h1")).toBeVisible();
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth), { message: `${path} overflows at ${width}px` }).toBeLessThanOrEqual(width);

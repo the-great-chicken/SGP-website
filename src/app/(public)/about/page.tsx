@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { BookOpenText, Map, Play, Swords, UsersRound } from "lucide-react";
-import Link from "next/link";
+import { BookOpenText, Camera, Map, MessageCircle, Music2, Play, Swords, UsersRound } from "lucide-react";
 import { PageIntro } from "@/components/page-intro";
 
 export const metadata: Metadata = {
@@ -52,20 +51,34 @@ export default function AboutPage() {
           <h2 id="about-links-title">Retrouver la SGP</h2>
         </div>
         <div className="about-link-list">
-          <a href="https://www.youtube.com/watch?v=XU8zjLW3BE0" target="_blank" rel="noreferrer">
+          <a href="https://www.youtube.com/@Soir%C3%A9eduGrandPoulet" target="_blank" rel="noreferrer">
             <Play size={20} aria-hidden="true" />
             <span>
               <strong>YouTube</strong>
-              <small>Voir le trailer de la SGP</small>
+              <small>Retrouver nos vidéos</small>
             </span>
           </a>
-          <Link href="/wiki">
-            <BookOpenText size={20} aria-hidden="true" />
+          <a href="https://discord.gg/SpZAuPVFBH" target="_blank" rel="noreferrer">
+            <MessageCircle size={20} aria-hidden="true" />
             <span>
-              <strong>Histoire et archives</strong>
-              <small>Parcourir les éditions, personnages et cartes historiques</small>
+              <strong>Discord</strong>
+              <small>Rejoindre la communauté SGP</small>
             </span>
-          </Link>
+          </a>
+          <a href="https://www.instagram.com/soireedugrandpoulet/" target="_blank" rel="noreferrer">
+            <Camera size={20} aria-hidden="true" />
+            <span>
+              <strong>Instagram</strong>
+              <small>Suivre la SGP sur Instagram</small>
+            </span>
+          </a>
+          <a href="https://www.tiktok.com/@le.grand.poulet" target="_blank" rel="noreferrer">
+            <Music2 size={20} aria-hidden="true" />
+            <span>
+              <strong>TikTok</strong>
+              <small>Retrouver nos vidéos sur TikTok</small>
+            </span>
+          </a>
         </div>
       </section>
     </div>
